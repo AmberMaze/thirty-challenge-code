@@ -7,6 +7,7 @@
   "src/api/dailyClient.ts": [],
   "src/components/Buzzer.tsx": [],
   "src/components/ConnectionBanner.tsx": [],
+  "src/components/LazyImage.tsx": [],
   "src/components/Scoreboard.tsx": [],
   "src/components/Timer.tsx": [],
   "src/components/VideoRoom.tsx": [],
@@ -24,9 +25,12 @@
   "src/data/questions.ts": [],
   "src/hooks/useErrorLog.ts": [],
   "src/hooks/useGame.ts": [],
+  "src/hooks/useGameAtoms.ts": [],
   "src/hooks/useSupabaseFetch.ts": [],
+  "src/lib/atomGameSync.ts": [],
+  "src/lib/dailyLazy.ts": [],
   "src/lib/gameDatabase.ts": [
-    "src/lib/supabaseClient.ts"
+    "src/lib/supabaseLazy.ts"
   ],
   "src/lib/gameSync.ts": [
     "src/lib/gameDatabase.ts",
@@ -34,6 +38,7 @@
     "src/types/game.ts"
   ],
   "src/lib/supabaseClient.ts": [],
+  "src/lib/supabaseLazy.ts": [],
   "src/main.tsx": [
     "src/App.tsx"
   ],
@@ -47,6 +52,22 @@
   "src/pages/QuizRoom.tsx": [],
   "src/pages/Scoreboard.tsx": [],
   "src/pages/SegmentIntro.tsx": [],
+  "src/segments/index.ts": [
+    "src/segments/useBellSegment.ts",
+    "src/segments/useRemoSegment.ts",
+    "src/segments/useSingSegment.ts"
+  ],
+  "src/segments/useBellSegment.ts": [],
+  "src/segments/useRemoSegment.ts": [],
+  "src/segments/useSingSegment.ts": [],
+  "src/state/gameAtoms.ts": [],
+  "src/state/index.ts": [
+    "src/state/gameAtoms.ts",
+    "src/state/syncAtoms.ts",
+    "src/state/videoAtoms.ts"
+  ],
+  "src/state/syncAtoms.ts": [],
+  "src/state/videoAtoms.ts": [],
   "src/types/game.ts": [],
   "src/utils/teamUtils.ts": [],
   "src/vite-env.d.ts": []
