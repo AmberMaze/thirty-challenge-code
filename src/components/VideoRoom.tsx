@@ -85,6 +85,7 @@ export default function VideoRoom({
         });
 
       // Join the meeting
+      if (!state.videoRoomUrl) throw new Error('Missing room URL');
       await (callObject as any).join({
         url: state.videoRoomUrl,
         token,
@@ -165,7 +166,7 @@ export default function VideoRoom({
     );
   }
 
-  if (!state.videoRoomCreated) {
+  if (!state.videoRoomCreated || !state.videoRoomUrl) {
     return (
       <div
         className={`bg-gray-500/20 border border-gray-500/30 rounded-xl p-6 ${className}`}

@@ -93,7 +93,6 @@ Can be modified by agent/gpt.
 ## ✅ Approved Changes
 
 - **Dual Host Control**
-
   - Host can join via _mobile_ to see what players see.
   - Host can also join via _PC_ with advanced controls:
     - View all questions/answers
@@ -104,9 +103,9 @@ Can be modified by agent/gpt.
     - Move to next question or segment
     - Lock inputs after bell click
     - Flexible host control over game state
+    - GameContext actions persist to Supabase and broadcast via GameSync
 
 - **Segment-Specific Behavior**
-
   - **BELLJ** and **SING**:
     - Question hidden from players.
     - Players race to click a shared "bell" button.
@@ -116,11 +115,9 @@ Can be modified by agent/gpt.
     - Host picks correct/incorrect via ui.
 
 - **REMO** Logic:
-
   - Host clicks to reveal club logos step-by.s
 
 - **Pre-Game Lobby Settings**
-
   - Host PC lobby view:
     - Set number of questions per segment
     - [Suggestions]: choose enabled segments, customize team logos, toggle special buttons)

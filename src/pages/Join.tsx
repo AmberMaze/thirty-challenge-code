@@ -1,18 +1,23 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getAllTeams, searchTeams, searchFlags } from '@/utils/teamUtils';
 import { GameDatabase } from '@/lib/gameDatabase';
 import { supabase } from '@/lib/supabaseClient';
+import { useGame } from '@/hooks/useGame';
 
 export default function Join() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [joinType, setJoinType] = useState<'host' | 'player' | ''>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { actions } = useGame();
+  const [step, setStep] = useState(Number(searchParams.get('step') || 1));
+  const [joinType, setJoinType] = useState<'host' | 'player' | ''>(
+    (searchParams.get('type') as 'host' | 'player' | '') || '',
+  );
   // Session code that players use to join the lobby
-  const [gameId, setGameId] = useState('');
+  const [gameId, setGameId] = useState(searchParams.get('gameId') || '');
   // Separate field for the host code when joining as phone host
-  const [hostCode, setHostCode] = useState('');
+  const [hostCode, setHostCode] = useState(searchParams.get('host') || '');
   const [name, setName] = useState('');
   const [selectedFlag, setSelectedFlag] = useState<string>('');
   const [selectedTeam, setSelectedTeam] = useState<string>('');
@@ -27,6 +32,7 @@ export default function Join() {
   const handleJoinTypeSelect = (type: 'host' | 'player') => {
     setJoinType(type);
     setStep(2);
+    setSearchParams({ step: '2', type });
   };
 
   const handleGameIdSubmit = async (e: React.FormEvent) => {
@@ -35,23 +41,20 @@ export default function Join() {
     if (!gameId.trim()) return;
 
     if (joinType === 'host') {
-
       const sessionId = gameId.toUpperCase();
       const code = hostCode.toUpperCase();
-      const { data } = await supabase
-        .from('games')
-        .select('id')
-        .eq('id', sessionId)
-        .eq('host_code', code)
-
-
-        .single();
-      const foundId = data?.id;
-      if (!foundId) {
+      const record = await GameDatabase.getGameByHostCode(sessionId, code);
+      if (!record) {
         setErrorMsg('لا توجد جلسة بهذا الرمز');
         return;
       }
-      navigate(`/lobby/${foundId}?role=host-mobile`);
+      setSearchParams({
+        step: '3',
+        type: 'host',
+        gameId: sessionId,
+        host: code,
+      });
+      navigate(`/lobby/${sessionId}?role=host-mobile`);
     } else {
       const actualGameId = gameId.toUpperCase();
       const existing = await GameDatabase.getGame(actualGameId);
@@ -60,6 +63,7 @@ export default function Join() {
         return;
       }
       setStep(3);
+      setSearchParams({ step: '3', type: 'player', gameId: actualGameId });
     }
   };
 
@@ -69,14 +73,12 @@ export default function Join() {
 
     const playerRole = 'playerA'; // TODO: choose open slot dynamically
     const sessionId = gameId.toUpperCase();
-
-    await GameDatabase.addPlayer(playerRole, sessionId, {
+    await actions.joinGame(playerRole, {
       name,
       flag: selectedFlag,
       club: selectedTeam,
-      role: playerRole,
     });
-
+    setSearchParams({ step: 'done' });
     navigate(`/lobby/${sessionId}?role=${playerRole}`);
   };
 
