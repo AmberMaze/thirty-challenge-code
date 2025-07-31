@@ -1,4 +1,4 @@
-import { isSupabaseConfigured, getSupabase } from './supabaseLazy';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 // GameState and PlayerId types are not needed in this module
 const FALLBACK_SEGMENT_SETTINGS: Record<string, number> = {
   WSHA: 4,
@@ -69,7 +69,6 @@ export class GameDatabase {
     }
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .insert({
@@ -104,7 +103,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*') // selects all columns including host_code
@@ -133,7 +131,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*')
@@ -163,7 +160,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .update(updates)
@@ -200,7 +196,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .insert({
@@ -231,7 +226,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .select('*')
@@ -257,7 +251,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .update(updates)
@@ -282,7 +275,6 @@ export class GameDatabase {
     event_data: Record<string, unknown> = {},
   ) {
     if (!this.isConfigured()) return;
-    const supabase = await getSupabase();
     const { error } = await supabase
       .from('game_events')
       .insert([{ game_id: gameId, event_type, event_data }]);
@@ -293,8 +285,7 @@ export class GameDatabase {
     if (!this.isConfigured()) return false;
 
     try {
-      const supabase = await getSupabase();
-    const { error } = await supabase
+      const { error } = await supabase
         .from('players')
         .delete()
         .eq('id', playerId);
@@ -315,7 +306,7 @@ export class GameDatabase {
   // REAL-TIME SUBSCRIPTIONS
   // =====================================
 
-  static async subscribeToGame(
+  static subscribeToGame(
     gameId: string,
     callbacks: {
       onGameUpdate?: (game: GameRecord) => void;
@@ -330,7 +321,6 @@ export class GameDatabase {
     }
 
     // Subscribe to game updates
-    const supabase = await getSupabase();
     const gameSubscription = supabase
       .channel(`game:${gameId}`)
       .on(
@@ -390,7 +380,6 @@ export class GameDatabase {
     if (!this.isConfigured()) return false;
 
     try {
-      const supabase = await getSupabase();
       const { error } = await supabase.from('game_events').insert({
         game_id: gameId,
         event_type: eventType,

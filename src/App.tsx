@@ -1,52 +1,39 @@
 import { Routes, Route } from 'react-router-dom';
-import { Provider as JotaiProvider } from 'jotai';
-import { lazy, Suspense } from 'react';
+import { GameProvider } from '@/context/GameContext';
 import ConnectionBanner from '@/components/ConnectionBanner';
 
-// Lazy load page components to reduce initial bundle size
-const Landing = lazy(() => import('@/pages/Landing'));
-const CreateSession = lazy(() => import('@/pages/CreateSession'));
-const Join = lazy(() => import('@/pages/Join'));
-const Lobby = lazy(() => import('@/pages/Lobby'));
-const QuizRoom = lazy(() => import('@/pages/QuizRoom'));
-const ControlRoom = lazy(() => import('@/pages/ControlRoom'));
-const FinalScores = lazy(() => import('@/pages/FinalScores'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
-
-// Loading component for suspense fallback
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-gradient-to-tr from-black via-[#10102a] to-accent2 flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 border-accent2 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <div className="text-white/70 font-arabic">جاري التحميل...</div>
-      </div>
-    </div>
-  );
-}
+// Import the page components required for the early playable build.
+import Landing from '@/pages/Landing';
+import CreateSession from '@/pages/CreateSession';
+import Join from '@/pages/Join';
+import Lobby from '@/pages/Lobby';
+import QuizRoom from '@/pages/QuizRoom';
+import ControlRoom from '@/pages/ControlRoom';
+import FinalScores from '@/pages/FinalScores';
+import NotFound from '@/pages/NotFound';
 
 /**
- * Root application component with lazy-loaded routes for optimal bundle splitting.
- * This ensures fast initial page load while keeping individual page chunks small.
+ * Root application component. This simplified router is used during
+ * development to focus on core API and state management logic without
+ * the distraction of all game flows. Additional routes will be added as
+ * features mature.
  */
 export default function App() {
   return (
-    <JotaiProvider>
+    <GameProvider>
       <div className="dark min-h-screen bg-gradient-to-tr from-black via-[#10102a] to-accent2">
         <ConnectionBanner />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/create-session" element={<CreateSession />} />
-            <Route path="/control-room" element={<ControlRoom />} />
-            <Route path="/join" element={<Join />} />
-            <Route path="/lobby" element={<Lobby />} />
-            <Route path="/quiz" element={<QuizRoom />} />
-            <Route path="/scores" element={<FinalScores />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/create-session" element={<CreateSession />} />
+          <Route path="/control-room" element={<ControlRoom />} />
+          <Route path="/join" element={<Join />} />
+          <Route path="/lobby" element={<Lobby />} />
+          <Route path="/quiz" element={<QuizRoom />} />
+          <Route path="/scores" element={<FinalScores />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </div>
-    </JotaiProvider>
+    </GameProvider>
   );
 }

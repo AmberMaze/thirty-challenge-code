@@ -1,24 +1,21 @@
-// Get all logo files from the assets/logos directory as URLs (lazy loaded)
+// Get all logo files from the assets/logos directory as URLs
 const logoModules = import.meta.glob('@/assets/logos/*.svg', {
-  query: '?url',
-  import: 'default',
-}) as Record<string, () => Promise<string>>;
+  eager: true,
+  as: 'url',
+}) as Record<string, string>;
 
 export interface Team {
   name: string;
   displayName: string;
-  logoPath: string | (() => Promise<string>);
+  logoPath: string;
   searchTerms: string[];
 }
 
-// Cache for loaded logos
-const logoCache = new Map<string, string>();
-
-export async function getAllTeams(): Promise<Team[]> {
+export function getAllTeams(): Team[] {
   const teams: Team[] = [];
 
   for (const path in logoModules) {
-    const logoLoader = logoModules[path];
+    const logoPath = logoModules[path];
     // Extract team name from file path (e.g., "@/assets/logos/real-madrid.svg" -> "real-madrid")
     const fileName = path.split('/').pop()?.replace('.svg', '') || '';
 
@@ -27,16 +24,6 @@ export async function getAllTeams(): Promise<Team[]> {
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
-
-    // Create a cached lazy loader
-    const logoPath = async () => {
-      if (logoCache.has(fileName)) {
-        return logoCache.get(fileName)!;
-      }
-      const url = await logoLoader();
-      logoCache.set(fileName, url);
-      return url;
-    };
 
     teams.push({
       name: fileName,
