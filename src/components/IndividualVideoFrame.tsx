@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-// Import Daily.co for fake participants
-// @ts-ignore - Daily.co types may not be perfect
-import DailyIframe from '@daily-co/daily-js';
-
 interface IndividualVideoFrameProps {
   gameId: string;
   participantType: 'host' | 'playerA' | 'playerB';
@@ -86,6 +82,19 @@ export default function IndividualVideoFrame({
 
         console.log(`[IndividualVideoFrame-${participantType}] Setting up call object...`);
 
+        // Try to import Daily.co dynamically
+        let DailyIframe;
+        try {
+          const DailyModule = await import('@daily-co/daily-js');
+          DailyIframe = DailyModule.default;
+        } catch (importError) {
+          console.warn(`[IndividualVideoFrame-${participantType}] Daily.co not available, using fallback`);
+          // Fallback: just show controls without actual video
+          setIsCallObjectReady(true);
+          setIsLoading(false);
+          return;
+        }
+
         // Create a new Daily call object for this frame
         const callObject = DailyIframe.createCallObject({
           iframeStyle: {
@@ -116,6 +125,8 @@ export default function IndividualVideoFrame({
       } catch (error) {
         console.error(`[IndividualVideoFrame-${participantType}] Failed to setup call object:`, error);
         setError('Failed to setup video frame');
+        // Still show controls even if video setup fails
+        setIsCallObjectReady(true);
       } finally {
         setIsLoading(false);
       }
