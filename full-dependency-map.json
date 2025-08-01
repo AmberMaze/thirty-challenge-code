@@ -4,6 +4,26 @@
   "netlify/functions/delete-daily-room.ts": [],
   "netlify/functions/game-event.ts": [],
   "src/App.tsx": [],
+  "src/alphaquiz/components/AlphaBell.tsx": [
+    "src/alphaquiz/state/alphaAtoms.ts"
+  ],
+  "src/alphaquiz/components/AlphaScoreboard.tsx": [
+    "src/alphaquiz/state/alphaAtoms.ts"
+  ],
+  "src/alphaquiz/pages/AlphaEntry.tsx": [
+    "src/alphaquiz/state/alphaAtoms.ts"
+  ],
+  "src/alphaquiz/pages/AlphaHost.tsx": [
+    "src/alphaquiz/components/AlphaBell.tsx",
+    "src/alphaquiz/components/AlphaScoreboard.tsx",
+    "src/alphaquiz/state/alphaAtoms.ts"
+  ],
+  "src/alphaquiz/pages/AlphaPlayer.tsx": [
+    "src/alphaquiz/components/AlphaBell.tsx",
+    "src/alphaquiz/components/AlphaScoreboard.tsx",
+    "src/alphaquiz/state/alphaAtoms.ts"
+  ],
+  "src/alphaquiz/state/alphaAtoms.ts": [],
   "src/api/dailyClient.ts": [],
   "src/components/AlertBanner.tsx": [],
   "src/components/Buzzer.tsx": [],
