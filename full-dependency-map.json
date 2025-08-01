@@ -25,7 +25,6 @@
     "src/alphaquiz/state/alphaAtoms.ts"
   ],
   "src/alphaquiz/state/alphaAtoms.ts": [],
-  "src/api/dailyClient.ts": [],
   "src/components/AlertBanner.tsx": [],
   "src/components/Buzzer.tsx": [],
   "src/components/ConfirmationModal.tsx": [],
@@ -33,12 +32,8 @@
   "src/components/LazyImage.tsx": [],
   "src/components/Scoreboard.tsx": [],
   "src/components/SimpleVideoFrame.tsx": [],
+  "src/components/SimpleVideoRoom.tsx": [],
   "src/components/Timer.tsx": [],
-  "src/components/UnifiedVideoRoom.tsx": [
-    "src/components/SimpleVideoFrame.tsx"
-  ],
-  "src/components/VideoFrame.tsx": [],
-  "src/components/VideoRoom.tsx": [],
   "src/context/GameContext.tsx": [
     "src/context/defaults.ts",
     "src/context/gameReducer.ts",
@@ -57,7 +52,6 @@
   "src/hooks/useSupabaseFetch.ts": [],
   "src/lib/atomGameSync.ts": [],
   "src/lib/dailyConfig.ts": [],
-  "src/lib/dailyLazy.ts": [],
   "src/lib/gameDatabase.ts": [
     "src/lib/supabaseLazy.ts"
   ],
@@ -95,7 +89,6 @@
     "src/state/syncAtoms.ts",
     "src/state/videoAtoms.ts"
   ],
-  "src/state/sharedVideoAtoms.ts": [],
   "src/state/syncAtoms.ts": [],
   "src/state/videoAtoms.ts": [],
   "src/types/game.ts": [],
