@@ -468,7 +468,11 @@ export default function VideoRoom(props: VideoRoomProps) {
   // lingering connections that could leave the UI in a loading state.
   useEffect(() => {
     return () => {
-      callObject.destroy();
+      // Only destroy if not already destroyed or destroying
+      const state = callObject.state && callObject.state();
+      if (state !== "destroyed" && state !== "destroying") {
+        callObject.destroy();
+      }
     };
   }, [callObject]);
 
