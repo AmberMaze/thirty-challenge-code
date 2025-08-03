@@ -9,6 +9,7 @@ import {
   DailyAudio,
 } from '@daily-co/daily-react';
 import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
+import { useGameState } from '@/hooks/useGameAtoms';
 import type { LobbyParticipant } from '@/state';
 
 interface SimpleKitchenSinkVideoProps {
@@ -30,11 +31,28 @@ function VideoContent({
   const participantIds = useParticipantIds();
   const meetingState = useMeetingState();
   const localParticipant = useLocalParticipant();
+  const gameState = useGameState();
   
   const [roomUrl, setRoomUrl] = useState('');
   const [userName, setUserName] = useState(myParticipant.name);
   const [isJoining, setIsJoining] = useState(false);
   const [preAuthToken, setPreAuthToken] = useState('');
+
+  // Initialize room URL from game state when available
+  useEffect(() => {
+    if (gameState.videoRoomUrl && !roomUrl) {
+      setRoomUrl(gameState.videoRoomUrl);
+      console.log('Auto-prefilled room URL from game state:', gameState.videoRoomUrl);
+    }
+  }, [gameState.videoRoomUrl, roomUrl]);
+
+  // Update user name when participant changes
+  useEffect(() => {
+    if (myParticipant.name && myParticipant.name !== userName) {
+      setUserName(myParticipant.name);
+      console.log('Auto-prefilled user name from participant:', myParticipant.name);
+    }
+  }, [myParticipant.name, userName]);
 
   // Join call function
   const joinCall = useCallback(async () => {
@@ -108,6 +126,7 @@ function VideoContent({
 
   const isInCall = meetingState === 'joined-meeting';
   const canJoin = !isInCall && roomUrl.trim() && !isJoining;
+  const isPreFilled = gameState.videoRoomUrl && roomUrl === gameState.videoRoomUrl;
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-600/30 space-y-6">
@@ -119,10 +138,19 @@ function VideoContent({
       <div className="bg-gray-700/50 rounded-lg p-4 space-y-4">
         <h4 className="text-lg font-semibold text-white font-arabic">إعدادات الاتصال</h4>
         
+        {/* Pre-filled Info Banner */}
+        {isPreFilled && (
+          <div className="bg-green-500/20 rounded-lg p-3 border border-green-500/30">
+            <p className="text-green-300 text-sm text-center font-arabic">
+              ✅ تم تعبئة معلومات الغرفة تلقائياً - اضغط "انضمام للمكالمة" للدخول
+            </p>
+          </div>
+        )}
+        
         {/* Room URL */}
         <div>
           <label className="block text-white font-arabic text-sm mb-2">
-            رابط الغرفة *
+            رابط الغرفة * {isPreFilled && <span className="text-green-400">(مُعبأ تلقائياً)</span>}
           </label>
           <input
             type="url"
@@ -130,21 +158,29 @@ function VideoContent({
             onChange={(e) => setRoomUrl(e.target.value)}
             placeholder="https://yourdomain.daily.co/room-name"
             disabled={isInCall}
-            className="w-full px-3 py-2 bg-gray-600 text-white rounded border border-gray-500 focus:border-blue-400 focus:outline-none disabled:opacity-50"
+            className={`w-full px-3 py-2 text-white rounded border focus:border-blue-400 focus:outline-none disabled:opacity-50 ${
+              isPreFilled 
+                ? 'bg-green-600/20 border-green-500/50' 
+                : 'bg-gray-600 border-gray-500'
+            }`}
           />
         </div>
 
         {/* User Name */}
         <div>
           <label className="block text-white font-arabic text-sm mb-2">
-            اسم المستخدم
+            اسم المستخدم {myParticipant.name && <span className="text-green-400">(مُعبأ تلقائياً)</span>}
           </label>
           <input
             type="text"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
             disabled={isInCall}
-            className="w-full px-3 py-2 bg-gray-600 text-white rounded border border-gray-500 focus:border-blue-400 focus:outline-none disabled:opacity-50"
+            className={`w-full px-3 py-2 text-white rounded border focus:border-blue-400 focus:outline-none disabled:opacity-50 ${
+              myParticipant.name 
+                ? 'bg-green-600/20 border-green-500/50' 
+                : 'bg-gray-600 border-gray-500'
+            }`}
           />
         </div>
 
@@ -169,9 +205,20 @@ function VideoContent({
             <button
               onClick={joinCall}
               disabled={!canJoin}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded font-arabic transition-colors"
+              className={`px-6 py-2 text-white rounded font-arabic transition-colors ${
+                canJoin && isPreFilled
+                  ? 'bg-green-600 hover:bg-green-700 ring-2 ring-green-400/50'
+                  : canJoin
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-gray-500 cursor-not-allowed'
+              } disabled:bg-gray-500 disabled:cursor-not-allowed`}
             >
-              {isJoining ? 'جاري الانضمام...' : 'انضمام للمكالمة'}
+              {isJoining 
+                ? 'جاري الانضمام...' 
+                : isPreFilled 
+                ? '🚀 انضمام سريع للمكالمة' 
+                : 'انضمام للمكالمة'
+              }
             </button>
           ) : (
             <>
@@ -273,10 +320,11 @@ function VideoContent({
           ✅ تطبيق Daily.co Kitchen Sink - 3 فيديوهات مرتبة عمودياً
         </p>
         <div className="text-green-200 text-xs text-center mt-2 font-arabic space-y-1">
-          <div>• أدخل رابط غرفة Daily.co صحيح</div>
+          <div>• يتم تعبئة رابط الغرفة واسم المستخدم تلقائياً</div>
           <div>• يمكن إضافة رمز تحقق مسبق (اختياري)</div>
           <div>• الفيديوهات مرتبة عمودياً كما طُلب</div>
           <div>• يدعم حتى 3 مشاركين مع أرقام واضحة</div>
+          <div>• انقر "انضمام سريع" عندما تكون المعلومات جاهزة</div>
         </div>
       </div>
     </div>
