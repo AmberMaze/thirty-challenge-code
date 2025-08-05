@@ -38,11 +38,7 @@ import {
 
 export function useGameActions() {
   const store = useStore();
-  const gameId = useAtomValue(gameIdAtom);
-  const setPhase = useSetAtom(phaseAtom);
-  const updateGameState = useSetAtom(updateGameStateAtom);
   const initializeGame = useSetAtom(initializeGameAtom);
-  const gameSyncInstance = useAtomValue(gameSyncInstanceAtom) as AtomGameSync | null;
 
   const startSession = useCallback(async (
     gameId: string,
@@ -130,17 +126,18 @@ export function useGameActions() {
         throw new Error('Failed to update game to LOBBY phase');
       }
       
-      // Update local state
-      updateGameState({
+      // Update local state - use store.set directly
+      store.set(updateGameStateAtom, {
         hostCode,
         hostName,
         phase: 'LOBBY',
         segmentSettings,
       });
       
-      // Broadcast the change
-      if (gameSyncInstance) {
-        await gameSyncInstance.broadcastGameState({
+      // Broadcast the change - get current instance to avoid stale closure
+      const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+      if (currentGameSync) {
+        await currentGameSync.broadcastGameState({
           hostCode,
           hostName,
           phase: 'LOBBY',
@@ -153,14 +150,15 @@ export function useGameActions() {
       console.error('Failed to update to LOBBY phase:', error);
       throw error;
     }
-  }, [updateGameState, gameSyncInstance]);
+  }, [store]);
 
   const startGame = useCallback(async () => {
-    if (!gameId) return;
+    const currentGameId = store.get(gameIdAtom);
+    if (!currentGameId) return;
     
     try {
       // Update database first to PLAYING phase
-      const updatedGame = await GameDatabase.updateGame(gameId, { 
+      const updatedGame = await GameDatabase.updateGame(currentGameId, { 
         phase: 'PLAYING',
         current_segment: 'WSHA', // Start with first segment
         current_question_index: 0,
@@ -170,17 +168,18 @@ export function useGameActions() {
         throw new Error('Failed to update game to PLAYING phase');
       }
       
-      // Update local state
-      setPhase('PLAYING');
-      updateGameState({
+      // Update local state - use store.set directly
+      store.set(phaseAtom, 'PLAYING');
+      store.set(updateGameStateAtom, {
         phase: 'PLAYING',
         currentSegment: 'WSHA',
         currentQuestionIndex: 0,
       });
       
-      // Broadcast the change
-      if (gameSyncInstance) {
-        await gameSyncInstance.broadcastGameState({ 
+      // Broadcast the change - get current instance to avoid stale closure
+      const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+      if (currentGameSync) {
+        await currentGameSync.broadcastGameState({ 
           phase: 'PLAYING',
           currentSegment: 'WSHA',
           currentQuestionIndex: 0,
@@ -191,30 +190,33 @@ export function useGameActions() {
     } catch (error) {
       console.error('Failed to start game:', error);
       // Revert local state on error
-      setPhase('LOBBY');
+      store.set(phaseAtom, 'LOBBY');
       throw error;
     }
-  }, [setPhase, gameSyncInstance, gameId, updateGameState]);
+  }, [store]);
 
   const advanceQuestion = useCallback(async () => {
-    if (!gameSyncInstance || !gameId) return;
+    const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+    const currentGameId = store.get(gameIdAtom);
+    
+    if (!currentGameSync || !currentGameId) return;
     
     try {
       const currentIndex = store.get(currentQuestionIndexAtom);
       const newIndex = currentIndex + 1;
       
       // Update database first
-      await GameDatabase.updateGame(gameId, { current_question_index: newIndex });
+      await GameDatabase.updateGame(currentGameId, { current_question_index: newIndex });
       
-      // Update local state
-      updateGameState({ currentQuestionIndex: newIndex });
+      // Update local state - use store.set directly
+      store.set(updateGameStateAtom, { currentQuestionIndex: newIndex });
       
       // Broadcast the change
-      await gameSyncInstance.broadcastGameState({ currentQuestionIndex: newIndex });
+      await currentGameSync.broadcastGameState({ currentQuestionIndex: newIndex });
     } catch (error) {
       console.error('Failed to advance question:', error);
     }
-  }, [gameSyncInstance, gameId, store, updateGameState]);
+  }, [store]);
 
   const createVideoRoom = useCallback(async (gameId: string) => {
     try {
@@ -238,15 +240,16 @@ export function useGameActions() {
           console.warn('[DEV] Database update failed, continuing with local state only:', dbError);
         }
         
-        // Update local state
-        updateGameState({
+        // Update local state - use store.set directly
+        store.set(updateGameStateAtom, {
           videoRoomUrl: mockUrl,
           videoRoomCreated: true,
         });
         
-        // Broadcast the change
-        if (gameSyncInstance) {
-          await gameSyncInstance.broadcastGameState({
+        // Broadcast the change - get current instance to avoid stale closure
+        const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+        if (currentGameSync) {
+          await currentGameSync.broadcastGameState({
             videoRoomUrl: mockUrl,
             videoRoomCreated: true,
           });
@@ -272,15 +275,16 @@ export function useGameActions() {
           video_room_created: true,
         });
         
-        // Update local state
-        updateGameState({
+        // Update local state - use store.set directly
+        store.set(updateGameStateAtom, {
           videoRoomUrl: data.url,
           videoRoomCreated: true,
         });
         
-        // Broadcast the change
-        if (gameSyncInstance) {
-          await gameSyncInstance.broadcastGameState({
+        // Broadcast the change - get current instance to avoid stale closure
+        const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+        if (currentGameSync) {
+          await currentGameSync.broadcastGameState({
             videoRoomUrl: data.url,
             videoRoomCreated: true,
           });
@@ -293,7 +297,7 @@ export function useGameActions() {
       console.error('Failed to create video room:', error);
       return { success: false, error: 'Network error' };
     }
-  }, [updateGameState, gameSyncInstance]);
+  }, [store]);
 
   const endVideoRoom = useCallback(async (gameId: string) => {
     try {
@@ -314,15 +318,16 @@ export function useGameActions() {
           console.warn('[DEV] Database update failed, continuing with local state only:', dbError);
         }
         
-        // Update local state
-        updateGameState({
+        // Update local state - use store.set directly
+        store.set(updateGameStateAtom, {
           videoRoomCreated: false,
           videoRoomUrl: undefined,
         });
         
-        // Broadcast the change
-        if (gameSyncInstance) {
-          await gameSyncInstance.broadcastGameState({
+        // Broadcast the change - get current instance to avoid stale closure
+        const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+        if (currentGameSync) {
+          await currentGameSync.broadcastGameState({
             videoRoomCreated: false,
             videoRoomUrl: undefined,
           });
@@ -345,15 +350,16 @@ export function useGameActions() {
         video_room_url: null,
       });
       
-      // Update local state
-      updateGameState({
+      // Update local state - use store.set directly
+      store.set(updateGameStateAtom, {
         videoRoomCreated: false,
         videoRoomUrl: undefined,
       });
       
-      // Broadcast the change
-      if (gameSyncInstance) {
-        await gameSyncInstance.broadcastGameState({
+      // Broadcast the change - get current instance to avoid stale closure
+      const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+      if (currentGameSync) {
+        await currentGameSync.broadcastGameState({
           videoRoomCreated: false,
           videoRoomUrl: undefined,
         });
@@ -364,7 +370,7 @@ export function useGameActions() {
       console.error('Failed to end video room:', error);
       return { success: false, error: 'Network error' };
     }
-  }, [updateGameState, gameSyncInstance]);
+  }, [store]);
 
   const checkVideoRoomExists = useCallback(async (roomName: string) => {
     try {
@@ -462,22 +468,24 @@ export function useGameActions() {
   }, []);
 
   const setHostConnected = useCallback(async (isConnected: boolean) => {
-    if (!gameId) return { success: false, error: 'No game ID' };
+    const currentGameId = store.get(gameIdAtom);
+    if (!currentGameId) return { success: false, error: 'No game ID' };
     
     try {
       // Update database
-      await GameDatabase.updateGame(gameId, {
+      await GameDatabase.updateGame(currentGameId, {
         host_is_connected: isConnected,
       });
       
-      // Update local state
-      updateGameState({
+      // Update local state - use store.set directly
+      store.set(updateGameStateAtom, {
         hostIsConnected: isConnected,
       });
       
-      // Broadcast the change
-      if (gameSyncInstance) {
-        await gameSyncInstance.broadcastGameState({
+      // Broadcast the change - get current instance to avoid stale closure
+      const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+      if (currentGameSync) {
+        await currentGameSync.broadcastGameState({
           hostIsConnected: isConnected,
         });
       }
@@ -488,7 +496,7 @@ export function useGameActions() {
       console.error('Failed to update host connection status:', error);
       return { success: false, error: 'Network error' };
     }
-  }, [gameId, updateGameState, gameSyncInstance]);
+  }, [store]);
 
   const loadGameState = useCallback(async (gameId: string) => {
     try {

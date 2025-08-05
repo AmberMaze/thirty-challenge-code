@@ -93,8 +93,10 @@ function VideoContent({
   const [isJoining, setIsJoining] = useState(false);
   const [preAuthToken, setPreAuthToken] = useState('');
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
+  const [tokenGenerationAttempted, setTokenGenerationAttempted] = useState(false);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [roomCreationAttempted, setRoomCreationAttempted] = useState(false);
+  const [lastRoomCreationAttempt, setLastRoomCreationAttempt] = useState<number>(0);
 
   // Auto-populate room URL when game state is loaded
   useEffect(() => {
@@ -109,6 +111,9 @@ function VideoContent({
   useEffect(() => {
     setRoomCreationAttempted(false);
     setIsCreatingRoom(false);
+    setTokenGenerationAttempted(false);
+    setIsGeneratingToken(false);
+    setLastRoomCreationAttempt(0);
     console.log('[VideoRoom] GameId changed, resetting room creation flags for:', gameId);
   }, [gameId]);
 
@@ -130,32 +135,43 @@ function VideoContent({
     // 3. No room URL exists in game state
     // 4. We haven't attempted creation yet
     // 5. We're not currently creating a room
+    // 6. We haven't attempted creation in the last 5 seconds (throttle)
+    const now = Date.now();
     if (
       (myParticipant.type === 'host' || myParticipant.type === 'controller') &&
       gameState.gameId === gameId && // Ensure game state is loaded for this gameId
       !gameState.videoRoomUrl &&
       !roomCreationAttempted &&
-      !isCreatingRoom
+      !isCreatingRoom &&
+      (now - lastRoomCreationAttempt > 5000) // 5 second throttle
     ) {
       console.log('[VideoRoom] All conditions met - checking for existing room or creating new one for gameId:', gameId);
+      
+      // Update throttle timestamp immediately
+      setLastRoomCreationAttempt(now);
       
       // Add a small delay to ensure all state updates are processed
       const timeoutId = setTimeout(() => {
         const checkAndCreateRoom = async () => {
+          // Capture the current functions to avoid stale closures
+          const currentCheckVideoRoomExists = checkVideoRoomExists;
+          const currentCreateVideoRoom = createVideoRoom;
+          const currentShowAlertMessage = showAlertMessage;
+          
           setIsCreatingRoom(true);
           setRoomCreationAttempted(true);
           
           try {
             // First, check if a room already exists with the gameId (session ID like P21AU2)
-            showAlertMessage('Checking for existing video room...', 'info');
+            currentShowAlertMessage('Checking for existing video room...', 'info');
             console.log('[VideoRoom] Checking for existing room with name:', gameId);
             
-            const checkResult = await checkVideoRoomExists(gameId);
+            const checkResult = await currentCheckVideoRoomExists(gameId);
             
             if (checkResult.success && checkResult.exists && checkResult.url) {
               // Room exists, use it and update database
               setRoomUrl(checkResult.url);
-              showAlertMessage('Found existing video room!', 'success');
+              currentShowAlertMessage('Found existing video room!', 'success');
               console.log('[VideoRoom] Found existing room:', checkResult.url);
               
               // Update the database with the existing room URL if it's not already stored
@@ -170,22 +186,22 @@ function VideoContent({
             
             // Room doesn't exist, create a new one
             console.log('[VideoRoom] No existing room found, creating new room with session ID:', gameId);
-            showAlertMessage('Creating video room...', 'info');
-            const result = await createVideoRoom(gameId);
+            currentShowAlertMessage('Creating video room...', 'info');
+            const result = await currentCreateVideoRoom(gameId);
             
             if (result.success && result.roomUrl) {
               setRoomUrl(result.roomUrl);
-              showAlertMessage('Video room created successfully!', 'success');
+              currentShowAlertMessage('Video room created successfully!', 'success');
               console.log('[VideoRoom] Room created successfully:', result.roomUrl);
               
               // Room creation also handles database update through useGameActions
             } else {
-              showAlertMessage(`Failed to create video room: ${result.error || 'Unknown error'}`, 'error');
+              currentShowAlertMessage(`Failed to create video room: ${result.error || 'Unknown error'}`, 'error');
               console.error('[VideoRoom] Room creation failed:', result);
             }
           } catch (error) {
             console.error('[VideoRoom] Failed to check/create video room:', error);
-            showAlertMessage('Error checking/creating video room', 'error');
+            currentShowAlertMessage('Error checking/creating video room', 'error');
           } finally {
             setIsCreatingRoom(false);
           }
@@ -203,16 +219,21 @@ function VideoContent({
     myParticipant.type, 
     gameId, 
     roomCreationAttempted, 
-    isCreatingRoom, 
-    createVideoRoom, 
-    checkVideoRoomExists,
-    showAlertMessage
+    isCreatingRoom,
+    lastRoomCreationAttempt
   ]);
 
   // Auto-generate token when room URL is available
   useEffect(() => {
-    if (gameState.videoRoomUrl && !preAuthToken && !isGeneratingToken) {
+    if (gameState.videoRoomUrl && !preAuthToken && !isGeneratingToken && !tokenGenerationAttempted) {
+      // Capture the current functions to avoid stale closures
+      const currentGenerateDailyToken = generateDailyToken;
+      const currentShowAlertMessage = showAlertMessage;
+      const currentT = t;
+      
       setIsGeneratingToken(true);
+      setTokenGenerationAttempted(true);
+      
       // Use the gameId as the room name for token generation (this should match the room name used in creation)
       // Use the participant's actual name or fallback to a proper name based on type
       const actualUserName = myParticipant.name || 
@@ -227,7 +248,7 @@ function VideoContent({
         participantType: myParticipant.type 
       });
       
-      generateDailyToken(
+      currentGenerateDailyToken(
         gameId, // Room name should match the room name used when creating the room
         actualUserName,
         myParticipant.type.startsWith('host') || myParticipant.type === 'controller',
@@ -236,26 +257,29 @@ function VideoContent({
         .then((token) => {
           if (token) {
             setPreAuthToken(token);
-            showAlertMessage(t('tokenGenerated'), 'success');
+            currentShowAlertMessage(currentT('tokenGenerated'), 'success');
             console.log('[VideoRoom] Token generated successfully for user:', actualUserName);
           } else {
-            showAlertMessage(t('failedGenerateToken'), 'warning');
+            currentShowAlertMessage(currentT('failedGenerateToken'), 'warning');
             console.error('[VideoRoom] Token generation returned null');
           }
         })
         .catch((error) => {
           console.error('Failed to generate token:', error);
-          showAlertMessage(t('failedGenerateToken'), 'warning');
+          currentShowAlertMessage(currentT('failedGenerateToken'), 'warning');
         })
         .finally(() => {
           setIsGeneratingToken(false);
         });
     }
-  }, [gameState.videoRoomUrl, gameState.hostName, preAuthToken, isGeneratingToken, generateDailyToken, gameId, myParticipant.name, myParticipant.type, myParticipant.id, showAlertMessage, t]);
+  }, [gameState.videoRoomUrl, gameState.hostName, preAuthToken, isGeneratingToken, tokenGenerationAttempted, gameId, myParticipant.name, myParticipant.type, myParticipant.id]);
 
   // Track host connection status based on meeting state
   useEffect(() => {
     if (myParticipant.type === 'host' || myParticipant.type === 'controller') {
+      // Capture the current function to avoid stale closures
+      const currentSetHostConnected = setHostConnected;
+      
       const isConnectedToCall = meetingState === 'joined-meeting';
       console.log('[VideoRoom] Host/Controller meeting state changed:', { 
         meetingState, 
@@ -264,7 +288,7 @@ function VideoContent({
       });
       
       // Update host connection status in database
-      setHostConnected(isConnectedToCall).then((result) => {
+      currentSetHostConnected(isConnectedToCall).then((result) => {
         if (result.success) {
           console.log(`[VideoRoom] Host connection status updated to: ${isConnectedToCall}`);
         } else {
@@ -274,15 +298,19 @@ function VideoContent({
         console.error('[VideoRoom] Error updating host connection status:', error);
       });
     }
-  }, [meetingState, myParticipant.type, setHostConnected]);
+  }, [meetingState, myParticipant.type]);
 
   // Join call function
   const joinCall = useCallback(async () => {
     if (!daily || !roomUrl.trim() || isJoining) return;
 
+    // Capture current functions to avoid stale closures
+    const currentShowAlertMessage = showAlertMessage;
+    const currentT = t;
+
     setIsJoining(true);
     try {
-      showAlertMessage(t('joiningCallMsg'), 'info');
+      currentShowAlertMessage(currentT('joiningCallMsg'), 'info');
       
       // Use the same username logic as token generation
       const actualUserName = myParticipant.name || 
@@ -314,28 +342,32 @@ function VideoContent({
       // Join the call
       await daily.join(joinOptions);
       
-      showAlertMessage(t('joinedCallSuccessfully'), 'success');
+      currentShowAlertMessage(currentT('joinedCallSuccessfully'), 'success');
       console.log('[VideoRoom] Successfully joined call as:', actualUserName);
     } catch (error) {
       console.error('Failed to join call:', error);
-      showAlertMessage(`${t('failedJoinCall')}: ${error instanceof Error ? error.message : t('unknownError')}`, 'error');
+      currentShowAlertMessage(`${currentT('failedJoinCall')}: ${error instanceof Error ? error.message : currentT('unknownError')}`, 'error');
     } finally {
       setIsJoining(false);
     }
-  }, [daily, roomUrl, userName, myParticipant.name, myParticipant.type, myParticipant.id, gameState.hostName, preAuthToken, isJoining, showAlertMessage, t]);
+  }, [daily, roomUrl, userName, myParticipant.name, myParticipant.type, myParticipant.id, gameState.hostName, preAuthToken, isJoining]);
 
   // Leave call function
   const leaveCall = useCallback(async () => {
     if (!daily) return;
 
+    // Capture current functions to avoid stale closures
+    const currentShowAlertMessage = showAlertMessage;
+    const currentT = t;
+
     try {
       await daily.leave();
-      showAlertMessage(t('leftCall'), 'info');
+      currentShowAlertMessage(currentT('leftCall'), 'info');
     } catch (error) {
       console.error('Failed to leave call:', error);
-      showAlertMessage(t('failedLeaveCall'), 'error');
+      currentShowAlertMessage(currentT('failedLeaveCall'), 'error');
     }
-  }, [daily, showAlertMessage, t]);
+  }, [daily]);
 
   // Toggle camera
   const toggleCamera = useCallback(async () => {
