@@ -276,7 +276,7 @@ export class AtomGameSync {
         payload: { gameState },
       });
 
-      if (result === 'ok') {
+      if (result === BROADCAST_SUCCESS) {
         this.store.set(broadcastEventAtom, {
           event: 'game_state_update',
           payload: gameState,
