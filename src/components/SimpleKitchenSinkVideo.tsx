@@ -93,8 +93,10 @@ function VideoContent({
   const [isJoining, setIsJoining] = useState(false);
   const [preAuthToken, setPreAuthToken] = useState('');
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
+  const [tokenGenerationAttempted, setTokenGenerationAttempted] = useState(false);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [roomCreationAttempted, setRoomCreationAttempted] = useState(false);
+  const [lastRoomCreationAttempt, setLastRoomCreationAttempt] = useState<number>(0);
 
   // Auto-populate room URL when game state is loaded
   useEffect(() => {
@@ -109,6 +111,9 @@ function VideoContent({
   useEffect(() => {
     setRoomCreationAttempted(false);
     setIsCreatingRoom(false);
+    setTokenGenerationAttempted(false);
+    setIsGeneratingToken(false);
+    setLastRoomCreationAttempt(0);
     console.log('[VideoRoom] GameId changed, resetting room creation flags for:', gameId);
   }, [gameId]);
 
@@ -130,14 +135,20 @@ function VideoContent({
     // 3. No room URL exists in game state
     // 4. We haven't attempted creation yet
     // 5. We're not currently creating a room
+    // 6. We haven't attempted creation in the last 5 seconds (throttle)
+    const now = Date.now();
     if (
       (myParticipant.type === 'host' || myParticipant.type === 'controller') &&
       gameState.gameId === gameId && // Ensure game state is loaded for this gameId
       !gameState.videoRoomUrl &&
       !roomCreationAttempted &&
-      !isCreatingRoom
+      !isCreatingRoom &&
+      (now - lastRoomCreationAttempt > 5000) // 5 second throttle
     ) {
       console.log('[VideoRoom] All conditions met - checking for existing room or creating new one for gameId:', gameId);
+      
+      // Update throttle timestamp immediately
+      setLastRoomCreationAttempt(now);
       
       // Add a small delay to ensure all state updates are processed
       const timeoutId = setTimeout(() => {
@@ -208,18 +219,21 @@ function VideoContent({
     myParticipant.type, 
     gameId, 
     roomCreationAttempted, 
-    isCreatingRoom
+    isCreatingRoom,
+    lastRoomCreationAttempt
   ]);
 
   // Auto-generate token when room URL is available
   useEffect(() => {
-    if (gameState.videoRoomUrl && !preAuthToken && !isGeneratingToken) {
+    if (gameState.videoRoomUrl && !preAuthToken && !isGeneratingToken && !tokenGenerationAttempted) {
       // Capture the current functions to avoid stale closures
       const currentGenerateDailyToken = generateDailyToken;
       const currentShowAlertMessage = showAlertMessage;
       const currentT = t;
       
       setIsGeneratingToken(true);
+      setTokenGenerationAttempted(true);
+      
       // Use the gameId as the room name for token generation (this should match the room name used in creation)
       // Use the participant's actual name or fallback to a proper name based on type
       const actualUserName = myParticipant.name || 
@@ -258,7 +272,7 @@ function VideoContent({
           setIsGeneratingToken(false);
         });
     }
-  }, [gameState.videoRoomUrl, gameState.hostName, preAuthToken, isGeneratingToken, gameId, myParticipant.name, myParticipant.type, myParticipant.id]);
+  }, [gameState.videoRoomUrl, gameState.hostName, preAuthToken, isGeneratingToken, tokenGenerationAttempted, gameId, myParticipant.name, myParticipant.type, myParticipant.id]);
 
   // Track host connection status based on meeting state
   useEffect(() => {

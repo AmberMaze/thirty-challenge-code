@@ -66,13 +66,21 @@ export default function Lobby() {
     if (!gameId) return;
 
     let isMounted = true;
+    
+    // Capture current functions to avoid stale closures
+    const currentLoadGameState = loadGameState;
+    const currentStartSession = startSession;
+    const currentSetHostConnected = setHostConnected;
+    const currentSetParticipant = setParticipant;
+    const currentShowAlertMessage = showAlertMessage;
+    const currentT = t;
 
     // Load game state from database if needed, or create if not exists
     const initializeGameState = async () => {
       if (state.gameId !== gameId) {
         console.log('Loading game state for:', gameId);
         try {
-          const result = await loadGameState(gameId);
+          const result = await currentLoadGameState(gameId);
           if (!isMounted) return;
           
           if (!result.success) {
@@ -82,7 +90,7 @@ export default function Lobby() {
               console.log('Game not found, attempting to create new game for host:', gameId);
               try {
                 // Create a new game with basic settings
-                await startSession(
+                await currentStartSession(
                   gameId,
                   'HOST', // Default host code
                   urlHostName || (language === 'ar' ? 'المقدم' : 'Host'), // Use URL host name or default
@@ -94,20 +102,20 @@ export default function Lobby() {
                     REMO: 4
                   }
                 );
-                showAlertMessage(t('sessionCreatedSuccessfully'), 'success');
+                currentShowAlertMessage(currentT('sessionCreatedSuccessfully'), 'success');
               } catch (createError) {
                 console.error('Failed to create new game:', createError);
-                showAlertMessage(t('failedCreateSession'), 'error');
+                currentShowAlertMessage(currentT('failedCreateSession'), 'error');
               }
             } else {
               console.error('Failed to load game state:', result.error);
-              showAlertMessage(`${t('failedLoadSessionData')}: ${result.error}`, 'error');
+              currentShowAlertMessage(`${currentT('failedLoadSessionData')}: ${result.error}`, 'error');
             }
           }
         } catch (error) {
           if (!isMounted) return;
           console.error('Error loading game state:', error);
-          showAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
+          currentShowAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
         }
       }
     };
@@ -126,7 +134,7 @@ export default function Lobby() {
         type: 'controller',
         isConnected: true,
       };
-      setHostConnected(true);
+      currentSetHostConnected(true);
     } else if (role === 'host') {
       participant = {
         id: 'host',
@@ -134,7 +142,7 @@ export default function Lobby() {
         type: 'host',
         isConnected: true,
       };
-      setHostConnected(true);
+      currentSetHostConnected(true);
     } else if (role === 'playerA' || role === 'playerB') {
       participant = {
         id: role,
@@ -148,22 +156,25 @@ export default function Lobby() {
     }
 
     if (participant && isMounted) {
-      setParticipant(participant);
+      currentSetParticipant(participant);
     }
     
     return () => {
       isMounted = false;
     };
-  }, [gameId, searchParamsObj, state.gameId, state.hostName, loadGameState, setHostConnected, setParticipant, showAlertMessage, startSession, language, t]);
+  }, [gameId, searchParamsObj, state.gameId, state.hostName, language]);
 
   // Set up cleanup when user leaves the page
   useEffect(() => {
+    // Capture current function to avoid stale closures
+    const currentSetHostConnected = setHostConnected;
+    
     const handleBeforeUnload = () => {
       if (myParticipant && gameSyncInstance && typeof gameSyncInstance === 'object' && 'disconnect' in gameSyncInstance) {
         (gameSyncInstance as { disconnect: () => Promise<void> }).disconnect().catch(console.error);
         
         if (myParticipant.type === 'controller' || myParticipant.type === 'host') {
-          setHostConnected(false);
+          currentSetHostConnected(false);
         }
       }
     };
@@ -174,10 +185,10 @@ export default function Lobby() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       
       if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
-        setHostConnected(false);
+        currentSetHostConnected(false);
       }
     };
-  }, [myParticipant, gameSyncInstance, setHostConnected]);
+  }, [myParticipant, gameSyncInstance]);
 
   if (!myParticipant || !gameId) {
     return (
