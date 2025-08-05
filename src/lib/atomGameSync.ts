@@ -77,26 +77,26 @@ export class AtomGameSync {
         },
       });
 
-      // Listen for game state broadcasts
+      // Listen for game state broadcasts with correct payload structure
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this.channel as any).on(
         'broadcast',
         { event: 'game_state_update' },
-        (payload: { gameState?: Partial<GameState> }) => {
-          if (payload.gameState) {
-            this.store.set(updateGameStateAtom, payload.gameState);
+        (data: { payload?: { gameState?: Partial<GameState> } }) => {
+          if (data.payload?.gameState) {
+            this.store.set(updateGameStateAtom, data.payload.gameState);
           }
         }
       );
 
-      // Listen for player events
+      // Listen for player events with correct payload structure
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this.channel as any).on(
         'broadcast',
         { event: 'player_join' },
-        (payload: { playerId?: PlayerId; playerData?: unknown }) => {
-          if (payload.playerId && payload.playerData) {
-            this.store.set(addPlayerAtom, payload.playerData as Player);
+        (data: { payload?: { playerId?: PlayerId; playerData?: unknown } }) => {
+          if (data.payload?.playerId && data.payload?.playerData) {
+            this.store.set(addPlayerAtom, data.payload.playerData as Player);
           }
         }
       );
@@ -105,10 +105,10 @@ export class AtomGameSync {
       (this.channel as any).on(
         'broadcast',
         { event: 'player_leave' },
-        (payload: { playerId?: PlayerId }) => {
-          if (payload.playerId) {
+        (data: { payload?: { playerId?: PlayerId } }) => {
+          if (data.payload?.playerId) {
             this.store.set(updatePlayerAtom, {
-              playerId: payload.playerId,
+              playerId: data.payload.playerId,
               update: { isConnected: false }
             });
           }
@@ -228,9 +228,13 @@ export class AtomGameSync {
         });
         
         // Update database to reflect connection status
-        GameDatabase.updatePlayer(participant.playerId, { 
+        GameDatabase.updatePlayerById(participant.playerId, { 
           is_connected: true,
           last_active: new Date().toISOString()
+        }).then(result => {
+          if (!result.success) {
+            console.warn(`Failed to update player ${participant.playerId} connection:`, result.error);
+          }
         }).catch(console.error);
       }
     });
@@ -248,29 +252,38 @@ export class AtomGameSync {
         });
         
         // Update database to reflect disconnection
-        GameDatabase.updatePlayer(playerId, { 
+        GameDatabase.updatePlayerById(playerId, { 
           is_connected: false,
           last_active: new Date().toISOString()
+        }).then(result => {
+          if (!result.success) {
+            console.warn(`Failed to update player ${playerId} disconnection:`, result.error);
+          }
         }).catch(console.error);
       }
     });
   }
 
-  // Broadcast methods
+  // Broadcast methods using proper Supabase v2 channel API
   async broadcastGameState(gameState: Partial<GameState>) {
     if (!this.channel) return;
 
     try {
-      await this.channel.send({
+      // Use proper Supabase v2 broadcast API format
+      const result = await this.channel.send({
         type: 'broadcast',
         event: 'game_state_update',
-        gameState,
+        payload: { gameState },
       });
 
-      this.store.set(broadcastEventAtom, {
-        event: 'game_state_update',
-        payload: gameState,
-      });
+      if (result === 'ok') {
+        this.store.set(broadcastEventAtom, {
+          event: 'game_state_update',
+          payload: gameState,
+        });
+      } else {
+        console.warn('Broadcast may not have been delivered:', result);
+      }
     } catch (error) {
       console.error('Failed to broadcast game state:', error);
     }
@@ -280,17 +293,21 @@ export class AtomGameSync {
     if (!this.channel) return;
 
     try {
-      await this.channel.send({
-        type: 'broadcast',
-        event: 'player_join',
-        playerId,
-        playerData,
-      });
-
-      this.store.set(broadcastEventAtom, {
+      // Use proper Supabase v2 broadcast API format
+      const result = await this.channel.send({
+        type: 'broadcast', 
         event: 'player_join',
         payload: { playerId, playerData },
       });
+
+      if (result === 'ok') {
+        this.store.set(broadcastEventAtom, {
+          event: 'player_join',
+          payload: { playerId, playerData },
+        });
+      } else {
+        console.warn('Broadcast may not have been delivered:', result);
+      }
     } catch (error) {
       console.error('Failed to broadcast player join:', error);
     }
@@ -300,16 +317,21 @@ export class AtomGameSync {
     if (!this.channel) return;
 
     try {
-      await this.channel.send({
+      // Use proper Supabase v2 broadcast API format
+      const result = await this.channel.send({
         type: 'broadcast',
-        event: 'player_leave',
-        playerId,
-      });
-
-      this.store.set(broadcastEventAtom, {
         event: 'player_leave',
         payload: { playerId },
       });
+
+      if (result === 'ok') {
+        this.store.set(broadcastEventAtom, {
+          event: 'player_leave',
+          payload: { playerId },
+        });
+      } else {
+        console.warn('Broadcast may not have been delivered:', result);
+      }
     } catch (error) {
       console.error('Failed to broadcast player leave:', error);
     }
