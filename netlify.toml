@@ -1,6 +1,6 @@
 [build]
   # How to build your Vite app
-  command    = "npm run build"
+  command    = "pnpm run build"
   # Where Vite outputs the production files
   publish    = "dist"
   # Pin build environment to Node 20 as used locally
@@ -19,7 +19,7 @@
 
 [dev]
   framework = "vite"
-  command    = "npm run dev"
+  command    = "pnpm run dev"
   port       = 3000        # Netlify’s public port
   targetPort = 5173        # where Vite actually listens
   autoLaunch = false
