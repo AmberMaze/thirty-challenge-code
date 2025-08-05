@@ -26,9 +26,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Clean up old map
         run: rm -f full-dependency-map.json
@@ -43,7 +49,7 @@ jobs:
       - name: Run Madge and generate JSON
         run: |
           # Include functions from the repo root
-          npx madge src netlify/functions \
+          pnpm exec madge src netlify/functions \
             --extensions ts,tsx \
             --exclude "^node_modules" \
             --json > full-dependency-map.json

@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "dep:graph": "madge --image full-graph.dot --extensions ts,tsx,js,jsx src && madge --json --extensions ts,tsx,js,jsx > full-dependency-map.json src",
     "flow:update": "node scripts/flow-from-json.mjs",
-    "analyze": "npm run build && npx vite-bundle-analyzer"
+    "analyze": "pnpm run build && pnpm exec vite-bundle-analyzer"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.81.0",

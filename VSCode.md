@@ -95,8 +95,8 @@
 - `sourceMaps`: Enables source map support for debugging TypeScript/JSX
 
 **Step 3:** Start your development server:
-- For Vite development: Run `npm run dev` in terminal
-- For Netlify development: Run `npm run dev:netlify` in terminal
+- For Vite development: Run `pnpm run dev` in terminal
+- For Netlify development: Run `pnpm run dev:netlify` in terminal
 
 **Step 4:** Start debugging:
 - Open VS Code's Debug panel (Ctrl+Shift+D)
@@ -226,7 +226,7 @@ The `debugNetworkRequests` utility in `src/utils/debugNetworkRequests.ts` is aut
 
 ### Npm Run Dev vs Netlify Dev
 
-| Aspect | `npm run dev` (Vite) | `netlify dev` |
+| Aspect | `pnpm run dev` (Vite) | `netlify dev` |
 |--------|---------------------|---------------|
 | **Purpose** | Frontend-only development | Full-stack development with serverless functions |
 | **Port** | 5173 (default) | 8888 (public), 5173 (internal) |
@@ -238,7 +238,7 @@ The `debugNetworkRequests` utility in `src/utils/debugNetworkRequests.ts` is aut
 
 ### When to Use Each
 
-**Use `npm run dev` when:**
+**Use `pnpm run dev` when:**
 - Working on UI components
 - Testing React state management
 - Rapid frontend iteration
@@ -262,7 +262,7 @@ The `debugNetworkRequests` utility in `src/utils/debugNetworkRequests.ts` is aut
 cd your-project-directory
 
 # Start Vite dev server  
-npm run dev
+pnpm run dev
 ```
 
 **Step 3:** The server will start on http://localhost:5173
@@ -289,7 +289,7 @@ nano .env  # or code .env for VS Code
 **Step 2:** Start the Netlify development server:
 ```bash
 # Start Netlify dev server (includes serverless functions)
-npm run dev:netlify
+pnpm run dev:netlify
 ```
 
 **Step 3:** The server will start on http://localhost:8888
@@ -380,13 +380,13 @@ const handleSupabaseQuery = async () => {
 
 ```bash
 # Analyze current bundle
-npm run analyze
+pnpm run analyze
 
 # Check dependency impact
-npm run dep:graph
+pnpm run dep:graph
 
 # Monitor in real-time during development
-npm run build && npx vite-bundle-analyzer
+pnpm run build && pnpm exec vite-bundle-analyzer
 ```
 
 ### 2. React Performance Profiling
@@ -467,7 +467,7 @@ Create `.vscode/settings.json` with Jest configuration:
 
 ```json
 {
-  "jest.jestCommandLine": "npm test",
+  "jest.jestCommandLine": "pnpm test",
   "jest.autoRun": {
     "watch": true,
     "onSave": "test-src-file"
@@ -488,16 +488,16 @@ Create `.vscode/settings.json` with Jest configuration:
 **Command Line:**
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run tests in watch mode
-npm run test:watch
+pnpm run test:watch
 
 # Run tests with coverage
-npm run test:coverage
+pnpm run test:coverage
 
 # Run specific test file
-npm test ErrorBoundary.test.tsx
+pnpm test ErrorBoundary.test.tsx
 ```
 
 **VS Code Integration:**
@@ -707,8 +707,8 @@ export const handler: Handler = async (event) => {
    - Copy `.env.example` to `.env` if it doesn't exist
    - Ensure all required `VITE_*` variables are defined
 **Step 3:** Confirm you're using the correct development server:
-   - Use `npm run dev` for frontend-only development (port 5173)
-   - Use `npm run dev:netlify` for full-stack development (port 8888)
+   - Use `pnpm run dev` for frontend-only development (port 5173)
+   - Use `pnpm run dev:netlify` for full-stack development (port 8888)
 **Step 4:** Check Network tab in Firefox Developer Tools for failed requests:
    - Look for 404, 500, or CORS errors
    - Verify API endpoints are correct
@@ -771,13 +771,13 @@ export const handler: Handler = async (event) => {
 
 ```bash
 # Generate dependency graph
-npm run dep:graph
+pnpm run dep:graph
 
 # Analyze bundle composition
-npm run analyze
+pnpm run analyze
 
 # Check for circular dependencies
-npx madge --circular src
+pnpm exec madge --circular src
 
 # Performance audit
 npx lighthouse http://localhost:8888 --view

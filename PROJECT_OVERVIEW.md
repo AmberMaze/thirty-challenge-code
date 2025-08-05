@@ -154,8 +154,8 @@ This section documents any manual interventions that need to be performed by han
 ### Dependencies and Build
 - **No manual intervention required** - All dependencies are compatible and build process is automated
 - Added useful development tools:
-  - Bundle analyzer (`npm run analyze`)
-  - Dependency graph generation (`npm run dep:graph`)
+  - Bundle analyzer (`pnpm run analyze`)
+  - Dependency graph generation (`pnpm run dep:graph`)
   - Enhanced Vite configuration with development server settings
 
 ### Database and Real-time Features

@@ -8,7 +8,7 @@ This repository already includes workflows under `.github/workflows`. The key fi
 
 If additional automation is required, consider creating workflows that:
 
-1. Run `npm run lint` and `npm test` on every push to ensure quality.
+1. Run `pnpm run lint` and `pnpm test` on every push to ensure quality.
 2. Deploy the `dist` folder to Netlify or another host after successful tests on the `main` branch.
 3. Automatically regenerate `full-dependency-map.json` using `madge` when source files change.
 

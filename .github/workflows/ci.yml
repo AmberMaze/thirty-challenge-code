@@ -16,20 +16,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "pnpm"
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
       - name: Install deps
-        run: npm install
+        run: pnpm install
 
       # Run Jest unit tests. passWithNoTests lets CI succeed if no tests exist.
       - name: Run tests
-        run: npm test
+        run: pnpm test
 
       # ← Add this step to auto‑format
       - name: Auto‑format code
-        run: npx prettier --write .
+        run: pnpm exec prettier --write .
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Format Check
-        run: npx prettier --check .
+        run: pnpm exec prettier --check .
       - name: Build
-        run: npm run build
+        run: pnpm run build
