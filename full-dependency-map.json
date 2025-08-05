@@ -1,113 +1,118 @@
 {
-  "App.tsx": [],
-  "alphaquiz/components/AlphaBell.tsx": [
-    "alphaquiz/state/alphaAtoms.ts"
+  "netlify/functions/check-daily-room.ts": [],
+  "netlify/functions/create-daily-room.ts": [],
+  "netlify/functions/create-daily-token.ts": [],
+  "netlify/functions/delete-daily-room.ts": [],
+  "netlify/functions/game-event.ts": [],
+  "src/App.tsx": [],
+  "src/alphaquiz/components/AlphaBell.tsx": [
+    "src/alphaquiz/state/alphaAtoms.ts"
   ],
-  "alphaquiz/components/AlphaScoreboard.tsx": [
-    "alphaquiz/state/alphaAtoms.ts"
+  "src/alphaquiz/components/AlphaScoreboard.tsx": [
+    "src/alphaquiz/state/alphaAtoms.ts"
   ],
-  "alphaquiz/pages/AlphaEntry.tsx": [
-    "alphaquiz/state/alphaAtoms.ts"
+  "src/alphaquiz/pages/AlphaEntry.tsx": [
+    "src/alphaquiz/state/alphaAtoms.ts"
   ],
-  "alphaquiz/pages/AlphaHost.tsx": [
-    "alphaquiz/components/AlphaBell.tsx",
-    "alphaquiz/components/AlphaScoreboard.tsx",
-    "alphaquiz/state/alphaAtoms.ts"
+  "src/alphaquiz/pages/AlphaHost.tsx": [
+    "src/alphaquiz/components/AlphaBell.tsx",
+    "src/alphaquiz/components/AlphaScoreboard.tsx",
+    "src/alphaquiz/state/alphaAtoms.ts"
   ],
-  "alphaquiz/pages/AlphaPlayer.tsx": [
-    "alphaquiz/components/AlphaBell.tsx",
-    "alphaquiz/components/AlphaScoreboard.tsx",
-    "alphaquiz/state/alphaAtoms.ts"
+  "src/alphaquiz/pages/AlphaPlayer.tsx": [
+    "src/alphaquiz/components/AlphaBell.tsx",
+    "src/alphaquiz/components/AlphaScoreboard.tsx",
+    "src/alphaquiz/state/alphaAtoms.ts"
   ],
-  "alphaquiz/state/alphaAtoms.ts": [],
-  "components/ActiveGames.tsx": [],
-  "components/AlertBanner.tsx": [
-    "utils/debugLog.ts"
+  "src/alphaquiz/state/alphaAtoms.ts": [],
+  "src/components/ActiveGames.tsx": [],
+  "src/components/AlertBanner.tsx": [
+    "src/utils/debugLog.ts"
   ],
-  "components/Buzzer.tsx": [],
-  "components/ConfirmationModal.tsx": [],
-  "components/ConnectionBanner.tsx": [],
-  "components/ErrorBoundary.tsx": [],
-  "components/KitchenSinkVideo.tsx": [],
-  "components/LanguageToggle.tsx": [],
-  "components/LazyImage.tsx": [],
-  "components/Scoreboard.tsx": [],
-  "components/SimpleKitchenSinkVideo.tsx": [],
-  "components/Timer.tsx": [],
-  "components/VideoGrid.tsx": [],
-  "components/VideoRoom.tsx": [
-    "components/AlertBanner.tsx"
+  "src/components/Buzzer.tsx": [],
+  "src/components/ConfirmationModal.tsx": [],
+  "src/components/ConnectionBanner.tsx": [],
+  "src/components/ErrorBoundary.tsx": [],
+  "src/components/KitchenSinkVideo.tsx": [],
+  "src/components/LanguageToggle.tsx": [],
+  "src/components/LazyImage.tsx": [],
+  "src/components/Scoreboard.tsx": [],
+  "src/components/SimpleKitchenSinkVideo.tsx": [],
+  "src/components/Timer.tsx": [],
+  "src/components/VideoGrid.tsx": [],
+  "src/components/VideoRoom.tsx": [
+    "src/components/AlertBanner.tsx"
   ],
-  "components/__tests__/SimpleKitchenSinkVideo.test.tsx": [
-    "components/SimpleKitchenSinkVideo.tsx"
+  "src/components/__tests__/SimpleKitchenSinkVideo.test.tsx": [
+    "src/components/SimpleKitchenSinkVideo.tsx"
   ],
-  "context/GameContext.tsx": [
-    "context/defaults.ts",
-    "context/gameReducer.ts",
-    "context/initialGameState.ts"
+  "src/context/GameContext.tsx": [
+    "src/context/defaults.ts",
+    "src/context/gameReducer.ts",
+    "src/context/initialGameState.ts"
   ],
-  "context/GameContextDefinition.ts": [],
-  "context/defaults.ts": [],
-  "context/gameReducer.ts": [],
-  "context/initialGameState.ts": [
-    "context/defaults.ts"
+  "src/context/GameContextDefinition.ts": [],
+  "src/context/defaults.ts": [],
+  "src/context/gameReducer.ts": [],
+  "src/context/initialGameState.ts": [
+    "src/context/defaults.ts"
   ],
-  "data/questions.ts": [],
-  "hooks/useErrorLog.ts": [],
-  "hooks/useGame.ts": [],
-  "hooks/useGameAtoms.ts": [],
-  "hooks/useSupabaseFetch.ts": [],
-  "hooks/useTranslation.ts": [],
-  "lib/atomGameSync.ts": [],
-  "lib/dailyConfig.ts": [],
-  "lib/gameDatabase.ts": [
-    "lib/supabaseClient.ts"
+  "src/data/questions.ts": [],
+  "src/hooks/useErrorLog.ts": [],
+  "src/hooks/useGame.ts": [],
+  "src/hooks/useGameAtoms.ts": [],
+  "src/hooks/useSupabaseFetch.ts": [],
+  "src/hooks/useTranslation.ts": [],
+  "src/lib/atomGameSync.ts": [],
+  "src/lib/dailyConfig.ts": [],
+  "src/lib/gameDatabase.ts": [
+    "src/lib/supabaseClient.ts"
   ],
-  "lib/gameSync.ts": [
-    "lib/gameDatabase.ts",
-    "lib/supabaseClient.ts",
-    "types/game.ts"
+  "src/lib/gameSync.ts": [
+    "src/lib/gameDatabase.ts",
+    "src/lib/supabaseClient.ts",
+    "src/types/game.ts"
   ],
-  "lib/supabaseClient.ts": [],
-  "lib/supabaseLazy.ts": [],
-  "lib/translations.ts": [],
-  "main.tsx": [
-    "App.tsx"
+  "src/lib/supabaseClient.ts": [],
+  "src/lib/supabaseLazy.ts": [],
+  "src/lib/translations.ts": [],
+  "src/main.tsx": [
+    "src/App.tsx"
   ],
-  "pages/ControlRoom.tsx": [],
-  "pages/CreateSession.tsx": [],
-  "pages/FinalScores.tsx": [],
-  "pages/Join.tsx": [],
-  "pages/Landing.tsx": [],
-  "pages/Lobby.tsx": [],
-  "pages/NotFound.tsx": [],
-  "pages/QuizRoom.tsx": [],
-  "pages/Scoreboard.tsx": [],
-  "pages/SegmentIntro.tsx": [],
-  "segments/index.ts": [
-    "segments/useBellSegment.ts",
-    "segments/useRemoSegment.ts",
-    "segments/useSingSegment.ts"
+  "src/pages/ControlRoom.tsx": [],
+  "src/pages/CreateSession.tsx": [],
+  "src/pages/FinalScores.tsx": [],
+  "src/pages/Join.tsx": [],
+  "src/pages/Landing.tsx": [],
+  "src/pages/Lobby.tsx": [],
+  "src/pages/NotFound.tsx": [],
+  "src/pages/QuizRoom.tsx": [],
+  "src/pages/Scoreboard.tsx": [],
+  "src/pages/SegmentIntro.tsx": [],
+  "src/segments/index.ts": [
+    "src/segments/useBellSegment.ts",
+    "src/segments/useRemoSegment.ts",
+    "src/segments/useSingSegment.ts"
   ],
-  "segments/useBellSegment.ts": [],
-  "segments/useRemoSegment.ts": [],
-  "segments/useSingSegment.ts": [],
-  "state/gameAtoms.ts": [],
-  "state/index.ts": [
-    "state/gameAtoms.ts",
-    "state/syncAtoms.ts",
-    "state/videoAtoms.ts"
+  "src/segments/useBellSegment.ts": [],
+  "src/segments/useRemoSegment.ts": [],
+  "src/segments/useSingSegment.ts": [],
+  "src/state/gameAtoms.ts": [],
+  "src/state/index.ts": [
+    "src/state/gameAtoms.ts",
+    "src/state/syncAtoms.ts",
+    "src/state/videoAtoms.ts"
   ],
-  "state/languageAtoms.ts": [],
-  "state/syncAtoms.ts": [],
-  "state/videoAtoms.ts": [],
-  "tests/setup.ts": [],
-  "types/game.ts": [],
-  "utils/__tests__/debugLog.test.ts": [
-    "utils/debugLog.ts"
+  "src/state/languageAtoms.ts": [],
+  "src/state/syncAtoms.ts": [],
+  "src/state/videoAtoms.ts": [],
+  "src/tests/setup.ts": [],
+  "src/types/game.ts": [],
+  "src/utils/__tests__/debugLog.test.ts": [
+    "src/utils/debugLog.ts"
   ],
-  "utils/debugLog.ts": [],
-  "utils/debugNetworkRequests.ts": [],
-  "utils/teamUtils.ts": [],
-  "vite-env.d.ts": []
+  "src/utils/debugLog.ts": [],
+  "src/utils/debugNetworkRequests.ts": [],
+  "src/utils/teamUtils.ts": [],
+  "src/vite-env.d.ts": []
 }
