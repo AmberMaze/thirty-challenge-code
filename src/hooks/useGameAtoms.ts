@@ -418,6 +418,13 @@ export function useGameActions() {
         return { success: false, error: data.error };
       }
       
+      // Handle case where room exists but URL is missing (API issue)
+      if (data.exists && !data.url) {
+        const errorMsg = 'Room exists but API did not provide URL - please retry or contact support';
+        console.error('Video room check error:', errorMsg);
+        return { success: false, error: errorMsg };
+      }
+      
       return { 
         success: true, 
         exists: data.exists,
@@ -572,6 +579,41 @@ export function useGameActions() {
     }
   }, [initializeGame]);
 
+  const updateVideoRoomState = useCallback(async (videoRoomUrl: string, videoRoomCreated: boolean = true) => {
+    const currentGameId = store.get(gameIdAtom);
+    if (!currentGameId) {
+      return { success: false, error: 'No game ID' };
+    }
+    
+    try {
+      // Update database first
+      await GameDatabase.updateGame(currentGameId, {
+        video_room_url: videoRoomUrl,
+        video_room_created: videoRoomCreated,
+      });
+      
+      // Update local state - use store.set directly
+      store.set(updateGameStateAtom, {
+        videoRoomUrl,
+        videoRoomCreated,
+      });
+      
+      // Broadcast the change - get current instance to avoid stale closure
+      const currentGameSync = store.get(gameSyncInstanceAtom) as AtomGameSync | null;
+      if (currentGameSync) {
+        await currentGameSync.broadcastGameState({ 
+          videoRoomUrl, 
+          videoRoomCreated 
+        });
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to update video room state:', error);
+      return { success: false, error: 'Database update failed' };
+    }
+  }, [store]);
+
   return {
     startSession,
     updateToLobbyPhase,
@@ -583,6 +625,7 @@ export function useGameActions() {
     generateDailyToken,
     setHostConnected,
     loadGameState,
+    updateVideoRoomState,
   };
 }
 

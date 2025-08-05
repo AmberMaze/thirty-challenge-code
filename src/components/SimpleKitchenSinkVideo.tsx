@@ -85,7 +85,7 @@ function VideoContent({
   const meetingState = useMeetingState();
   const localParticipant = useLocalParticipant();
   const gameState = useGameState();
-  const { generateDailyToken, createVideoRoom, checkVideoRoomExists, setHostConnected } = useGameActions();
+  const { generateDailyToken, createVideoRoom, checkVideoRoomExists, setHostConnected, updateVideoRoomState } = useGameActions();
   const { t } = useTranslation();
   
   const [roomUrl, setRoomUrl] = useState('');
@@ -157,6 +157,7 @@ function VideoContent({
           const currentCheckVideoRoomExists = checkVideoRoomExists;
           const currentCreateVideoRoom = createVideoRoom;
           const currentShowAlertMessage = showAlertMessage;
+          const currentUpdateVideoRoomState = updateVideoRoomState;
           
           setIsCreatingRoom(true);
           setRoomCreationAttempted(true);
@@ -177,10 +178,28 @@ function VideoContent({
               // Update the database with the existing room URL if it's not already stored
               if (!gameState.videoRoomUrl) {
                 console.log('[VideoRoom] Updating database with existing room URL');
-                // The updateGame call should happen through the useGameActions hook
-                // This will be handled by the game state management
+                try {
+                  const updateResult = await currentUpdateVideoRoomState(checkResult.url, true);
+                  if (updateResult.success) {
+                    console.log('[VideoRoom] Database and state updated with existing room URL');
+                  } else {
+                    console.error('[VideoRoom] Failed to update database:', updateResult.error);
+                    currentShowAlertMessage('Warning: Room found but failed to save to database', 'warning');
+                  }
+                } catch (updateError) {
+                  console.error('[VideoRoom] Failed to update database with existing room URL:', updateError);
+                  currentShowAlertMessage('Warning: Room found but failed to save to database', 'warning');
+                }
               }
               
+              return;
+            }
+            
+            // Handle case where room exists but URL is missing (error state)
+            if (checkResult.success && checkResult.exists && !checkResult.url) {
+              const errorMsg = 'Room exists but URL is missing - this indicates an API issue';
+              console.error('[VideoRoom]', errorMsg);
+              currentShowAlertMessage(errorMsg, 'error');
               return;
             }
             
@@ -380,6 +399,65 @@ function VideoContent({
     }
   }, [daily]);
 
+  // Debug function to check/create room with session ID
+  const debugCheckCreateRoom = useCallback(async () => {
+    if (!gameId) {
+      showAlertMessage('No session ID available', 'error');
+      return;
+    }
+
+    try {
+      showAlertMessage('Debug: Checking for room with session ID...', 'info');
+      console.log('[Debug] Checking for room with session ID:', gameId);
+      
+      const checkResult = await checkVideoRoomExists(gameId);
+      
+      if (checkResult.success && checkResult.exists && checkResult.url) {
+        // Room exists, prefill and auto-join
+        setRoomUrl(checkResult.url);
+        showAlertMessage('Debug: Found existing room, auto-joining...', 'success');
+        console.log('[Debug] Found existing room, auto-joining:', checkResult.url);
+        
+        // Update database state
+        try {
+          await updateVideoRoomState(checkResult.url, true);
+        } catch (updateError) {
+          console.warn('[Debug] Failed to update database state:', updateError);
+        }
+        
+        // Auto-join
+        setTimeout(() => {
+          joinCall();
+        }, 1000);
+        
+      } else if (checkResult.success && !checkResult.exists) {
+        // Room doesn't exist, create it
+        showAlertMessage('Debug: No room found, creating new room...', 'info');
+        console.log('[Debug] No room found, creating new room with session ID:', gameId);
+        
+        const createResult = await createVideoRoom(gameId);
+        
+        if (createResult.success && createResult.roomUrl) {
+          setRoomUrl(createResult.roomUrl);
+          showAlertMessage('Debug: Room created! Click Join to enter.', 'success');
+          console.log('[Debug] Room created successfully:', createResult.roomUrl);
+        } else {
+          showAlertMessage(`Debug: Failed to create room: ${createResult.error}`, 'error');
+          console.error('[Debug] Room creation failed:', createResult);
+        }
+        
+      } else {
+        // Error occurred
+        showAlertMessage(`Debug: Error checking room: ${checkResult.error}`, 'error');
+        console.error('[Debug] Error checking room:', checkResult);
+      }
+      
+    } catch (error) {
+      console.error('[Debug] Failed to check/create room:', error);
+      showAlertMessage('Debug: Error occurred while checking/creating room', 'error');
+    }
+  }, [gameId, checkVideoRoomExists, createVideoRoom, updateVideoRoomState, showAlertMessage, joinCall]);
+
   // Toggle microphone
   const toggleMicrophone = useCallback(async () => {
     if (!daily) return;
@@ -556,6 +634,26 @@ function VideoContent({
             <div className="text-sm">{t('enterRoomAndJoin')}</div>
           </div>
         )}
+      </div>
+
+      {/* Debug Section */}
+      <div className="bg-yellow-900/20 rounded-lg p-3 border border-yellow-600/30">
+        <h4 className="text-yellow-400 text-sm font-semibold mb-2">🔧 Debug Tools</h4>
+        <div className="space-y-2">
+          <div className="text-yellow-300 text-xs">
+            Session ID: <span className="font-mono">{gameId}</span>
+          </div>
+          <button
+            onClick={debugCheckCreateRoom}
+            disabled={!gameId}
+            className="w-full px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded text-sm transition-colors"
+          >
+            Check/Create Room with Session ID
+          </button>
+          <div className="text-yellow-300 text-xs">
+            This button will check for a room with the current session ID. If found, it will auto-join. If not found, it will create a room and let you join manually.
+          </div>
+        </div>
       </div>
 
       {/* Audio component for call audio */}
