@@ -50,6 +50,29 @@ export interface PlayerRecord {
   last_active: string;
 }
 
+// Type guard to validate PlayerRecord
+function isPlayerRecord(data: unknown): data is PlayerRecord {
+  if (!data || typeof data !== 'object') return false;
+  
+  const record = data as Record<string, unknown>;
+  
+  return (
+    typeof record.id === 'string' &&
+    typeof record.game_id === 'string' &&
+    typeof record.name === 'string' &&
+    (record.flag === null || typeof record.flag === 'string') &&
+    (record.club === null || typeof record.club === 'string') &&
+    typeof record.role === 'string' &&
+    typeof record.score === 'number' &&
+    typeof record.strikes === 'number' &&
+    typeof record.is_connected === 'boolean' &&
+    typeof record.special_buttons === 'object' &&
+    record.special_buttons !== null &&
+    typeof record.joined_at === 'string' &&
+    typeof record.last_active === 'string'
+  );
+}
+
 export class GameDatabase {
   // Check if Supabase is configured
   static isConfigured(): boolean {
