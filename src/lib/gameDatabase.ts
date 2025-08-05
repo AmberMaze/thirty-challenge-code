@@ -410,7 +410,12 @@ export class GameDatabase {
         return { success: false, error: error.message };
       }
 
-      return { success: true, data: data as PlayerRecord };
+      if (isPlayerRecord(data)) {
+        return { success: true, data };
+      } else {
+        console.error('Updated player data does not match PlayerRecord type:', data);
+        return { success: false, error: 'Invalid player data returned from database' };
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error updating player by ID:', errorMessage);
