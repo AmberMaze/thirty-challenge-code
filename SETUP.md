@@ -44,13 +44,13 @@ In your Netlify dashboard, go to Site Settings → Environment Variables and add
 For local development with Netlify Functions:
 
 ```bash
-npm run dev:netlify
+pnpm run dev:netlify
 ```
 
 For regular Vite development (without functions):
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ## Security Notes

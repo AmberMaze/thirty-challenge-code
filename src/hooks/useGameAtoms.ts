@@ -652,11 +652,16 @@ export function usePlayerActions() {
   const leaveGame = useCallback(async (playerId: PlayerId) => {
     try {
       if (gameId) {
-        // Update database first
-        await GameDatabase.updatePlayer(playerId, { 
+        // Update database first with better error handling
+        const result = await GameDatabase.updatePlayerById(playerId, { 
           is_connected: false,
           last_active: new Date().toISOString()
         });
+
+        if (!result.success) {
+          console.warn(`Failed to update player ${playerId} in database:`, result.error);
+          // Continue with local state update even if database update fails
+        }
 
         // Update local state
         updatePlayer({ playerId, update: { isConnected: false } });
@@ -686,11 +691,15 @@ export function usePlayerActions() {
         if (player) {
           const newTotalScore = player.score + points;
           
-          // Update database with the new total score
-          await GameDatabase.updatePlayer(playerId, { 
+          // Update database with the new total score using better error handling
+          const result = await GameDatabase.updatePlayerById(playerId, { 
             score: newTotalScore,
             last_active: new Date().toISOString()
           });
+
+          if (!result.success) {
+            console.warn(`Failed to update player ${playerId} score in database:`, result.error);
+          }
           
           // Broadcast the updated player data
           await gameSyncInstance.broadcastGameState({
@@ -732,10 +741,14 @@ export function useLobbyActions() {
         
         // If this is a player, also update their database record
         if (participant.playerId && participant.type === 'player') {
-          await GameDatabase.updatePlayer(participant.playerId, {
+          const result = await GameDatabase.updatePlayerById(participant.playerId, {
             is_connected: true,
             last_active: new Date().toISOString()
           });
+
+          if (!result.success) {
+            console.warn(`Failed to update player ${participant.playerId} connection in database:`, result.error);
+          }
         }
       } catch (error) {
         console.error('Failed to set participant presence:', error);

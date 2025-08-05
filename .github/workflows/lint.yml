@@ -14,5 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
-      - run: npm run lint
+          cache: "pnpm"
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint

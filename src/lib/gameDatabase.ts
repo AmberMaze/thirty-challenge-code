@@ -342,12 +342,13 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use singleton supabase client - ensure single row update
       const { data, error } = await supabase
         .from('players')
         .update(updates)
         .eq('id', playerId)
         .select()
+        .limit(1)
         .single();
 
       if (error) {
@@ -359,6 +360,66 @@ export class GameDatabase {
     } catch (error) {
       console.error('Error updating player:', error);
       return null;
+    }
+  }
+
+  /**
+   * Update a player by ID with better error handling for single-row operations
+   */
+  static async updatePlayerById(
+    playerId: string,
+    updates: Partial<PlayerRecord>,
+  ): Promise<{ success: boolean; data?: PlayerRecord; error?: string }> {
+    if (!this.isConfigured()) {
+      return { success: false, error: 'Database not configured' };
+    }
+
+    try {
+      // First check if player exists and get current data
+      const { data: existingPlayer, error: fetchError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('id', playerId)
+        .limit(1);
+
+      if (fetchError) {
+        console.error('Error fetching player before update:', fetchError);
+        return { success: false, error: fetchError.message };
+      }
+
+      if (!existingPlayer || existingPlayer.length === 0) {
+        console.warn(`Player ${playerId} not found for update`);
+        return { success: false, error: 'Player not found' };
+      }
+
+      if (existingPlayer.length > 1) {
+        console.warn(`Multiple players found with ID ${playerId}, updating first one`);
+      }
+
+      // Update the player with precise filtering
+      const { data, error } = await supabase
+        .from('players')
+        .update(updates)
+        .eq('id', playerId)
+        .select()
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error updating player:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (isPlayerRecord(data)) {
+        return { success: true, data };
+      } else {
+        console.error('Updated player data does not match PlayerRecord type:', data);
+        return { success: false, error: 'Invalid player data returned from database' };
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error updating player by ID:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   }
   static async insertGameEvent(
