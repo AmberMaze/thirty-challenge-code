@@ -6,14 +6,15 @@ import SimpleKitchenSinkVideo from '../SimpleKitchenSinkVideo';
 jest.mock('@/hooks/useGameAtoms', () => ({
   useGameState: () => ({
     gameId: 'test-game-123',
-    videoRoomUrl: '',
-    videoRoomCreated: false,
+    videoRoomUrl: 'https://test.daily.co/test-room',
+    videoRoomCreated: true,
   }),
   useGameActions: () => ({
-    generateDailyToken: jest.fn(),
+    generateDailyToken: jest.fn(() => Promise.resolve('mock-token')),
     createVideoRoom: jest.fn(),
     checkVideoRoomExists: jest.fn(),
     setHostConnected: jest.fn(() => Promise.resolve({ success: true })),
+    updateVideoRoomState: jest.fn(() => Promise.resolve({ success: true })),
   }),
 }));
 
@@ -54,9 +55,9 @@ jest.mock('@daily-co/daily-js', () => ({
 }));
 
 const mockParticipant = {
-  id: 'host',
-  name: 'Test Host',
-  type: 'host' as const,
+  id: 'player',
+  name: 'Test Player',
+  type: 'player' as const,
   isConnected: true,
 };
 
@@ -104,7 +105,7 @@ describe('SimpleKitchenSinkVideo', () => {
       />
     );
 
-    const usernameInput = screen.getByDisplayValue('Test Host');
+    const usernameInput = screen.getByDisplayValue('Test Player');
     expect(usernameInput).toBeInTheDocument();
   });
 
