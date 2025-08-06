@@ -135,7 +135,7 @@ function VideoContent({
     // 3. No room URL exists in game state
     // 4. We haven't attempted creation yet
     // 5. We're not currently creating a room
-    // 6. We haven't attempted creation in the last 5 seconds (throttle)
+    // 6. We haven't attempted creation in the last 10 seconds (increased throttle)
     const now = Date.now();
     if (
       (myParticipant.type === 'host' || myParticipant.type === 'controller') &&
@@ -143,14 +143,15 @@ function VideoContent({
       !gameState.videoRoomUrl &&
       !roomCreationAttempted &&
       !isCreatingRoom &&
-      (now - lastRoomCreationAttempt > 5000) // 5 second throttle
+      (now - lastRoomCreationAttempt > 10000) // 10 second throttle (increased)
     ) {
       console.log('[VideoRoom] All conditions met - checking for existing room or creating new one for gameId:', gameId);
       
-      // Update throttle timestamp immediately
+      // Update throttle timestamp immediately to prevent concurrent attempts
       setLastRoomCreationAttempt(now);
+      setRoomCreationAttempted(true); // Set this immediately
       
-      // Add a small delay to ensure all state updates are processed
+      // Add a longer delay to ensure all state updates are processed
       const timeoutId = setTimeout(() => {
         const checkAndCreateRoom = async () => {
           // Capture the current functions to avoid stale closures
@@ -160,7 +161,6 @@ function VideoContent({
           const currentUpdateVideoRoomState = updateVideoRoomState;
           
           setIsCreatingRoom(true);
-          setRoomCreationAttempted(true);
           
           try {
             // First, check if a room already exists with the gameId (session ID like P21AU2)
@@ -179,12 +179,16 @@ function VideoContent({
               if (!gameState.videoRoomUrl) {
                 console.log('[VideoRoom] Updating database with existing room URL');
                 try {
-                  const updateResult = await currentUpdateVideoRoomState(checkResult.url, true);
-                  if (updateResult.success) {
-                    console.log('[VideoRoom] Database and state updated with existing room URL');
+                  if (currentUpdateVideoRoomState) {
+                    const updateResult = await currentUpdateVideoRoomState(checkResult.url, true);
+                    if (updateResult.success) {
+                      console.log('[VideoRoom] Database and state updated with existing room URL');
+                    } else {
+                      console.error('[VideoRoom] Failed to update database:', updateResult.error);
+                      currentShowAlertMessage('Warning: Room found but failed to save to database', 'warning');
+                    }
                   } else {
-                    console.error('[VideoRoom] Failed to update database:', updateResult.error);
-                    currentShowAlertMessage('Warning: Room found but failed to save to database', 'warning');
+                    console.warn('[VideoRoom] updateVideoRoomState function not available');
                   }
                 } catch (updateError) {
                   console.error('[VideoRoom] Failed to update database with existing room URL:', updateError);
@@ -227,7 +231,7 @@ function VideoContent({
         };
         
         checkAndCreateRoom();
-      }, 1000); // 1 second delay to ensure state is stable
+      }, 2000); // 2 second delay to ensure state is stable (increased)
       
       return () => clearTimeout(timeoutId);
     }
@@ -306,16 +310,21 @@ function VideoContent({
         participantType: myParticipant.type 
       });
       
-      // Update host connection status in database
-      currentSetHostConnected(isConnectedToCall).then((result) => {
-        if (result.success) {
-          console.log(`[VideoRoom] Host connection status updated to: ${isConnectedToCall}`);
-        } else {
-          console.error('[VideoRoom] Failed to update host connection status:', result.error);
-        }
-      }).catch((error) => {
-        console.error('[VideoRoom] Error updating host connection status:', error);
-      });
+      // Debounce connection status updates to prevent flapping
+      const updateTimeout = setTimeout(() => {
+        // Update host connection status in database
+        currentSetHostConnected(isConnectedToCall).then((result) => {
+          if (result.success) {
+            console.log(`[VideoRoom] Host connection status updated to: ${isConnectedToCall}`);
+          } else {
+            console.error('[VideoRoom] Failed to update host connection status:', result.error);
+          }
+        }).catch((error) => {
+          console.error('[VideoRoom] Error updating host connection status:', error);
+        });
+      }, 1000); // 1 second debounce
+      
+      return () => clearTimeout(updateTimeout);
     }
   }, [meetingState, myParticipant.type]);
 
@@ -670,15 +679,21 @@ export default function SimpleKitchenSinkVideo({
   className = '' 
 }: SimpleKitchenSinkVideoProps) {
   const [callObject, setCallObject] = useState<DailyCall | null>(null);
+  const gameState = useGameState();
   const { t } = useTranslation();
 
-  // Create call object - only once
+  // Create call object only when we have a video room URL and gameId
   useEffect(() => {
     let isMounted = true;
     
     const createCallObject = async () => {
+      // Only create call object if we have both gameId and room URL available
+      if (!gameId || !gameState.videoRoomUrl) {
+        return;
+      }
+      
       try {
-        console.log('[VideoRoom] Creating Daily call object...');
+        console.log('[VideoRoom] Creating Daily call object for room:', gameState.videoRoomUrl);
         const newCallObject = DailyIframe.createCallObject({
           iframeStyle: {
             position: 'relative',
@@ -703,13 +718,20 @@ export default function SimpleKitchenSinkVideo({
       }
     };
 
-    if (!callObject) {
+    // Only create if we don't have one yet and conditions are met
+    if (!callObject && gameId && gameState.videoRoomUrl) {
       createCallObject();
     }
 
     // Cleanup
     return () => {
       isMounted = false;
+    };
+  }, [gameId, gameState.videoRoomUrl, callObject, showAlertMessage, t]);
+
+  // Separate cleanup effect that only runs on unmount
+  useEffect(() => {
+    return () => {
       if (callObject) {
         try {
           console.log('[VideoRoom] Cleaning up Daily call object...');
@@ -719,7 +741,7 @@ export default function SimpleKitchenSinkVideo({
         }
       }
     };
-  }, [callObject, showAlertMessage, t]); // Include dependencies
+  }, [callObject]);
 
   if (!callObject) {
     return (

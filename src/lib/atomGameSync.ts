@@ -227,13 +227,18 @@ export class AtomGameSync {
           update: { isConnected: true, name: participant.name }
         });
         
-        // Update database to reflect connection status
+        // Update database to reflect connection status - method already checks if player exists
         GameDatabase.updatePlayerById(participant.playerId, { 
           is_connected: true,
           last_active: new Date().toISOString()
         }).then(result => {
           if (!result.success) {
-            console.warn(`Failed to update player ${participant.playerId} connection:`, result.error);
+            // Only warn if it's not a "not found" error
+            if (result.error !== 'Player not found') {
+              console.warn(`Failed to update player ${participant.playerId} connection:`, result.error);
+            } else {
+              console.log(`Player ${participant.playerId} not found for connection update`);
+            }
           }
         }).catch(console.error);
       }
@@ -251,13 +256,18 @@ export class AtomGameSync {
           update: { isConnected: false }
         });
         
-        // Update database to reflect disconnection
+        // Update database to reflect disconnection - method already checks if player exists
         GameDatabase.updatePlayerById(playerId, { 
           is_connected: false,
           last_active: new Date().toISOString()
         }).then(result => {
           if (!result.success) {
-            console.warn(`Failed to update player ${playerId} disconnection:`, result.error);
+            // Only warn if it's not a "not found" error
+            if (result.error !== 'Player not found') {
+              console.warn(`Failed to update player ${playerId} disconnection:`, result.error);
+            } else {
+              console.log(`Player ${playerId} not found for disconnection update`);
+            }
           }
         }).catch(console.error);
       }

@@ -120,7 +120,12 @@ export default function Lobby() {
       }
     };
 
-    initializeGameState();
+    // Add delay before initializing to prevent race conditions
+    const initTimeout = setTimeout(() => {
+      if (isMounted) {
+        initializeGameState();
+      }
+    }, 500);
 
     // Determine my role from URL parameters
     const { role, name, flag, club, hostName } = searchParamsObj;
@@ -134,7 +139,14 @@ export default function Lobby() {
         type: 'controller',
         isConnected: true,
       };
-      currentSetHostConnected(true);
+      // Debounce host connection updates
+      const hostTimeout = setTimeout(() => {
+        if (isMounted) {
+          currentSetHostConnected(true);
+        }
+      }, 1000);
+      
+      return () => clearTimeout(hostTimeout);
     } else if (role === 'host') {
       participant = {
         id: 'host',
@@ -142,7 +154,14 @@ export default function Lobby() {
         type: 'host',
         isConnected: true,
       };
-      currentSetHostConnected(true);
+      // Debounce host connection updates
+      const hostTimeout = setTimeout(() => {
+        if (isMounted) {
+          currentSetHostConnected(true);
+        }
+      }, 1000);
+      
+      return () => clearTimeout(hostTimeout);
     } else if (role === 'playerA' || role === 'playerB') {
       participant = {
         id: role,
@@ -161,6 +180,7 @@ export default function Lobby() {
     
     return () => {
       isMounted = false;
+      clearTimeout(initTimeout);
     };
   }, [gameId, searchParamsObj, state.gameId, state.hostName, language]);
 
@@ -183,12 +203,22 @@ export default function Lobby() {
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      
-      if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
-        currentSetHostConnected(false);
-      }
     };
   }, [myParticipant, gameSyncInstance]);
+
+  // Separate effect for component unmount cleanup
+  useEffect(() => {
+    const currentSetHostConnected = setHostConnected;
+    
+    return () => {
+      // Debounce cleanup operations to prevent flapping
+      if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
+        setTimeout(() => {
+          currentSetHostConnected(false);
+        }, 1000);
+      }
+    };
+  }, [myParticipant]);
 
   if (!myParticipant || !gameId) {
     return (
