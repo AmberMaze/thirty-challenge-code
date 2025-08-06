@@ -182,7 +182,7 @@ export default function Lobby() {
       isMounted = false;
       clearTimeout(initTimeout);
     };
-  }, [gameId, searchParamsObj, state.gameId, state.hostName, language]);
+  }, [gameId, searchParamsObj, state.gameId, state.hostName, language, loadGameState, startSession, setHostConnected, setParticipant, showAlertMessage, t]);
 
   // Set up cleanup when user leaves the page
   useEffect(() => {
@@ -204,7 +204,7 @@ export default function Lobby() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [myParticipant, gameSyncInstance]);
+  }, [myParticipant, gameSyncInstance, setHostConnected]);
 
   // Separate effect for component unmount cleanup
   useEffect(() => {
@@ -218,7 +218,7 @@ export default function Lobby() {
         }, 1000);
       }
     };
-  }, [myParticipant]);
+  }, [myParticipant, setHostConnected]);
 
   if (!myParticipant || !gameId) {
     return (

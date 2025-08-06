@@ -243,7 +243,11 @@ function VideoContent({
     gameId, 
     roomCreationAttempted, 
     isCreatingRoom,
-    lastRoomCreationAttempt
+    lastRoomCreationAttempt,
+    checkVideoRoomExists,
+    createVideoRoom,
+    showAlertMessage,
+    updateVideoRoomState
   ]);
 
   // Auto-generate token when room URL is available
@@ -295,7 +299,7 @@ function VideoContent({
           setIsGeneratingToken(false);
         });
     }
-  }, [gameState.videoRoomUrl, gameState.hostName, preAuthToken, isGeneratingToken, tokenGenerationAttempted, gameId, myParticipant.name, myParticipant.type, myParticipant.id]);
+  }, [gameState.videoRoomUrl, gameState.hostName, preAuthToken, isGeneratingToken, tokenGenerationAttempted, gameId, myParticipant.name, myParticipant.type, myParticipant.id, generateDailyToken, showAlertMessage, t]);
 
   // Track host connection status based on meeting state
   useEffect(() => {
@@ -326,7 +330,7 @@ function VideoContent({
       
       return () => clearTimeout(updateTimeout);
     }
-  }, [meetingState, myParticipant.type]);
+  }, [meetingState, myParticipant.type, setHostConnected]);
 
   // Join call function
   const joinCall = useCallback(async () => {
@@ -378,7 +382,7 @@ function VideoContent({
     } finally {
       setIsJoining(false);
     }
-  }, [daily, roomUrl, userName, myParticipant.name, myParticipant.type, myParticipant.id, gameState.hostName, preAuthToken, isJoining]);
+  }, [daily, roomUrl, userName, myParticipant.name, myParticipant.type, myParticipant.id, gameState.hostName, preAuthToken, isJoining, showAlertMessage, t]);
 
   // Leave call function
   const leaveCall = useCallback(async () => {
@@ -395,7 +399,7 @@ function VideoContent({
       console.error('Failed to leave call:', error);
       currentShowAlertMessage(currentT('failedLeaveCall'), 'error');
     }
-  }, [daily]);
+  }, [daily, showAlertMessage, t]);
 
   // Toggle camera
   const toggleCamera = useCallback(async () => {
