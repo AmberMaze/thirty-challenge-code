@@ -63,126 +63,132 @@ export default function Lobby() {
   }), [searchParams]);
 
   useEffect(() => {
-    if (!gameId) return;
+  if (!gameId) return;
 
-    let isMounted = true;
-    
-    // Capture current functions to avoid stale closures
-    const currentLoadGameState = loadGameState;
-    const currentStartSession = startSession;
-    const currentSetHostConnected = setHostConnected;
-    const currentSetParticipant = setParticipant;
-    const currentShowAlertMessage = showAlertMessage;
-    const currentT = t;
+  let isMounted = true;
 
-    // Load game state from database if needed, or create if not exists
-    const initializeGameState = async () => {
-      if (state.gameId !== gameId) {
-        console.log('Loading game state for:', gameId);
-        try {
-          const result = await currentLoadGameState(gameId);
-          if (!isMounted) return;
-          
-          if (!result.success) {
-            // If game doesn't exist and we have host parameters, try to create it
-            const { role, hostName: urlHostName } = searchParamsObj;
-            if (role === 'host') {
-              console.log('Game not found, attempting to create new game for host:', gameId);
-              try {
-                // Create a new game with basic settings
-                await currentStartSession(
-                  gameId,
-                  'HOST', // Default host code
-                  urlHostName || (language === 'ar' ? 'المقدم' : 'Host'), // Use URL host name or default
-                  {
-                    WSHA: 4,
-                    AUCT: 4, 
-                    BELL: 10,
-                    SING: 10,
-                    REMO: 4
-                  }
-                );
-                currentShowAlertMessage(currentT('sessionCreatedSuccessfully'), 'success');
-              } catch (createError) {
-                console.error('Failed to create new game:', createError);
-                currentShowAlertMessage(currentT('failedCreateSession'), 'error');
-              }
-            } else {
-              console.error('Failed to load game state:', result.error);
-              currentShowAlertMessage(`${currentT('failedLoadSessionData')}: ${result.error}`, 'error');
+  // snapshot functions to avoid stale closures
+  const currentLoadGameState = loadGameState;
+  const currentStartSession = startSession;
+  const currentSetHostConnected = setHostConnected;
+  const currentSetParticipant = setParticipant;
+  const currentShowAlertMessage = showAlertMessage;
+  const currentT = t;
+
+  // helper to load or create game state
+  const initializeGameState = async () => {
+    if (state.gameId !== gameId) {
+      console.log('Loading game state for:', gameId);
+      try {
+        const result = await currentLoadGameState(gameId);
+        if (!isMounted) return;
+
+        if (!result.success) {
+          // If no game exists and user is a host, create a new one
+          const { role, hostName: urlHostName } = searchParamsObj;
+          if (role === 'host') {
+            try {
+              await currentStartSession(
+                gameId,
+                'HOST',
+                urlHostName || (language === 'ar' ? 'المقدم' : 'Host'),
+                { WSHA: 4, AUCT: 4, BELL: 10, SING: 10, REMO: 4 }
+              );
+              currentShowAlertMessage(currentT('sessionCreatedSuccessfully'), 'success');
+            } catch (createError) {
+              console.error('Failed to create new game:', createError);
+              currentShowAlertMessage(currentT('failedCreateSession'), 'error');
             }
+          } else {
+            console.error('Failed to load game state:', result.error);
+            currentShowAlertMessage(`${currentT('failedLoadSessionData')}: ${result.error}`, 'error');
           }
-        } catch (error) {
-          if (!isMounted) return;
-          console.error('Error loading game state:', error);
-          currentShowAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
         }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Error loading game state:', error);
+        currentShowAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
       }
-    };
+    }
+  };
 
-    // Add delay before initializing to prevent race conditions
-    const initTimeout = setTimeout(() => {
+  // delay initialization slightly to avoid race conditions
+  const initTimeout = setTimeout(() => {
+    if (isMounted) {
+      initializeGameState();
+    }
+  }, 500);
+
+  // read URL params for role and details
+  const { role, name, flag, club, hostName } = searchParamsObj;
+
+  let participant: LobbyParticipant | null = null;
+  let hostTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  if (role === 'controller') {
+    participant = {
+      id: 'controller',
+      name: hostName || state.hostName || 'Controller',
+      type: 'controller',
+      isConnected: true,
+    };
+    // schedule host-connected update without aborting the effect
+    hostTimeout = setTimeout(() => {
       if (isMounted) {
-        initializeGameState();
+        currentSetHostConnected(true);
       }
-    }, 500);
-
-    // Determine my role from URL parameters
-    const { role, name, flag, club, hostName } = searchParamsObj;
-
-    let participant: LobbyParticipant | null = null;
-
-    if (role === 'controller') {
-      participant = {
-        id: 'controller',
-        name: hostName || state.hostName || 'Controller',
-        type: 'controller',
-        isConnected: true,
-      };
-      // Debounce host connection updates
-      const hostTimeout = setTimeout(() => {
-        if (isMounted) {
-          currentSetHostConnected(true);
-        }
-      }, 1000);
-      
-      return () => clearTimeout(hostTimeout);
-    } else if (role === 'host') {
-      participant = {
-        id: 'host',
-        name: hostName || state.hostName || 'Host',
-        type: 'host',
-        isConnected: true,
-      };
-      // Debounce host connection updates
-      const hostTimeout = setTimeout(() => {
-        if (isMounted) {
-          currentSetHostConnected(true);
-        }
-      }, 1000);
-      
-      return () => clearTimeout(hostTimeout);
-    } else if (role === 'playerA' || role === 'playerB') {
-      participant = {
-        id: role,
-        name: name || 'لاعب',
-        type: 'player',
-        playerId: role,
-        flag: flag || undefined,
-        club: club || undefined,
-        isConnected: true,
-      };
-    }
-
-    if (participant && isMounted) {
-      currentSetParticipant(participant);
-    }
-    
-    return () => {
-      isMounted = false;
-      clearTimeout(initTimeout);
+    }, 1000);
+  } else if (role === 'host') {
+    participant = {
+      id: 'host',
+      name: hostName || state.hostName || 'Host',
+      type: 'host',
+      isConnected: true,
     };
-  }, [gameId, searchParamsObj, state.gameId, state.hostName, language, loadGameState, startSession, setHostConnected, setParticipant, showAlertMessage, t]);
+    hostTimeout = setTimeout(() => {
+      if (isMounted) {
+        currentSetHostConnected(true);
+      }
+    }, 1000);
+  } else if (role === 'playerA' || role === 'playerB') {
+    participant = {
+      id: role,
+      name: name || 'لاعب',
+      type: 'player',
+      playerId: role,
+      flag: flag || undefined,
+      club: club || undefined,
+      isConnected: true,
+    };
+  }
+
+  // now that participant is defined, store it in Jotai
+  if (participant && isMounted) {
+    currentSetParticipant(participant);
+  }
+
+  // cleanup: clear any timers and mark effect as unmounted
+  return () => {
+    isMounted = false;
+    clearTimeout(initTimeout);
+    if (hostTimeout) {
+      clearTimeout(hostTimeout);
+    }
+  };
+}, [
+  gameId,
+  searchParamsObj,
+  state.gameId,
+  state.hostName,
+  language,
+  loadGameState,
+  startSession,
+  setHostConnected,
+  setParticipant,
+  showAlertMessage,
+  t,
+]);
+
 
   // Set up cleanup when user leaves the page
   useEffect(() => {
