@@ -39,8 +39,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
   useEffect(() => {
     if (!state.gameId) return;
-    const detach = attachGameSync(state.gameId, dispatch);
-    return () => detach();
+    
+    let detachFn: (() => Promise<void>) | null = null;
+    
+    // Setup async attachment
+    attachGameSync(state.gameId, dispatch).then((detach) => {
+      detachFn = detach;
+    }).catch(console.error);
+    
+    // Cleanup function
+    return () => {
+      if (detachFn) {
+        detachFn().catch(console.error);
+      }
+    };
   }, [state.gameId]);
   return (
     <GameContext.Provider value={{ state, dispatch }}>

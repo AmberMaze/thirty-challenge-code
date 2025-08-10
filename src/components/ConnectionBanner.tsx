@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { isSupabaseConfigured, getConfigurationError } from '@/lib/supabaseClient';
+import { isSupabaseConfigured, getConfigurationError } from '@/lib/supabaseLazy';
 import { testDailyIntegration } from '@/lib/dailyConfig';
 
 /**

@@ -1,4 +1,4 @@
-import { isSupabaseConfigured, supabase } from './supabaseClient';
+import { getSupabase, isSupabaseConfigured } from './supabaseLazy';
 
 // Check if we're in development mode
 const isDevelopmentMode = () => import.meta.env?.DEV === true;
@@ -132,7 +132,8 @@ export class GameDatabase {
     }
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .insert({
@@ -181,7 +182,8 @@ export class GameDatabase {
     if (!isSupabaseConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*') // selects all columns including host_code
@@ -210,7 +212,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*')
@@ -262,7 +265,8 @@ export class GameDatabase {
     if (!isSupabaseConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .update(updates)
@@ -299,7 +303,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       
       // First, remove the player from any existing games to avoid primary key conflicts
       // This allows players to switch between games
@@ -339,7 +344,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .select('*')
@@ -365,7 +371,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client - ensure single row update
+      // Use lazy supabase client - ensure single row update
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .update(updates)
@@ -398,6 +405,7 @@ export class GameDatabase {
     }
 
     try {
+      const supabase = await getSupabase();
       // First check if player exists and get current data
       const { data: existingPlayer, error: fetchError } = await supabase
         .from('players')
@@ -451,7 +459,8 @@ export class GameDatabase {
     event_data: Record<string, unknown> = {},
   ) {
     if (!this.isConfigured()) return;
-    // Use singleton supabase client
+    // Use lazy supabase client
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('game_events')
       .insert([{ game_id: gameId, event_type, event_data }]);
@@ -462,7 +471,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return false;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
     const { error } = await supabase
         .from('players')
         .delete()
@@ -487,7 +497,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .select('*')
@@ -524,7 +535,8 @@ export class GameDatabase {
     }
 
     // Subscribe to game updates
-    // Use singleton supabase client
+    // Use lazy supabase client
+    const supabase = await getSupabase();
     const gameSubscription = supabase
       .channel(`game:${gameId}`)
       .on(
@@ -650,7 +662,8 @@ export class GameDatabase {
       const cutoffTime = new Date();
       cutoffTime.setHours(cutoffTime.getHours() - olderThanHours);
 
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .delete()
@@ -698,7 +711,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*')
@@ -725,7 +739,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return false;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { error } = await supabase.from('game_events').insert({
         game_id: gameId,
         event_type: eventType,
