@@ -234,6 +234,81 @@ export class GameDatabase {
   }
 
   /**
+   * Atomically set video_room_created flag to true if it's currently false.
+   * This prevents race conditions during room creation.
+   * 
+   * @param gameId The game ID
+   * @returns { success: true, data: GameRecord } if the flag was successfully set,
+   *          { success: false } if the flag was already true (room already being created)
+   */
+  static async atomicSetVideoRoomCreating(
+    gameId: string,
+  ): Promise<{ success: boolean; data?: GameRecord; error?: string }> {
+    // Development mode: simulate atomic operation with in-memory storage
+    if (isDevelopmentMode()) {
+      console.log('[DEV] Atomic set video room creating for:', gameId);
+      
+      const existingGame = developmentStorage.games.get(gameId);
+      if (!existingGame) {
+        return { success: false, error: 'Game not found' };
+      }
+      
+      if (existingGame.video_room_created) {
+        console.log('[DEV] Video room already being created/created');
+        return { success: false, error: 'Video room already being created' };
+      }
+      
+      // Set the flag atomically
+      const updatedGame: GameRecord = {
+        ...existingGame,
+        video_room_created: true,
+        updated_at: new Date().toISOString(),
+      };
+      
+      developmentStorage.games.set(gameId, updatedGame);
+      console.log('[DEV] Video room creation flag set successfully');
+      return { success: true, data: updatedGame };
+    }
+
+    // Production mode: use Supabase with atomic WHERE condition
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Database not configured' };
+    }
+
+    try {
+      const supabase = await getSupabase();
+      const { data, error } = await supabase
+        .from('games')
+        .update({ 
+          video_room_created: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', gameId)
+        .eq('video_room_created', false) // Only update if flag is currently false
+        .select()
+        .single();
+
+      if (error) {
+        // If no rows were updated, it means the flag was already true
+        if (error.code === 'PGRST116') {
+          console.log('Video room creation already in progress for game:', gameId);
+          return { success: false, error: 'Video room already being created' };
+        }
+        
+        console.error('Error in atomic video room flag update:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('Successfully set video room creation flag for game:', gameId);
+      return { success: true, data: data as GameRecord };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error in atomic video room flag update:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
    * Update a game record with the provided fields.
    */
   static async updateGame(

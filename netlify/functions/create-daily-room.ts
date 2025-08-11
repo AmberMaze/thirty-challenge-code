@@ -1,5 +1,44 @@
 import type { Handler } from '@netlify/functions';
 
+// Import Supabase for database check
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+// Function to check if video room is already being created
+async function checkVideoRoomStatus(gameId: string): Promise<{ alreadyCreated: boolean; roomUrl?: string }> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.log('Supabase not configured, skipping database check');
+    return { alreadyCreated: false };
+  }
+
+  try {
+    // Use dynamic import to load Supabase only when needed
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const { data, error } = await supabase
+      .from('games')
+      .select('video_room_created, video_room_url')
+      .eq('id', gameId)
+      .single();
+
+    if (error) {
+      console.error('Database check error:', error);
+      return { alreadyCreated: false };
+    }
+
+    if (data?.video_room_created && data?.video_room_url) {
+      console.log('Video room already exists for game:', gameId, 'URL:', data.video_room_url);
+      return { alreadyCreated: true, roomUrl: data.video_room_url };
+    }
+
+    return { alreadyCreated: false };
+  } catch (error) {
+    console.error('Error checking video room status:', error);
+    return { alreadyCreated: false };
+  }
+}
+
 // Enhanced Daily.co room creation with comprehensive error handling and validation
 export const handler: Handler = async (event) => {
   // Handle CORS preflight requests
@@ -97,6 +136,30 @@ export const handler: Handler = async (event) => {
     // Use the session ID directly as room name (no sanitization to preserve session ID)
     // Session IDs should already be safe for Daily.co room names
     const roomNameForDaily = roomName.trim();
+
+    // Check if room is already created in database to prevent duplicates
+    console.log('Checking database for existing video room:', roomNameForDaily);
+    const roomStatus = await checkVideoRoomStatus(roomNameForDaily);
+    
+    if (roomStatus.alreadyCreated && roomStatus.roomUrl) {
+      console.log('Room already exists in database, returning existing URL');
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'POST',
+        } as Record<string, string>,
+        body: JSON.stringify({
+          roomName: roomNameForDaily,
+          url: roomStatus.roomUrl,
+          created: new Date().toISOString(),
+          config: {},
+          note: 'Room already existed in database',
+        }),
+      };
+    }
 
     // Prepare room configuration with safe defaults
     const roomConfig = {
