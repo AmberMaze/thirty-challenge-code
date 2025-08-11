@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { getSupabase, isSupabaseConfigured } from './supabaseLazy';
 import type { GameRecord, PlayerRecord } from './gameDatabase';
 import type { Dispatch } from 'react';
 import type { GameState, PlayerId, Player } from '../types/game';
@@ -47,6 +47,7 @@ export class GameSync {
 
     try {
       // Create or join the game channel
+      const supabase = await getSupabase();
       this.channel = supabase.channel(`game:${this.gameId}`, {
         config: {
           broadcast: { self: true },
@@ -261,7 +262,8 @@ export function createGameSync(
   return new GameSync(gameId, callbacks);
 }
 
-export function attachGameSync(gameId: string, dispatch: Dispatch<GameAction>) {
+export async function attachGameSync(gameId: string, dispatch: Dispatch<GameAction>) {
+  const supabase = await getSupabase();
   const channel = supabase
     .channel(`game:${gameId}`)
     .on(
@@ -309,6 +311,7 @@ export function attachGameSync(gameId: string, dispatch: Dispatch<GameAction>) {
     )
     .subscribe();
 
+  // Cleanup function is now synchronous
   return () => {
     supabase.removeChannel(channel);
   };

@@ -132,7 +132,7 @@ function VideoContent({
     // Only proceed if:
     // 1. We're a host or controller
     // 2. Game state is loaded (gameId matches our gameId)
-    // 3. No room URL exists in game state
+    // 3. No room URL exists in game state AND video_room_created is false
     // 4. We haven't attempted creation yet
     // 5. We're not currently creating a room
     // 6. We haven't attempted creation in the last 10 seconds (increased throttle)
@@ -141,6 +141,7 @@ function VideoContent({
       (myParticipant.type === 'host' || myParticipant.type === 'controller') &&
       gameState.gameId === gameId && // Ensure game state is loaded for this gameId
       !gameState.videoRoomUrl &&
+      !gameState.videoRoomCreated && // Check database flag to prevent duplicate creation
       !roomCreationAttempted &&
       !isCreatingRoom &&
       (now - lastRoomCreationAttempt > 10000) // 10 second throttle (increased)
@@ -207,7 +208,7 @@ function VideoContent({
               return;
             }
             
-            // Room doesn't exist, create a new one
+            // Room doesn't exist, create a new one using atomic guard
             console.log('[VideoRoom] No existing room found, creating new room with session ID:', gameId);
             currentShowAlertMessage('Creating video room...', 'info');
             const result = await currentCreateVideoRoom(gameId);
@@ -219,8 +220,14 @@ function VideoContent({
               
               // Room creation also handles database update through useGameActions
             } else {
-              currentShowAlertMessage(`Failed to create video room: ${result.error || 'Unknown error'}`, 'error');
-              console.error('[VideoRoom] Room creation failed:', result);
+              // Handle specific error cases
+              if (result.error?.includes('already being created')) {
+                currentShowAlertMessage('Video room is already being created by another process', 'info');
+                console.log('[VideoRoom] Room creation already in progress:', result.error);
+              } else {
+                currentShowAlertMessage(`Failed to create video room: ${result.error || 'Unknown error'}`, 'error');
+                console.error('[VideoRoom] Room creation failed:', result);
+              }
             }
           } catch (error) {
             console.error('[VideoRoom] Failed to check/create video room:', error);
@@ -382,7 +389,7 @@ function VideoContent({
     } finally {
       setIsJoining(false);
     }
-  }, [daily, roomUrl, userName, myParticipant.name, myParticipant.type, myParticipant.id, gameState.hostName, preAuthToken, isJoining, showAlertMessage, t]);
+  }, [daily, roomUrl, myParticipant.name, myParticipant.type, myParticipant.id, gameState.hostName, preAuthToken, isJoining, showAlertMessage, t]);
 
   // Leave call function
   const leaveCall = useCallback(async () => {

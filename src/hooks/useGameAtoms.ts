@@ -220,6 +220,17 @@ export function useGameActions() {
 
   const createVideoRoom = useCallback(async (gameId: string) => {
     try {
+      // First, atomically set the video_room_created flag to prevent race conditions
+      console.log('Attempting to atomically set video room creation flag for gameId:', gameId);
+      const atomicResult = await GameDatabase.atomicSetVideoRoomCreating(gameId);
+      
+      if (!atomicResult.success) {
+        console.log('Cannot create video room - already being created by another process:', atomicResult.error);
+        return { success: false, error: atomicResult.error || 'Room already being created' };
+      }
+
+      console.log('Successfully acquired video room creation lock for gameId:', gameId);
+
       // Development mode: use mock video room
       if (isDevelopmentMode()) {
         console.log('[DEV] Creating mock video room for gameId:', gameId);
@@ -230,11 +241,10 @@ export function useGameActions() {
         // Simulate async operation
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Update database first (if available)
+        // Update database with URL (flag already set by atomic operation)
         try {
           await GameDatabase.updateGame(gameId, {
             video_room_url: mockUrl,
-            video_room_created: true,
           });
         } catch (dbError) {
           console.warn('[DEV] Database update failed, continuing with local state only:', dbError);
@@ -269,10 +279,9 @@ export function useGameActions() {
       const data = await result.json() as { url?: string; error?: string };
       
       if (data.url) {
-        // Update database first
+        // Update database with the URL (flag already set by atomic operation)
         await GameDatabase.updateGame(gameId, {
           video_room_url: data.url,
-          video_room_created: true,
         });
         
         // Update local state - use store.set directly
@@ -291,10 +300,27 @@ export function useGameActions() {
         }
         
         return { success: true, roomUrl: data.url };
+      } else {
+        // Room creation failed, reset the flag
+        console.error('Daily room creation failed, resetting flag:', data.error);
+        await GameDatabase.updateGame(gameId, {
+          video_room_created: false,
+        });
+        
+        return { success: false, error: data.error || 'create failed' };
       }
-      return { success: false, error: data.error || 'create failed' };
     } catch (error) {
       console.error('Failed to create video room:', error);
+      
+      // Reset the flag on error
+      try {
+        await GameDatabase.updateGame(gameId, {
+          video_room_created: false,
+        });
+      } catch (resetError) {
+        console.error('Failed to reset video room flag after error:', resetError);
+      }
+      
       return { success: false, error: 'Network error' };
     }
   }, [store]);

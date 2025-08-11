@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameActions } from '@/hooks/useGameAtoms';
 import { GameDatabase } from '@/lib/gameDatabase';
-import { getConfigurationError } from '@/lib/supabaseClient';
+import { getConfigurationError } from '@/lib/supabaseLazy';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SegmentCode } from '@/types/game';
 

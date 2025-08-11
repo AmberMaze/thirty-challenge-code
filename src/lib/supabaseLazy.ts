@@ -63,6 +63,19 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
+ * Returns a user-friendly error message for configuration issues.
+ */
+export function getConfigurationError(): string | null {
+  if (isSupabaseConfigured()) return null;
+  
+  if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
+    return 'متغيرات البيئة مفقودة: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY';
+  }
+  
+  return 'إعدادات قاعدة البيانات غير صحيحة - تعمل في وضع التطوير';
+}
+
+/**
  * Create a Supabase channel with lazy loading
  */
 export async function createChannel(

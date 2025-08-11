@@ -1,4 +1,4 @@
-import { isSupabaseConfigured, supabase } from './supabaseClient';
+import { getSupabase, isSupabaseConfigured } from './supabaseLazy';
 
 // Check if we're in development mode
 const isDevelopmentMode = () => import.meta.env?.DEV === true;
@@ -7,6 +7,7 @@ const isDevelopmentMode = () => import.meta.env?.DEV === true;
 const developmentStorage = {
   games: new Map<string, GameRecord>(),
   players: new Map<string, PlayerRecord[]>(),
+  atomicLocks: new Map<string, boolean>(), // Track atomic locks
 };
 
 // GameState and PlayerId types are not needed in this module
@@ -132,7 +133,8 @@ export class GameDatabase {
     }
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .insert({
@@ -181,7 +183,8 @@ export class GameDatabase {
     if (!isSupabaseConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*') // selects all columns including host_code
@@ -210,7 +213,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*')
@@ -227,6 +231,92 @@ export class GameDatabase {
     } catch (error) {
       console.error('Error fetching game with host code:', error);
       return null;
+    }
+  }
+
+  /**
+   * Atomically set video_room_created flag to true if it's currently false.
+   * This prevents race conditions during room creation.
+   * 
+   * @param gameId The game ID
+   * @returns { success: true, data: GameRecord } if the flag was successfully set,
+   *          { success: false } if the flag was already true (room already being created)
+   */
+  static async atomicSetVideoRoomCreating(
+    gameId: string,
+  ): Promise<{ success: boolean; data?: GameRecord; error?: string }> {
+    // Development mode: simulate atomic operation with in-memory storage
+    if (isDevelopmentMode()) {
+      console.log('[DEV] Atomic set video room creating for:', gameId);
+      
+      const lockKey = `video_room_${gameId}`;
+      
+      // Check if another process is already creating the room
+      if (developmentStorage.atomicLocks.has(lockKey)) {
+        console.log('[DEV] Video room already being created by another process');
+        return { success: false, error: 'Video room already being created' };
+      }
+      
+      const existingGame = developmentStorage.games.get(gameId);
+      if (!existingGame) {
+        return { success: false, error: 'Game not found' };
+      }
+      
+      if (existingGame.video_room_created) {
+        console.log('[DEV] Video room already created');
+        return { success: false, error: 'Video room already created' };
+      }
+      
+      // Acquire the atomic lock (simulates database row lock)
+      developmentStorage.atomicLocks.set(lockKey, true);
+      
+      // Set the flag atomically
+      const updatedGame: GameRecord = {
+        ...existingGame,
+        video_room_created: true,
+        updated_at: new Date().toISOString(),
+      };
+      
+      developmentStorage.games.set(gameId, updatedGame);
+      console.log('[DEV] Video room creation flag set successfully');
+      return { success: true, data: updatedGame };
+    }
+
+    // Production mode: use Supabase with atomic WHERE condition
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Database not configured' };
+    }
+
+    try {
+      const supabase = await getSupabase();
+      const { data, error } = await supabase
+        .from('games')
+        .update({ 
+          video_room_created: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', gameId)
+        .eq('video_room_created', false) // Only update if flag is currently false
+        .select()
+        .single();
+
+      if (error) {
+        // If no rows were updated, it means the flag was already true
+        if (error.code === 'PGRST116') {
+          console.log('Video room creation already in progress for game:', gameId);
+          return { success: false, error: 'Video room already being created' };
+        }
+        
+        console.error('Error in atomic video room flag update:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('Successfully set video room creation flag for game:', gameId);
+      return { success: true, data: data as GameRecord };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error in atomic video room flag update:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -262,7 +352,8 @@ export class GameDatabase {
     if (!isSupabaseConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .update(updates)
@@ -299,7 +390,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       
       // First, remove the player from any existing games to avoid primary key conflicts
       // This allows players to switch between games
@@ -339,7 +431,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .select('*')
@@ -365,7 +458,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return null;
 
     try {
-      // Use singleton supabase client - ensure single row update
+      // Use lazy supabase client - ensure single row update
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .update(updates)
@@ -398,6 +492,7 @@ export class GameDatabase {
     }
 
     try {
+      const supabase = await getSupabase();
       // First check if player exists and get current data
       const { data: existingPlayer, error: fetchError } = await supabase
         .from('players')
@@ -451,7 +546,8 @@ export class GameDatabase {
     event_data: Record<string, unknown> = {},
   ) {
     if (!this.isConfigured()) return;
-    // Use singleton supabase client
+    // Use lazy supabase client
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('game_events')
       .insert([{ game_id: gameId, event_type, event_data }]);
@@ -462,7 +558,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return false;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
     const { error } = await supabase
         .from('players')
         .delete()
@@ -487,7 +584,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('players')
         .select('*')
@@ -524,7 +622,8 @@ export class GameDatabase {
     }
 
     // Subscribe to game updates
-    // Use singleton supabase client
+    // Use lazy supabase client
+    const supabase = await getSupabase();
     const gameSubscription = supabase
       .channel(`game:${gameId}`)
       .on(
@@ -650,7 +749,8 @@ export class GameDatabase {
       const cutoffTime = new Date();
       cutoffTime.setHours(cutoffTime.getHours() - olderThanHours);
 
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .delete()
@@ -698,7 +798,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return [];
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
         .select('*')
@@ -725,7 +826,8 @@ export class GameDatabase {
     if (!this.isConfigured()) return false;
 
     try {
-      // Use singleton supabase client
+      // Use lazy supabase client
+      const supabase = await getSupabase();
       const { error } = await supabase.from('game_events').insert({
         game_id: gameId,
         event_type: eventType,
