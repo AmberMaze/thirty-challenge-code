@@ -30,7 +30,7 @@ export default defineConfig({
           ui: ['framer-motion'],
           // Split SDKs into separate chunks for lazy loading
           supabase: ['@supabase/supabase-js'],
-          daily: ['@daily-co/daily-js'],
+          // Daily SDK will be code-split automatically with lazy loading
           jotai: ['jotai'],
         },
       },
