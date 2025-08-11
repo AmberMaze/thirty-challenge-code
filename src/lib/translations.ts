@@ -218,6 +218,7 @@ export interface Translations {
   loadingLobby: string;
   noGameIdFound: string;
   loadingVideoComponents: string;
+  preparingVideoConnection: string;
   failedInitVideoComponents: string;
   failedGenerateToken: string;
   failedJoinCall: string;
@@ -447,6 +448,7 @@ export const translations: Record<Language, Translations> = {
     loadingLobby: 'Loading lobby...',
     noGameIdFound: 'No game ID found',
     loadingVideoComponents: 'Loading video components...',
+    preparingVideoConnection: 'Preparing video connection...',
     failedInitVideoComponents: 'Failed to initialize video components',
     failedGenerateToken: 'Failed to generate login token, you can continue without it',
     failedJoinCall: 'Failed to join call',
@@ -674,6 +676,7 @@ export const translations: Record<Language, Translations> = {
     loadingLobby: 'جاري تحميل الصالة...',
     noGameIdFound: 'لا يوجد معرف للعبة',
     loadingVideoComponents: 'جاري تهيئة مكونات الفيديو...',
+    preparingVideoConnection: 'جاري تحضير اتصال الفيديو...',
     failedInitVideoComponents: 'فشل في تهيئة مكونات الفيديو',
     failedGenerateToken: 'تعذر إنشاء رمز الدخول، يمكنك المتابعة بدونه',
     failedJoinCall: 'فشل في الانضمام للمكالمة',

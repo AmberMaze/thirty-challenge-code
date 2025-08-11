@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAtomValue } from 'jotai';
 import { useGameState, useGameActions, useLobbyActions, useGameSync } from '@/hooks/useGameAtoms';
 import { gameSyncInstanceAtom, lobbyParticipantsAtom } from '@/state';
-import SimpleKitchenSinkVideo from '@/components/SimpleKitchenSinkVideo';
+import SimpleKitchenSinkVideoLazy from '@/components/SimpleKitchenSinkVideoLazy';
 import AlertBanner from '@/components/AlertBanner';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -318,7 +318,7 @@ export default function Lobby() {
 
         {/* Simple Kitchen Sink Video - Optimized for mobile */}
         <div className="mb-6">
-          <SimpleKitchenSinkVideo
+          <SimpleKitchenSinkVideoLazy
             gameId={gameId!}
             myParticipant={myParticipant}
             showAlertMessage={showAlertMessage}
