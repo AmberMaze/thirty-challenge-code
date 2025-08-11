@@ -3,11 +3,11 @@ import { GameDatabase } from '@/lib/gameDatabase';
 export interface HeartbeatConfig {
   playerId: string;
   intervalMs?: number; // Default: 60000 (60s)
-  onError?: (error: Error) => void;
+  onError?: (_err: Error) => void;
 }
 
 export class HeartbeatManager {
-  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private intervalId: number | null = null;
   private config: HeartbeatConfig;
   private isActive = false;
 
@@ -118,7 +118,7 @@ export class MultiPlayerHeartbeat {
   /**
    * Start heartbeat for a specific player
    */
-  startForPlayer(playerId: string, onError?: (error: Error) => void): void {
+  startForPlayer(playerId: string, onError?: (_err: Error) => void): void {
     if (this.heartbeats.has(playerId)) {
       console.warn(`Heartbeat already exists for player ${playerId}`);
       return;

@@ -9,6 +9,7 @@ import LanguageToggle from '@/components/LanguageToggle';
 import { useTranslation } from '@/hooks/useTranslation';
 import { debugLog } from '@/utils/debugLog';
 import type { LobbyParticipant } from '@/state';
+import { AtomGameSync } from '@/lib/atomGameSync';
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -205,7 +206,8 @@ export default function Lobby() {
         // Try to send a beacon to mark player as disconnected
         // Note: This would require a serverless function endpoint to handle the beacon
         const hasBeaconSupport = typeof navigator.sendBeacon !== 'undefined';
-        if (hasBeaconSupport && ENABLE_BEACON) { // Disabled for now - would need serverless function
+        const ENABLE_BEACON = false; // Disabled for now - would need serverless function
+        if (hasBeaconSupport && ENABLE_BEACON) {
           navigator.sendBeacon('/api/disconnect-player', payload);
         } else {
           console.log('Page unloading, player will be marked disconnected by presence timeout');
@@ -246,15 +248,11 @@ export default function Lobby() {
 
   // Start heartbeat for players when they connect
   useEffect(() => {
-    function hasStartHeartbeat(obj: any): obj is GameSyncWithHeartbeat {
-      return typeof obj?.startHeartbeat === 'function';
-    }
     if (
       myParticipant &&
       myParticipant.type === 'player' &&
       myParticipant.playerId &&
-      gameSyncInstance &&
-      hasStartHeartbeat(gameSyncInstance)
+      gameSyncInstance instanceof AtomGameSync
     ) {
       console.log(`Starting heartbeat for player ${myParticipant.playerId}`);
       gameSyncInstance.startHeartbeat(myParticipant.playerId);
