@@ -246,12 +246,18 @@ export default function Lobby() {
 
   // Start heartbeat for players when they connect
   useEffect(() => {
-    if (myParticipant && myParticipant.type === 'player' && myParticipant.playerId && gameSyncInstance) {
-      const syncInstance = gameSyncInstance as { startHeartbeat?: (playerId: string) => void };
-      if (syncInstance.startHeartbeat) {
-        console.log(`Starting heartbeat for player ${myParticipant.playerId}`);
-        syncInstance.startHeartbeat(myParticipant.playerId);
-      }
+    function hasStartHeartbeat(obj: any): obj is GameSyncWithHeartbeat {
+      return typeof obj?.startHeartbeat === 'function';
+    }
+    if (
+      myParticipant &&
+      myParticipant.type === 'player' &&
+      myParticipant.playerId &&
+      gameSyncInstance &&
+      hasStartHeartbeat(gameSyncInstance)
+    ) {
+      console.log(`Starting heartbeat for player ${myParticipant.playerId}`);
+      gameSyncInstance.startHeartbeat(myParticipant.playerId);
     }
   }, [myParticipant, gameSyncInstance]);
 
