@@ -7,6 +7,7 @@ const isDevelopmentMode = () => import.meta.env?.DEV === true;
 const developmentStorage = {
   games: new Map<string, GameRecord>(),
   players: new Map<string, PlayerRecord[]>(),
+  atomicLocks: new Map<string, boolean>(), // Track atomic locks
 };
 
 // GameState and PlayerId types are not needed in this module
@@ -248,15 +249,26 @@ export class GameDatabase {
     if (isDevelopmentMode()) {
       console.log('[DEV] Atomic set video room creating for:', gameId);
       
+      const lockKey = `video_room_${gameId}`;
+      
+      // Check if another process is already creating the room
+      if (developmentStorage.atomicLocks.has(lockKey)) {
+        console.log('[DEV] Video room already being created by another process');
+        return { success: false, error: 'Video room already being created' };
+      }
+      
       const existingGame = developmentStorage.games.get(gameId);
       if (!existingGame) {
         return { success: false, error: 'Game not found' };
       }
       
       if (existingGame.video_room_created) {
-        console.log('[DEV] Video room already being created/created');
-        return { success: false, error: 'Video room already being created' };
+        console.log('[DEV] Video room already created');
+        return { success: false, error: 'Video room already created' };
       }
+      
+      // Acquire the atomic lock (simulates database row lock)
+      developmentStorage.atomicLocks.set(lockKey, true);
       
       // Set the flag atomically
       const updatedGame: GameRecord = {
