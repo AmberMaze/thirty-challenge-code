@@ -311,8 +311,8 @@ export async function attachGameSync(gameId: string, dispatch: Dispatch<GameActi
     )
     .subscribe();
 
-  return async () => {
-    const supabase = await getSupabase();
+  // Cleanup function is now synchronous
+  return () => {
     supabase.removeChannel(channel);
   };
 }
