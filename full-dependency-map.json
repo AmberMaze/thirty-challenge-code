@@ -38,13 +38,22 @@
   "src/components/LazyImage.tsx": [],
   "src/components/Scoreboard.tsx": [],
   "src/components/SimpleKitchenSinkVideo.tsx": [],
+  "src/components/SimpleKitchenSinkVideoLazy.tsx": [
+    "src/components/SimpleKitchenSinkVideo.tsx"
+  ],
   "src/components/Timer.tsx": [],
   "src/components/VideoGrid.tsx": [],
   "src/components/VideoRoom.tsx": [
     "src/components/AlertBanner.tsx"
   ],
+  "src/components/VideoRoomLazy.tsx": [
+    "src/components/VideoRoom.tsx"
+  ],
   "src/components/__tests__/SimpleKitchenSinkVideo.test.tsx": [
     "src/components/SimpleKitchenSinkVideo.tsx"
+  ],
+  "src/components/__tests__/SimpleKitchenSinkVideoLazy.test.tsx": [
+    "src/components/SimpleKitchenSinkVideoLazy.tsx"
   ],
   "src/context/GameContext.tsx": [
     "src/context/defaults.ts",
