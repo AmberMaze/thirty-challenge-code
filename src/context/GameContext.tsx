@@ -39,16 +39,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
   useEffect(() => {
     if (!state.gameId) return;
-    
+
     let detachFn: (() => Promise<void>) | null = null;
-    
+    const isActive = { current: true };
+
     // Setup async attachment
     attachGameSync(state.gameId, dispatch).then((detach) => {
-      detachFn = detach;
+      if (isActive.current) {
+        detachFn = detach;
+      } else {
+        // If effect already cleaned up, call detach immediately
+        detach().catch(console.error);
+      }
     }).catch(console.error);
-    
+
     // Cleanup function
     return () => {
+      isActive.current = false;
       if (detachFn) {
         detachFn().catch(console.error);
       }
