@@ -7,7 +7,7 @@ export interface HeartbeatConfig {
 }
 
 export class HeartbeatManager {
-  private intervalId: number | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private config: HeartbeatConfig;
   private isActive = false;
 
