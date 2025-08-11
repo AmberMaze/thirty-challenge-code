@@ -66,11 +66,11 @@
   "src/lib/atomGameSync.ts": [],
   "src/lib/dailyConfig.ts": [],
   "src/lib/gameDatabase.ts": [
-    "src/lib/supabaseClient.ts"
+    "src/lib/supabaseLazy.ts"
   ],
   "src/lib/gameSync.ts": [
     "src/lib/gameDatabase.ts",
-    "src/lib/supabaseClient.ts",
+    "src/lib/supabaseLazy.ts",
     "src/types/game.ts"
   ],
   "src/lib/supabaseClient.ts": [],
