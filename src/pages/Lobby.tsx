@@ -205,7 +205,7 @@ export default function Lobby() {
         // Try to send a beacon to mark player as disconnected
         // Note: This would require a serverless function endpoint to handle the beacon
         const hasBeaconSupport = typeof navigator.sendBeacon !== 'undefined';
-        if (hasBeaconSupport && false) { // eslint-disable-line no-constant-condition -- Disabled for now - would need serverless function
+        if (hasBeaconSupport && ENABLE_BEACON) { // Disabled for now - would need serverless function
           navigator.sendBeacon('/api/disconnect-player', payload);
         } else {
           console.log('Page unloading, player will be marked disconnected by presence timeout');
