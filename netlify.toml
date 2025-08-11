@@ -1,10 +1,10 @@
 [build]
   # How to build your Vite app
-  command    = "pnpm run build"
+  command    = "corepack enable && pnpm i --frozen-lockfile && pnpm build"
   # Where Vite outputs the production files
   publish    = "dist"
   # Pin build environment to Node 20 as used locally
-  environment = { NODE_VERSION = "20" }
+  environment = { NODE_VERSION = "20", PNPM_VERSION = "10" }
 
 [functions]
   # Functions are located in ./netlify/functions relative to this file
