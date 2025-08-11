@@ -9,6 +9,7 @@ import LanguageToggle from '@/components/LanguageToggle';
 import { useTranslation } from '@/hooks/useTranslation';
 import { debugLog } from '@/utils/debugLog';
 import type { LobbyParticipant } from '@/state';
+import { AtomGameSync } from '@/lib/atomGameSync';
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -192,25 +193,44 @@ export default function Lobby() {
 
   // Set up cleanup when user leaves the page
   useEffect(() => {
-    // Capture current function to avoid stale closures
-    const currentSetHostConnected = setHostConnected;
-    
-    const handleBeforeUnload = () => {
-      if (myParticipant && gameSyncInstance && typeof gameSyncInstance === 'object' && 'disconnect' in gameSyncInstance) {
-        (gameSyncInstance as { disconnect: () => Promise<void> }).disconnect().catch(console.error);
+    // Handle browser tab close/refresh - synchronous version
+    const handleBeforeUnloadSync = () => {
+      if (myParticipant && myParticipant.type === 'player' && myParticipant.playerId) {
+        // Use navigator.sendBeacon for reliable delivery on page unload
+        const payload = JSON.stringify({
+          playerId: myParticipant.playerId,
+          is_connected: false,
+          last_active: new Date().toISOString()
+        });
         
-        if (myParticipant.type === 'controller' || myParticipant.type === 'host') {
-          currentSetHostConnected(false);
+        // Try to send a beacon to mark player as disconnected
+        // Note: This would require a serverless function endpoint to handle the beacon
+        const hasBeaconSupport = typeof navigator.sendBeacon !== 'undefined';
+        const ENABLE_BEACON = false; // Disabled for now - would need serverless function
+        if (hasBeaconSupport && ENABLE_BEACON) {
+          navigator.sendBeacon('/api/disconnect-player', payload);
+        } else {
+          console.log('Page unloading, player will be marked disconnected by presence timeout');
         }
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', handleBeforeUnloadSync);
+    
+    // Also handle visibility change (tab switching)
+    const handleVisibilityChange = () => {
+      if (document.hidden && myParticipant && myParticipant.type === 'player' && myParticipant.playerId) {
+        console.log('Tab hidden, heartbeat will continue but presence may timeout');
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleBeforeUnloadSync);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [myParticipant, gameSyncInstance, setHostConnected]);
+  }, [myParticipant, setHostConnected]);
 
   // Separate effect for component unmount cleanup
   useEffect(() => {
@@ -225,6 +245,19 @@ export default function Lobby() {
       }
     };
   }, [myParticipant, setHostConnected]);
+
+  // Start heartbeat for players when they connect
+  useEffect(() => {
+    if (
+      myParticipant &&
+      myParticipant.type === 'player' &&
+      myParticipant.playerId &&
+      gameSyncInstance instanceof AtomGameSync
+    ) {
+      console.log(`Starting heartbeat for player ${myParticipant.playerId}`);
+      gameSyncInstance.startHeartbeat(myParticipant.playerId);
+    }
+  }, [myParticipant, gameSyncInstance]);
 
   if (!myParticipant || !gameId) {
     return (

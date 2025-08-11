@@ -40,7 +40,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.gameId) return;
 
-    let detachFn: (() => Promise<void>) | null = null;
+    let detachFn: (() => void) | null = null;
     const isActive = { current: true };
 
     // Setup async attachment
@@ -49,7 +49,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         detachFn = detach;
       } else {
         // If effect already cleaned up, call detach immediately
-        detach().catch(console.error);
+        detach();
       }
     }).catch(console.error);
 
@@ -57,7 +57,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => {
       isActive.current = false;
       if (detachFn) {
-        detachFn().catch(console.error);
+        detachFn();
       }
     };
   }, [state.gameId]);

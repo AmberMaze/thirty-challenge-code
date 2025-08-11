@@ -113,6 +113,7 @@
   ],
   "src/utils/debugLog.ts": [],
   "src/utils/debugNetworkRequests.ts": [],
+  "src/utils/heartbeat.ts": [],
   "src/utils/teamUtils.ts": [],
   "src/vite-env.d.ts": []
 }

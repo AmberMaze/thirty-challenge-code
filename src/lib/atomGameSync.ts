@@ -4,6 +4,7 @@ import { GameDatabase } from '@/lib/gameDatabase';
 import type { GameState, PlayerId, Player } from '@/types/game';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { createStore } from 'jotai';
+import { MultiPlayerHeartbeat } from '@/utils/heartbeat';
 type Store = ReturnType<typeof createStore>;
 import { 
   updateGameStateAtom, 
@@ -53,10 +54,12 @@ export class AtomGameSync {
   private store: Store;
   private channel: RealtimeChannel | null = null;
   private gameSubscription: RealtimeChannel | null = null;
+  private heartbeatManager: MultiPlayerHeartbeat;
 
   constructor(gameId: string, store: Store) {
     this.gameId = gameId;
     this.store = store;
+    this.heartbeatManager = new MultiPlayerHeartbeat();
   }
 
   async connect() {
@@ -228,6 +231,9 @@ export class AtomGameSync {
           update: { isConnected: true, name: participant.name }
         });
         
+        // Start heartbeat for connected player
+        this.startHeartbeat(participant.playerId);
+        
         // Update database to reflect connection status - method already checks if player exists
         GameDatabase.updatePlayerById(participant.playerId, { 
           is_connected: true,
@@ -256,6 +262,9 @@ export class AtomGameSync {
           playerId: playerId as PlayerId,
           update: { isConnected: false }
         });
+        
+        // Stop heartbeat and mark as disconnected
+        this.stopHeartbeat(playerId as PlayerId);
         
         // Update database to reflect disconnection - method already checks if player exists
         GameDatabase.updatePlayerById(playerId, { 
@@ -359,6 +368,9 @@ export class AtomGameSync {
   }
 
   async disconnect() {
+    // Stop all heartbeats and mark players as disconnected
+    await this.heartbeatManager.stopAll();
+
     if (this.channel) {
       await this.channel.unsubscribe();
       this.channel = null;
@@ -372,6 +384,29 @@ export class AtomGameSync {
 
     this.store.set(isConnectedToSupabaseAtom, false);
     this.store.set(gameSyncInstanceAtom, null);
+  }
+
+  /**
+   * Start heartbeat for a player to keep their last_active updated
+   */
+  startHeartbeat(playerId: PlayerId) {
+    this.heartbeatManager.startForPlayer(playerId, (error) => {
+      console.warn(`Heartbeat error for player ${playerId}:`, error);
+    });
+  }
+
+  /**
+   * Stop heartbeat for a player and mark them as disconnected
+   */
+  async stopHeartbeat(playerId: PlayerId) {
+    await this.heartbeatManager.markPlayerDisconnected(playerId);
+  }
+
+  /**
+   * Get list of players with active heartbeats
+   */
+  getActiveHeartbeats(): string[] {
+    return this.heartbeatManager.getActivePlayerIds();
   }
 }
 
