@@ -4,6 +4,11 @@ import { GameDatabase, type GameRecord } from '@/lib/gameDatabase';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAtomValue } from 'jotai';
 import { isArabicAtom } from '@/state/languageAtoms';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+// Extend dayjs with relativeTime plugin
+dayjs.extend(relativeTime);
 
 interface ActiveGamesProps {
   onJoinGame: (gameId: string) => void;
@@ -50,10 +55,9 @@ export default function ActiveGames({ onJoinGame }: ActiveGamesProps) {
   };
 
   const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const date = dayjs(dateString);
+    const now = dayjs();
+    const diffMins = now.diff(date, 'minute');
     
     if (diffMins < 1) return isArabic ? 'الآن' : 'Now';
     if (diffMins < 60) return isArabic ? `${diffMins} دقيقة` : `${diffMins}m ago`;

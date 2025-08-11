@@ -17,6 +17,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.52.1
         version: 2.54.0
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.13
       dompurify:
         specifier: ^3.2.6
         version: 3.2.6
@@ -35,9 +38,6 @@ importers:
       jotai:
         specifier: ^2.12.5
         version: 2.13.1(@babel/core@7.28.0)(@babel/template@7.27.2)(@types/react@18.3.23)(react@18.3.1)
-      moment:
-        specifier: ^2.30.1
-        version: 2.30.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1806,6 +1806,9 @@ packages:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
 
+  dayjs@1.11.13:
+    resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
+
   debounce@2.2.0:
     resolution: {integrity: sha512-Xks6RUDLZFdz8LIdR6q0MTH44k7FikOmnh5xkSjMig6ch45afc8sjTjRQf3P6ax8dMgcQrYO/AR2RGWURrruqw==}
     engines: {node: '>=18'}
@@ -3129,9 +3132,6 @@ packages:
     resolution: {integrity: sha512-Rs5FVpVcBYRHPLuhHOjgbRhosaQYLtEo3JIeDIbmNo7mSssi1CTzwMh8v36gAzpbzLGXI9wB/yHh+5+3fY1QVw==}
     engines: {node: '>=18'}
     hasBin: true
-
-  moment@2.30.1:
-    resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
   motion-dom@12.23.12:
     resolution: {integrity: sha512-RcR4fvMCTESQBD/uKQe49D5RUeDOokkGRmz4ceaJKDBgHYtZtntC/s2vLvY38gqGaytinij/yi3hMcWVcEF5Kw==}
@@ -6228,6 +6228,8 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
+  dayjs@1.11.13: {}
+
   debounce@2.2.0: {}
 
   debug@4.4.1:
@@ -7867,8 +7869,6 @@ snapshots:
       glob: 7.2.3
       requirejs: 2.3.7
       requirejs-config-file: 4.0.0
-
-  moment@2.30.1: {}
 
   motion-dom@12.23.12:
     dependencies:
