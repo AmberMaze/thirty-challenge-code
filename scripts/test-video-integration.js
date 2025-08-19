@@ -5,7 +5,9 @@
  * Tests the key flows without requiring a full UI interaction.
  */
 
-const API_BASE = process.env.NETLIFY_FUNCTIONS_URL || 'http://localhost:8888/.netlify/functions';
+const API_BASE =
+  process.env.NETLIFY_FUNCTIONS_URL ||
+  'http://localhost:8888/.netlify/functions';
 
 async function testVideoIntegration() {
   console.log('🧪 Testing Video Integration Fixes...\n');
@@ -19,11 +21,11 @@ async function testVideoIntegration() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ roomName }),
     });
-    
+
     if (!createResponse.ok) {
       throw new Error(`Room creation failed: ${createResponse.status}`);
     }
-    
+
     const roomData = await createResponse.json();
     console.log('✅ Room created successfully:', roomData);
 
@@ -34,57 +36,64 @@ async function testVideoIntegration() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ roomName }),
     });
-    
+
     if (!checkResponse.ok) {
       throw new Error(`Room check failed: ${checkResponse.status}`);
     }
-    
+
     const checkData = await checkResponse.json();
     console.log('✅ Room check successful:', checkData);
 
     if (!checkData.exists) {
-      console.log('❌ Room was created but check says it doesn\'t exist');
+      console.log("❌ Room was created but check says it doesn't exist");
       return false;
     }
 
     // Test 3: Token generation for different participant types
     console.log('\n3️⃣ Testing token generation...');
-    
+
     // Host token
     const hostTokenResponse = await fetch(`${API_BASE}/create-daily-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        room: roomName, 
-        user: 'Test Host', 
+      body: JSON.stringify({
+        room: roomName,
+        user: 'Test Host',
         isHost: true,
-        isObserver: false 
+        isObserver: false,
       }),
     });
-    
+
     if (!hostTokenResponse.ok) {
-      throw new Error(`Host token creation failed: ${hostTokenResponse.status}`);
+      throw new Error(
+        `Host token creation failed: ${hostTokenResponse.status}`,
+      );
     }
-    
+
     const hostTokenData = await hostTokenResponse.json();
     console.log('✅ Host token created successfully');
 
     // Observer token (for control room)
-    const observerTokenResponse = await fetch(`${API_BASE}/create-daily-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        room: roomName, 
-        user: 'Test Observer', 
-        isHost: true,
-        isObserver: true 
-      }),
-    });
-    
+    const observerTokenResponse = await fetch(
+      `${API_BASE}/create-daily-token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room: roomName,
+          user: 'Test Observer',
+          isHost: true,
+          isObserver: true,
+        }),
+      },
+    );
+
     if (!observerTokenResponse.ok) {
-      throw new Error(`Observer token creation failed: ${observerTokenResponse.status}`);
+      throw new Error(
+        `Observer token creation failed: ${observerTokenResponse.status}`,
+      );
     }
-    
+
     const observerTokenData = await observerTokenResponse.json();
     console.log('✅ Observer token created successfully');
 
@@ -92,18 +101,20 @@ async function testVideoIntegration() {
     const playerTokenResponse = await fetch(`${API_BASE}/create-daily-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        room: roomName, 
-        user: 'Test Player', 
+      body: JSON.stringify({
+        room: roomName,
+        user: 'Test Player',
         isHost: false,
-        isObserver: false 
+        isObserver: false,
       }),
     });
-    
+
     if (!playerTokenResponse.ok) {
-      throw new Error(`Player token creation failed: ${playerTokenResponse.status}`);
+      throw new Error(
+        `Player token creation failed: ${playerTokenResponse.status}`,
+      );
     }
-    
+
     const playerTokenData = await playerTokenResponse.json();
     console.log('✅ Player token created successfully');
 
@@ -114,7 +125,7 @@ async function testVideoIntegration() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ roomName }),
     });
-    
+
     if (!deleteResponse.ok) {
       console.log('⚠️ Room deletion failed (might be expected)');
     } else {
@@ -123,7 +134,6 @@ async function testVideoIntegration() {
 
     console.log('\n🎉 All video integration tests passed!');
     return true;
-
   } catch (error) {
     console.error('❌ Test failed:', error);
     return false;
@@ -132,7 +142,7 @@ async function testVideoIntegration() {
 
 async function main() {
   const success = await testVideoIntegration();
-  
+
   if (success) {
     console.log('\n✅ Video integration fixes validated successfully!');
     console.log('\n📋 Summary of fixes:');
@@ -150,8 +160,7 @@ async function main() {
   }
 }
 
-if (require.main === module) {
-  main().catch(console.error);
-}
+// Run if this file is executed directly
+main().catch(console.error);
 
-module.exports = { testVideoIntegration };
+export { testVideoIntegration };

@@ -1,8 +1,8 @@
-import { Routes, Route } from 'react-router-dom';
-import { Provider as JotaiProvider } from 'jotai';
-import { lazy, Suspense } from 'react';
 import ConnectionBanner from '@/components/ConnectionBanner';
 import LanguageToggle from '@/components/LanguageToggle';
+import { Provider as JotaiProvider } from 'jotai';
+import { lazy, Suspense } from 'react';
+import { Route, Routes } from 'react-router-dom';
 
 // Lazy load page components to reduce initial bundle size
 const Landing = lazy(() => import('@/pages/Landing'));
@@ -14,11 +14,6 @@ const QuizRoom = lazy(() => import('@/pages/QuizRoom'));
 const ControlRoom = lazy(() => import('@/pages/ControlRoom'));
 const FinalScores = lazy(() => import('@/pages/FinalScores'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
-
-// Alpha Quiz components
-const AlphaEntry = lazy(() => import('@/alphaquiz/pages/AlphaEntry'));
-const AlphaHost = lazy(() => import('@/alphaquiz/pages/AlphaHost'));
-const AlphaPlayer = lazy(() => import('@/alphaquiz/pages/AlphaPlayer'));
 
 // Loading component for suspense fallback
 function PageLoader() {
@@ -52,10 +47,6 @@ export default function App() {
             <Route path="/lobby/:gameId" element={<Lobby />} />
             <Route path="/quiz" element={<QuizRoom />} />
             <Route path="/scores" element={<FinalScores />} />
-            {/* Alpha Quiz Routes */}
-            <Route path="/alpha-quiz" element={<AlphaEntry />} />
-            <Route path="/alpha-quiz/host" element={<AlphaHost />} />
-            <Route path="/alpha-quiz/player" element={<AlphaPlayer />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

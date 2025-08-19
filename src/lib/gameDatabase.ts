@@ -1,7 +1,33 @@
 import { getSupabase, isSupabaseConfigured } from './supabaseLazy';
 
-// Check if we're in development mode
-const isDevelopmentMode = () => import.meta.env?.DEV === true;
+// Check if we should use development mode (in-memory storage)
+// Only use development mode if Supabase is NOT configured
+const shouldUseDevelopmentMode = () => {
+  const isDev = import.meta.env?.DEV === true;
+  const supabaseConfigured = isSupabaseConfigured();
+
+  // If Supabase is configured, always use it regardless of DEV mode
+  if (supabaseConfigured) {
+    console.log(
+      '[GameDatabase] Supabase configured - using production database even in dev mode',
+    );
+    return false;
+  }
+
+  // If Supabase is not configured and we're in dev mode, use in-memory storage
+  if (isDev) {
+    console.log(
+      '[GameDatabase] Development mode with no Supabase - using in-memory storage',
+    );
+    return true;
+  }
+
+  // Production mode without Supabase configuration
+  console.warn(
+    '[GameDatabase] Production mode but Supabase not configured - this will cause issues',
+  );
+  return false;
+};
 
 // In-memory storage for development mode
 const developmentStorage = {
@@ -54,9 +80,9 @@ export interface PlayerRecord {
 // Type guard to validate PlayerRecord
 function isPlayerRecord(data: unknown): data is PlayerRecord {
   if (!data || typeof data !== 'object') return false;
-  
+
   const record = data as Record<string, unknown>;
-  
+
   return (
     typeof record.id === 'string' &&
     typeof record.game_id === 'string' &&
@@ -77,7 +103,7 @@ function isPlayerRecord(data: unknown): data is PlayerRecord {
 export class GameDatabase {
   // Check if Supabase is configured
   static isConfigured(): boolean {
-    return isSupabaseConfigured() || isDevelopmentMode();
+    return isSupabaseConfigured() || shouldUseDevelopmentMode();
   }
 
   // =====================================
@@ -99,9 +125,13 @@ export class GameDatabase {
     segmentSettings: Record<string, number> = {},
   ): Promise<GameRecord | null> {
     // Development mode: use in-memory storage
-    if (isDevelopmentMode()) {
-      console.log('[DEV] Creating game in memory:', { gameId, hostCode, hostName });
-      
+    if (shouldUseDevelopmentMode()) {
+      console.log('[DEV] Creating game in memory:', {
+        gameId,
+        hostCode,
+        hostName,
+      });
+
       const gameRecord: GameRecord = {
         id: gameId,
         host_code: hostCode,
@@ -120,7 +150,7 @@ export class GameDatabase {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      
+
       developmentStorage.games.set(gameId, gameRecord);
       console.log('[DEV] Game created successfully in memory');
       return gameRecord;
@@ -167,7 +197,7 @@ export class GameDatabase {
    */
   static async getGame(gameId: string): Promise<GameRecord | null> {
     // Development mode: get from in-memory storage
-    if (isDevelopmentMode()) {
+    if (shouldUseDevelopmentMode()) {
       console.log('[DEV] Getting game from memory:', gameId);
       const game = developmentStorage.games.get(gameId);
       if (game) {
@@ -237,7 +267,7 @@ export class GameDatabase {
   /**
    * Atomically set video_room_created flag to true if it's currently false.
    * This prevents race conditions during room creation.
-   * 
+   *
    * @param gameId The game ID
    * @returns { success: true, data: GameRecord } if the flag was successfully set,
    *          { success: false } if the flag was already true (room already being created)
@@ -246,37 +276,39 @@ export class GameDatabase {
     gameId: string,
   ): Promise<{ success: boolean; data?: GameRecord; error?: string }> {
     // Development mode: simulate atomic operation with in-memory storage
-    if (isDevelopmentMode()) {
+    if (shouldUseDevelopmentMode()) {
       console.log('[DEV] Atomic set video room creating for:', gameId);
-      
+
       const lockKey = `video_room_${gameId}`;
-      
+
       // Check if another process is already creating the room
       if (developmentStorage.atomicLocks.has(lockKey)) {
-        console.log('[DEV] Video room already being created by another process');
+        console.log(
+          '[DEV] Video room already being created by another process',
+        );
         return { success: false, error: 'Video room already being created' };
       }
-      
+
       const existingGame = developmentStorage.games.get(gameId);
       if (!existingGame) {
         return { success: false, error: 'Game not found' };
       }
-      
+
       if (existingGame.video_room_created) {
         console.log('[DEV] Video room already created');
         return { success: false, error: 'Video room already created' };
       }
-      
+
       // Acquire the atomic lock (simulates database row lock)
       developmentStorage.atomicLocks.set(lockKey, true);
-      
+
       // Set the flag atomically
       const updatedGame: GameRecord = {
         ...existingGame,
         video_room_created: true,
         updated_at: new Date().toISOString(),
       };
-      
+
       developmentStorage.games.set(gameId, updatedGame);
       console.log('[DEV] Video room creation flag set successfully');
       return { success: true, data: updatedGame };
@@ -291,9 +323,9 @@ export class GameDatabase {
       const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('games')
-        .update({ 
+        .update({
           video_room_created: true,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', gameId)
         .eq('video_room_created', false) // Only update if flag is currently false
@@ -303,18 +335,25 @@ export class GameDatabase {
       if (error) {
         // If no rows were updated, it means the flag was already true
         if (error.code === 'PGRST116') {
-          console.log('Video room creation already in progress for game:', gameId);
+          console.log(
+            'Video room creation already in progress for game:',
+            gameId,
+          );
           return { success: false, error: 'Video room already being created' };
         }
-        
+
         console.error('Error in atomic video room flag update:', error);
         return { success: false, error: error.message };
       }
 
-      console.log('Successfully set video room creation flag for game:', gameId);
+      console.log(
+        'Successfully set video room creation flag for game:',
+        gameId,
+      );
       return { success: true, data: data as GameRecord };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       console.error('Error in atomic video room flag update:', errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -328,21 +367,21 @@ export class GameDatabase {
     updates: Partial<GameRecord>,
   ): Promise<GameRecord | null> {
     // Development mode: update in-memory storage
-    if (isDevelopmentMode()) {
+    if (shouldUseDevelopmentMode()) {
       console.log('[DEV] Updating game in memory:', { gameId, updates });
-      
+
       const existingGame = developmentStorage.games.get(gameId);
       if (!existingGame) {
         console.warn('[DEV] Game not found in memory:', gameId);
         return null;
       }
-      
+
       const updatedGame: GameRecord = {
         ...existingGame,
         ...updates,
         updated_at: new Date().toISOString(),
       };
-      
+
       developmentStorage.games.set(gameId, updatedGame);
       console.log('[DEV] Game updated successfully in memory');
       return updatedGame;
@@ -392,13 +431,10 @@ export class GameDatabase {
     try {
       // Use lazy supabase client
       const supabase = await getSupabase();
-      
+
       // First, remove the player from any existing games to avoid primary key conflicts
       // This allows players to switch between games
-      await supabase
-        .from('players')
-        .delete()
-        .eq('id', playerId);
+      await supabase.from('players').delete().eq('id', playerId);
 
       // Now insert the player into the new game
       const { data, error } = await supabase
@@ -511,7 +547,9 @@ export class GameDatabase {
       }
 
       if (existingPlayer.length > 1) {
-        console.warn(`Multiple players found with ID ${playerId}, updating first one`);
+        console.warn(
+          `Multiple players found with ID ${playerId}, updating first one`,
+        );
       }
 
       // Update the player with precise filtering
@@ -531,11 +569,18 @@ export class GameDatabase {
       if (isPlayerRecord(data)) {
         return { success: true, data };
       } else {
-        console.error('Updated player data does not match PlayerRecord type:', data);
-        return { success: false, error: 'Invalid player data returned from database' };
+        console.error(
+          'Updated player data does not match PlayerRecord type:',
+          data,
+        );
+        return {
+          success: false,
+          error: 'Invalid player data returned from database',
+        };
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       console.error('Error updating player by ID:', errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -560,7 +605,7 @@ export class GameDatabase {
     try {
       // Use lazy supabase client
       const supabase = await getSupabase();
-    const { error } = await supabase
+      const { error } = await supabase
         .from('players')
         .delete()
         .eq('id', playerId);
@@ -678,7 +723,9 @@ export class GameDatabase {
   /**
    * Check if a game exists and is in a specific phase
    */
-  static async checkGamePhase(gameId: string): Promise<{ exists: boolean; phase?: string; game?: GameRecord }> {
+  static async checkGamePhase(
+    gameId: string,
+  ): Promise<{ exists: boolean; phase?: string; game?: GameRecord }> {
     if (!this.isConfigured()) {
       return { exists: false };
     }
@@ -720,11 +767,15 @@ export class GameDatabase {
 
       if (!game) return null;
 
-      const totalQuestions = Object.values(game.segment_settings).reduce((sum, count) => sum + (count as number), 0);
-      const connectedPlayers = players.filter(p => p.is_connected).length;
-      const averageScore = players.length > 0 
-        ? players.reduce((sum, p) => sum + p.score, 0) / players.length 
-        : 0;
+      const totalQuestions = Object.values(game.segment_settings).reduce(
+        (sum, count) => sum + (count as number),
+        0,
+      );
+      const connectedPlayers = players.filter((p) => p.is_connected).length;
+      const averageScore =
+        players.length > 0
+          ? players.reduce((sum, p) => sum + p.score, 0) / players.length
+          : 0;
 
       return {
         playerCount: players.length,

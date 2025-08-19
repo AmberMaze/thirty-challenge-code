@@ -9,11 +9,11 @@ import {
 } from '@/hooks/useGameAtoms';
 import { useTranslation } from '@/hooks/useTranslation';
 import { gameSyncInstanceAtom, lobbyParticipantsAtom } from '@/state';
-import type { LobbyParticipant } from '@/state/syncAtoms';
 import { debugLog } from '@/utils/debugLog';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import type { LobbyParticipant } from '@/state/syncAtoms';
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();

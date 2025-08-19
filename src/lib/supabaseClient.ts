@@ -15,11 +15,12 @@ function validateEnvironment(): EnvironmentConfig {
   };
 
   const missingVars: string[] = [];
-  
+
   if (!VITE_SUPABASE_URL) missingVars.push('VITE_SUPABASE_URL');
   if (!VITE_SUPABASE_ANON_KEY) missingVars.push('VITE_SUPABASE_ANON_KEY');
 
-  const isConfigured = missingVars.length === 0 && 
+  const isConfigured =
+    missingVars.length === 0 &&
     VITE_SUPABASE_URL !== 'https://example.supabase.co' &&
     VITE_SUPABASE_ANON_KEY !== 'example-key-placeholder';
 
@@ -27,15 +28,24 @@ function validateEnvironment(): EnvironmentConfig {
     console.warn(
       '🔧 Supabase Configuration Missing:',
       missingVars.join(', '),
-      '- Running in offline mode'
+      '- Running in offline mode',
     );
   } else if (!isConfigured) {
     console.warn(
       '🔧 Supabase Configuration Invalid:',
-      'Using placeholder values - Running in offline mode'
+      'Using placeholder values - Running in offline mode',
     );
   } else {
-    console.log('✅ Supabase Configuration Valid');
+    // Mask key for safety (show first 6 chars only)
+    const masked = VITE_SUPABASE_ANON_KEY
+      ? VITE_SUPABASE_ANON_KEY.slice(0, 6) +
+        '...' +
+        VITE_SUPABASE_ANON_KEY.slice(-4)
+      : 'missing';
+    console.log('[Supabase] ✅ Config OK', {
+      url: VITE_SUPABASE_URL,
+      anonKeyPreview: masked,
+    });
   }
 
   return {
@@ -52,7 +62,10 @@ const envConfig = validateEnvironment();
  * Singleton Supabase client with comprehensive environment validation.
  * Uses either real configuration or safe placeholder values for development.
  */
-export const supabase = createClient(envConfig.supabaseUrl, envConfig.supabaseKey);
+export const supabase = createClient(
+  envConfig.supabaseUrl,
+  envConfig.supabaseKey,
+);
 
 /**
  * Returns detailed configuration status for environment validation.
@@ -69,10 +82,10 @@ export const isSupabaseConfigured = () => envConfig.isConfigured;
  */
 export const getConfigurationError = (): string | null => {
   if (envConfig.isConfigured) return null;
-  
+
   if (envConfig.missingVars.length > 0) {
     return `متغيرات البيئة مفقودة: ${envConfig.missingVars.join(', ')}`;
   }
-  
+
   return 'إعدادات قاعدة البيانات غير صحيحة - تعمل في وضع التطوير';
 };

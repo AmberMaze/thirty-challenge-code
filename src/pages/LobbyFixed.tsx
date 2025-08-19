@@ -1,23 +1,19 @@
 import AlertBanner from '@/components/AlertBanner';
 import LanguageToggle from '@/components/LanguageToggle';
 import SimpleKitchenSinkVideoLazy from '@/components/SimpleKitchenSinkVideoLazy';
-import { useGameActions, useGameState, useGameSync, useLobbyActions } from '@/hooks/useGameAtoms';
+import {
+  useGameActions,
+  useGameState,
+  useGameSync,
+  useLobbyActions,
+} from '@/hooks/useGameAtoms';
 import { useTranslation } from '@/hooks/useTranslation';
 import { gameSyncInstanceAtom, lobbyParticipantsAtom } from '@/state';
+import type { LobbyParticipant } from '@/state/syncAtoms';
 import { debugLog } from '@/utils/debugLog';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-
-interface LobbyParticipant {
-  id: string;
-  name: string;
-  type: 'host' | 'controller' | 'player';
-  playerId?: string;
-  flag?: string;
-  club?: string;
-  isConnected: boolean;
-}
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -36,13 +32,18 @@ export default function Lobby() {
 
   // Alert state
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertType, setAlertType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
+  const [alertType, setAlertType] = useState<
+    'info' | 'success' | 'warning' | 'error'
+  >('info');
   const [showAlert, setShowAlert] = useState(false);
 
   // Refs to prevent stale closures
-  const initializationRef = useRef<{ hasInitialized: boolean; isInitializing: boolean }>({
+  const initializationRef = useRef<{
+    hasInitialized: boolean;
+    isInitializing: boolean;
+  }>({
     hasInitialized: false,
-    isInitializing: false
+    isInitializing: false,
   });
 
   // Get lobby participants to properly count connections
@@ -54,31 +55,44 @@ export default function Lobby() {
     ).length;
 
     const lobbyPlayersCount = lobbyParticipants.filter(
-      (p) => p.isConnected && p.type === 'player'
+      (p) => p.isConnected && p.type === 'player',
     ).length;
 
     return Math.max(gamePlayersCount, lobbyPlayersCount);
   }, [state.players, lobbyParticipants]);
 
   // Function to show alerts
-  const showAlertMessage = useCallback((message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
-    setAlertMessage(message);
-    setAlertType(type);
-    setShowAlert(true);
-  }, []);
+  const showAlertMessage = useCallback(
+    (
+      message: string,
+      type: 'info' | 'success' | 'warning' | 'error' = 'info',
+    ) => {
+      setAlertMessage(message);
+      setAlertType(type);
+      setShowAlert(true);
+    },
+    [],
+  );
 
   // Memoize search params to avoid re-parsing on every render
-  const searchParamsObj = useMemo(() => ({
-    role: searchParams.get('role'),
-    name: searchParams.get('name'),
-    flag: searchParams.get('flag'),
-    club: searchParams.get('club'),
-    hostName: searchParams.get('hostName'),
-  }), [searchParams]);
+  const searchParamsObj = useMemo(
+    () => ({
+      role: searchParams.get('role'),
+      name: searchParams.get('name'),
+      flag: searchParams.get('flag'),
+      club: searchParams.get('club'),
+      hostName: searchParams.get('hostName'),
+    }),
+    [searchParams],
+  );
 
   // Game initialization effect - runs once when gameId changes
   useEffect(() => {
-    if (!gameId || initializationRef.current.hasInitialized || initializationRef.current.isInitializing) {
+    if (
+      !gameId ||
+      initializationRef.current.hasInitialized ||
+      initializationRef.current.isInitializing
+    ) {
       return;
     }
 
@@ -103,7 +117,7 @@ export default function Lobby() {
                 gameId,
                 'HOST',
                 urlHostName || (language === 'ar' ? 'المقدم' : 'Host'),
-                { WSHA: 4, AUCT: 4, BELL: 10, SING: 10, REMO: 4 }
+                { WSHA: 4, AUCT: 4, BELL: 10, SING: 10, REMO: 4 },
               );
               showAlertMessage(t('sessionCreatedSuccessfully'), 'success');
             } catch (createError) {
@@ -112,7 +126,10 @@ export default function Lobby() {
             }
           } else {
             console.error('Failed to load game state:', result.error);
-            showAlertMessage(`${t('failedLoadSessionData')}: ${result.error}`, 'error');
+            showAlertMessage(
+              `${t('failedLoadSessionData')}: ${result.error}`,
+              'error',
+            );
           }
         }
 
@@ -131,7 +148,16 @@ export default function Lobby() {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [gameId, state.gameId, loadGameState, startSession, searchParamsObj, language, showAlertMessage, t]);
+  }, [
+    gameId,
+    state.gameId,
+    loadGameState,
+    startSession,
+    searchParamsObj,
+    language,
+    showAlertMessage,
+    t,
+  ]);
 
   // Participant setup effect - runs when URL params change
   useEffect(() => {
@@ -188,29 +214,43 @@ export default function Lobby() {
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
-      const { role } = searchParamsObj;
-
-      if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
+      if (
+        myParticipant &&
+        (myParticipant.type === 'controller' || myParticipant.type === 'host')
+      ) {
         // Debounced cleanup to prevent flapping
         setTimeout(() => {
           setHostConnected(false);
         }, 1000);
       }
     };
-  }, [myParticipant, setHostConnected, searchParamsObj]);
+  }, [myParticipant, setHostConnected]);
 
   // Page unload cleanup effect
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (myParticipant && myParticipant.type === 'player' && myParticipant.playerId) {
+      if (
+        myParticipant &&
+        myParticipant.type === 'player' &&
+        myParticipant.playerId
+      ) {
         // Log for debugging - actual cleanup would require serverless function
-        console.log('Page unloading, player will be marked disconnected by presence timeout');
+        console.log(
+          'Page unloading, player will be marked disconnected by presence timeout',
+        );
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && myParticipant && myParticipant.type === 'player' && myParticipant.playerId) {
-        console.log('Tab hidden, heartbeat will continue but presence may timeout');
+      if (
+        document.hidden &&
+        myParticipant &&
+        myParticipant.type === 'player' &&
+        myParticipant.playerId
+      ) {
+        console.log(
+          'Tab hidden, heartbeat will continue but presence may timeout',
+        );
       }
     };
 
@@ -241,10 +281,18 @@ export default function Lobby() {
   if (!myParticipant || !gameId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#10102a] to-blue-900 flex items-center justify-center">
-        <div className={`text-white text-center ${language === 'ar' ? 'font-arabic' : ''}`}>
+        <div
+          className={`text-white text-center ${language === 'ar' ? 'font-arabic' : ''}`}
+        >
           <div className="w-8 h-8 border-2 border-accent2 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg mb-2">{language === 'ar' ? t('loadingLobby') : 'Loading lobby...'}</p>
-          {!gameId && <p className="text-sm text-white/70">{language === 'ar' ? t('noGameIdFound') : 'No game ID found'}</p>}
+          <p className="text-lg mb-2">
+            {language === 'ar' ? t('loadingLobby') : 'Loading lobby...'}
+          </p>
+          {!gameId && (
+            <p className="text-sm text-white/70">
+              {language === 'ar' ? t('noGameIdFound') : 'No game ID found'}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -266,14 +314,21 @@ export default function Lobby() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className={`text-4xl font-bold text-white mb-2 ${language === 'ar' ? 'font-arabic' : ''}`}>
+          <h1
+            className={`text-4xl font-bold text-white mb-2 ${language === 'ar' ? 'font-arabic' : ''}`}
+          >
             {t('waitingLobby')}
           </h1>
           <div className="space-y-2">
-            <p className={`text-accent2 ${language === 'ar' ? 'font-arabic' : ''}`}>
-              {t('lobbySessionCode')}: <span className="font-mono text-2xl">{gameId}</span>
+            <p
+              className={`text-accent2 ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
+              {t('lobbySessionCode')}:{' '}
+              <span className="font-mono text-2xl">{gameId}</span>
             </p>
-            <p className={`text-white/70 ${language === 'ar' ? 'font-arabic' : ''}`}>
+            <p
+              className={`text-white/70 ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
               {t('connectedPlayers')}: {connectedPlayers}/2
             </p>
           </div>
@@ -282,13 +337,19 @@ export default function Lobby() {
         {/* User Info - Compact */}
         <div className="mb-6 bg-blue-500/20 rounded-xl p-4 border border-blue-500/30">
           <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <span className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}>
+            <span
+              className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
               {t('participantType')}: {myParticipant.type}
             </span>
-            <span className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}>
+            <span
+              className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
               {t('participantName')}: {myParticipant.name}
             </span>
-            <span className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}>
+            <span
+              className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
               {t('participantId')}: {myParticipant.id}
             </span>
           </div>
@@ -296,12 +357,14 @@ export default function Lobby() {
 
         {/* Simple Kitchen Sink Video - Optimized for mobile */}
         <div className="mb-6">
-          <SimpleKitchenSinkVideoLazy
-            gameId={gameId!}
-            myParticipant={myParticipant}
-            showAlertMessage={showAlertMessage}
-            className="w-full"
-          />
+          {gameId && (
+            <SimpleKitchenSinkVideoLazy
+              gameId={gameId}
+              myParticipant={myParticipant}
+              showAlertMessage={showAlertMessage}
+              className="w-full"
+            />
+          )}
         </div>
 
         {/* Navigation and Action Buttons */}
@@ -314,13 +377,15 @@ export default function Lobby() {
                   state: {
                     gameId: gameId,
                     hostCode: state.hostCode,
-                    hostName: state.hostName || 'Controller'
-                  }
+                    hostName: state.hostName || 'Controller',
+                  },
                 });
               }}
               className={`px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
             >
-              {language === 'ar' ? 'العودة إلى غرفة التحكم' : 'Return to Control Room'}
+              {language === 'ar'
+                ? 'العودة إلى غرفة التحكم'
+                : 'Return to Control Room'}
             </button>
           )}
 
@@ -332,22 +397,25 @@ export default function Lobby() {
                   state: {
                     gameId: gameId,
                     hostCode: state.hostCode,
-                    hostName: state.hostName || 'Host'
-                  }
+                    hostName: state.hostName || 'Host',
+                  },
                 });
               }}
               className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
             >
-              {language === 'ar' ? 'الذهاب إلى غرفة التحكم' : 'Go to Control Room'}
+              {language === 'ar'
+                ? 'الذهاب إلى غرفة التحكم'
+                : 'Go to Control Room'}
             </button>
           )}
 
           {/* Leave Session Button for all participants */}
           <button
             onClick={() => {
-              const confirmMessage = language === 'ar'
-                ? 'هل أنت متأكد من مغادرة هذه الجلسة؟'
-                : 'Are you sure you want to leave this session?';
+              const confirmMessage =
+                language === 'ar'
+                  ? 'هل أنت متأكد من مغادرة هذه الجلسة؟'
+                  : 'Are you sure you want to leave this session?';
               if (window.confirm(confirmMessage)) {
                 navigate('/');
               }

@@ -21,7 +21,7 @@ Visit **[quiz.tyshub.xyz](https://quiz.tyshub.xyz)** to experience the app in ac
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
+- [Quick Start](#-quick-start)
 - [Development](#development)
 - [Architecture](#architecture)
 - [Quiz Segments](#quiz-segments)
@@ -45,6 +45,7 @@ Thirty Challenge is a modern, real-time football quiz application designed for c
 ## ✨ Features
 
 ### 🎮 Game Features
+
 - **Multi-user Lobby**: Create and join game sessions
 - **Video Conferencing**: Integrated Daily.co video rooms
 - **Real-time Sync**: Supabase-powered live game state
@@ -52,6 +53,7 @@ Thirty Challenge is a modern, real-time football quiz application designed for c
 - **Segment Controls**: Host-controlled quiz progression
 
 ### 🌐 Technical Features
+
 - **Responsive Design**: Mobile-first Tailwind CSS
 - **Type Safety**: Full TypeScript coverage
 - **State Management**: Jotai atoms for efficient state
@@ -60,6 +62,7 @@ Thirty Challenge is a modern, real-time football quiz application designed for c
 - **Bundle Analysis**: Size monitoring and optimization
 
 ### 🌍 Internationalization
+
 - **Arabic Language**: RTL support and localized content
 - **English Fallback**: Dual language toggle
 - **Cultural Adaptation**: Club-themed quiz content
@@ -83,7 +86,7 @@ Thirty Challenge is a modern, real-time football quiz application designed for c
 
 ### Prerequisites
 
-- **Node.js** 18+ 
+- **Node.js** 18+
 - **pnpm** 10+ (recommended)
 - **Supabase** account (for backend)
 - **Daily.co** account (for video)

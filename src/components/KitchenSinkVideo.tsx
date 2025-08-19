@@ -1,39 +1,49 @@
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useGameActions, useGameState } from '@/hooks/useGameAtoms';
+import { shouldUseSimulationMode } from '@/lib/dailyConfig';
+import type { LobbyParticipant } from '@/state';
+import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
 import {
-  DailyVideo,
   DailyAudio,
+  DailyProvider,
+  DailyVideo,
   useDaily,
-  useParticipantIds,
   useMeetingState,
   useParticipantCounts,
-  DailyProvider,
+  useParticipantIds,
 } from '@daily-co/daily-react';
-import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
-import { useGameState, useGameActions } from '@/hooks/useGameAtoms';
-import { isDevelopmentMode } from '@/lib/dailyConfig';
-import type { LobbyParticipant } from '@/state';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface KitchenSinkVideoProps {
   gameId: string;
   myParticipant: LobbyParticipant;
-  showAlertMessage: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  showAlertMessage: (
+    message: string,
+    type?: 'info' | 'success' | 'warning' | 'error',
+  ) => void;
   className?: string;
 }
 
 interface VideoContentProps {
   gameId: string;
   myParticipant: LobbyParticipant;
-  showAlertMessage: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  showAlertMessage: (
+    message: string,
+    type?: 'info' | 'success' | 'warning' | 'error',
+  ) => void;
 }
 
-function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentProps) {
+function VideoContent({
+  gameId,
+  myParticipant,
+  showAlertMessage,
+}: VideoContentProps) {
   const daily = useDaily();
   const participantIds = useParticipantIds();
   const meetingState = useMeetingState();
   const { present, hidden } = useParticipantCounts();
   const state = useGameState();
   const { generateDailyToken } = useGameActions();
-  
+
   const [roomUrl, setRoomUrl] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
@@ -52,9 +62,9 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
     try {
       console.log('[KitchenSinkVideo] Joining call:', roomUrl);
 
-      // In development mode, just simulate joining
-      if (isDevelopmentMode()) {
-        console.log('[KitchenSinkVideo] Development mode - simulating join');
+      // In simulation mode, just simulate joining
+      if (shouldUseSimulationMode()) {
+        console.log('[KitchenSinkVideo] Simulation mode - simulating join');
         setHasJoined(true);
         showAlertMessage('تم الانضمام للمكالمة (محاكاة تطوير)', 'success');
         return;
@@ -65,7 +75,7 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
         gameId,
         myParticipant.name,
         myParticipant.type === 'controller' || myParticipant.type === 'host',
-        false // Not observer mode
+        false, // Not observer mode
       );
 
       if (!token) {
@@ -92,7 +102,15 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
     } finally {
       setIsJoining(false);
     }
-  }, [daily, roomUrl, gameId, generateDailyToken, myParticipant, showAlertMessage, isJoining]);
+  }, [
+    daily,
+    roomUrl,
+    gameId,
+    generateDailyToken,
+    myParticipant,
+    showAlertMessage,
+    isJoining,
+  ]);
 
   const leaveCall = useCallback(async () => {
     if (!daily) return;
@@ -165,16 +183,20 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
         <h4 className="text-white font-arabic text-center mb-4">
           إطارات الفيديو الفردية
         </h4>
-        
-        {isDevelopmentMode() && hasJoined ? (
-          // Development mode simulation
+
+        {shouldUseSimulationMode() && hasJoined ? (
+          // Simulation mode
           <div className="text-center">
             <div className="bg-gradient-to-br from-blue-900 to-indigo-800 rounded-lg p-8 inline-block">
               <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 mx-auto animate-pulse">
                 {myParticipant.name.charAt(0).toUpperCase()}
               </div>
-              <div className="text-white font-arabic font-semibold">{myParticipant.name}</div>
-              <div className="text-blue-200 text-sm font-arabic mt-1">محاكاة فيديو - وضع التطوير</div>
+              <div className="text-white font-arabic font-semibold">
+                {myParticipant.name}
+              </div>
+              <div className="text-blue-200 text-sm font-arabic mt-1">
+                محاكاة فيديو - وضع التطوير
+              </div>
               <div className="mt-4 flex gap-2 justify-center">
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs">🎥</span>
@@ -189,15 +211,18 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
           // Production mode with actual Daily video components
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {participantIds.map((id) => (
-              <div key={id} className="bg-gray-800 rounded-lg overflow-hidden border border-gray-600/50">
+              <div
+                key={id}
+                className="bg-gray-800 rounded-lg overflow-hidden border border-gray-600/50"
+              >
                 <div className="aspect-video relative">
-                  <DailyVideo 
-                    type="video" 
-                    sessionId={id} 
-                    automirror 
+                  <DailyVideo
+                    type="video"
+                    sessionId={id}
+                    automirror
                     className="w-full h-full object-cover"
                   />
-                  
+
                   {/* Participant overlay info */}
                   <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-arabic">
                     المشارك {id.slice(-4)}
@@ -220,7 +245,7 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
       </div>
 
       {/* Audio Component */}
-      {hasJoined && !isDevelopmentMode() && <DailyAudio />}
+      {hasJoined && !shouldUseSimulationMode() && <DailyAudio />}
 
       {/* Info Panel */}
       <div className="mt-4 bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
@@ -230,9 +255,9 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
         <p className="text-blue-200 text-xs text-center mt-1 font-arabic">
           كل مشارك يظهر في مكون DailyVideo منفصل
         </p>
-        {isDevelopmentMode() && (
+        {shouldUseSimulationMode() && (
           <p className="text-yellow-300 text-xs text-center mt-1 font-arabic">
-            🔧 وضع التطوير: يتم استخدام محاكاة الفيديو
+            🔧 وضع المحاكاة: يتم استخدام محاكاة الفيديو
           </p>
         )}
       </div>
@@ -240,19 +265,29 @@ function VideoContent({ gameId, myParticipant, showAlertMessage }: VideoContentP
   );
 }
 
-export default function KitchenSinkVideo({ gameId, myParticipant, showAlertMessage, className = '' }: KitchenSinkVideoProps) {
+export default function KitchenSinkVideo({
+  gameId,
+  myParticipant,
+  showAlertMessage,
+  className = '',
+}: KitchenSinkVideoProps) {
   // Create Daily call object - single instance for the entire component
   const callObject = useMemo<DailyCall | null>(() => {
     try {
-      // In development mode, we can skip creating the actual call object
-      if (isDevelopmentMode()) {
-        console.log('[KitchenSinkVideo] Skipping Daily call object creation in dev mode');
+      // In simulation mode, we can skip creating the actual call object
+      if (shouldUseSimulationMode()) {
+        console.log(
+          '[KitchenSinkVideo] Skipping Daily call object creation in simulation mode',
+        );
         return null;
       }
 
       return DailyIframe.createCallObject();
     } catch (error) {
-      console.warn('[KitchenSinkVideo] Failed to create Daily call object:', error);
+      console.warn(
+        '[KitchenSinkVideo] Failed to create Daily call object:',
+        error,
+      );
       return null;
     }
   }, []);
@@ -280,18 +315,18 @@ export default function KitchenSinkVideo({ gameId, myParticipant, showAlertMessa
 
   return (
     <div className={className}>
-      {isDevelopmentMode() || callObject ? (
-        // In development mode, use our VideoContent directly
+      {shouldUseSimulationMode() || callObject ? (
+        // In simulation mode, use our VideoContent directly
         // In production, wrap with DailyProvider
-        isDevelopmentMode() ? (
-          <VideoContent 
+        shouldUseSimulationMode() ? (
+          <VideoContent
             gameId={gameId}
             myParticipant={myParticipant}
             showAlertMessage={showAlertMessage}
           />
         ) : (
           <DailyProvider callObject={callObject!}>
-            <VideoContent 
+            <VideoContent
               gameId={gameId}
               myParticipant={myParticipant}
               showAlertMessage={showAlertMessage}

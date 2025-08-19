@@ -1,19 +1,22 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useGameActions } from '@/hooks/useGameAtoms';
+import { useTranslation } from '@/hooks/useTranslation';
+import { shouldUseSimulationMode } from '@/lib/dailyConfig';
+import type { LobbyParticipant } from '@/state';
+import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
 import {
+  DailyProvider,
   useDaily,
   useParticipantIds,
-  DailyProvider,
 } from '@daily-co/daily-react';
-import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
-import { useGameActions } from '@/hooks/useGameAtoms';
-import { isDevelopmentMode } from '@/lib/dailyConfig';
-import { useTranslation } from '@/hooks/useTranslation';
-import type { LobbyParticipant } from '@/state';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface VideoGridProps {
   gameId: string;
   myParticipant: LobbyParticipant;
-  showAlertMessage: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  showAlertMessage: (
+    message: string,
+    type?: 'info' | 'success' | 'warning' | 'error',
+  ) => void;
   className?: string;
 }
 
@@ -26,7 +29,10 @@ interface VideoRoomFrameProps {
   onCreateRoom: () => void;
   onDeleteRoom: () => void;
   onJoinRoom: () => void;
-  showAlertMessage: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  showAlertMessage: (
+    message: string,
+    type?: 'info' | 'success' | 'warning' | 'error',
+  ) => void;
 }
 
 interface VideoRoomContentProps {
@@ -34,10 +40,19 @@ interface VideoRoomContentProps {
   gameId: string;
   myParticipant: LobbyParticipant;
   roomUrl: string;
-  showAlertMessage: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  showAlertMessage: (
+    message: string,
+    type?: 'info' | 'success' | 'warning' | 'error',
+  ) => void;
 }
 
-function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertMessage }: VideoRoomContentProps) {
+function VideoRoomContent({
+  roomType,
+  gameId,
+  myParticipant,
+  roomUrl,
+  showAlertMessage,
+}: VideoRoomContentProps) {
   const daily = useDaily();
   const participantIds = useParticipantIds();
   const { generateDailyToken } = useGameActions();
@@ -50,29 +65,42 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
   // Determine if this is my room
   const isMyRoom = useMemo(() => {
     if (roomType === 'host') {
-      return myParticipant.type === 'controller' || myParticipant.type === 'host';
+      return (
+        myParticipant.type === 'controller' || myParticipant.type === 'host'
+      );
     }
     return myParticipant.id === roomType;
   }, [roomType, myParticipant]);
 
-  // Development mode simulation for video
+  // Simulation mode for video
   useEffect(() => {
-    if (!isDevelopmentMode()) return;
-    
+    if (!shouldUseSimulationMode()) return;
+
     if (isMyRoom && !hasJoined && !isJoining) {
       const timer = setTimeout(() => {
         setDevModeSimulation(true);
         setHasJoined(true);
-        showAlertMessage(`تم تفعيل محاكاة الفيديو لغرفة ${getRoomLabel(roomType)} في وضع التطوير`, 'success');
+        showAlertMessage(
+          `تم تفعيل محاكاة الفيديو لغرفة ${getRoomLabel(roomType)} في وضع التطوير`,
+          'success',
+        );
       }, 1500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isMyRoom, hasJoined, isJoining, roomType, showAlertMessage]);
 
-  // Join room when URL is available and it's my room (only in production)
+  // Join room when URL is available and it's my room (skip in simulation mode)
   useEffect(() => {
-    if (!daily || !roomUrl || !isMyRoom || hasJoined || isJoining || isDevelopmentMode()) return;
+    if (
+      !daily ||
+      !roomUrl ||
+      !isMyRoom ||
+      hasJoined ||
+      isJoining ||
+      shouldUseSimulationMode()
+    )
+      return;
 
     const joinRoom = async () => {
       setIsJoining(true);
@@ -84,7 +112,7 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
           `${gameId}-${roomType}`,
           myParticipant.name,
           roomType === 'host',
-          false // Not observer mode
+          false, // Not observer mode
         );
 
         if (!token) {
@@ -103,24 +131,41 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
         await daily.setLocalAudio(true);
 
         setHasJoined(true);
-        showAlertMessage(`تم الانضمام بنجاح لغرفة ${getRoomLabel(roomType)}`, 'success');
+        showAlertMessage(
+          `تم الانضمام بنجاح لغرفة ${getRoomLabel(roomType)}`,
+          'success',
+        );
         console.log(`[VideoGrid] Successfully joined ${roomType} room`);
       } catch (error) {
         console.error(`[VideoGrid] Failed to join ${roomType} room:`, error);
         setJoinError(`فشل في الانضمام لغرفة ${getRoomLabel(roomType)}`);
-        showAlertMessage(`فشل في الانضمام لغرفة ${getRoomLabel(roomType)}`, 'error');
+        showAlertMessage(
+          `فشل في الانضمام لغرفة ${getRoomLabel(roomType)}`,
+          'error',
+        );
       } finally {
         setIsJoining(false);
       }
     };
 
     joinRoom();
-  }, [daily, roomUrl, gameId, generateDailyToken, myParticipant, roomType, isMyRoom, hasJoined, isJoining, showAlertMessage]);
+  }, [
+    daily,
+    roomUrl,
+    gameId,
+    generateDailyToken,
+    myParticipant,
+    roomType,
+    isMyRoom,
+    hasJoined,
+    isJoining,
+    showAlertMessage,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (daily && hasJoined && !isDevelopmentMode()) {
+      if (daily && hasJoined && !shouldUseSimulationMode()) {
         daily.leave().catch(console.error);
       }
     };
@@ -128,11 +173,16 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
 
   const getRoomLabel = (type: string) => {
     switch (type) {
-      case 'host': return language === 'ar' ? 'المقدم' : 'Host';
-      case 'playerA': return language === 'ar' ? 'اللاعب الأول' : 'Player A';
-      case 'playerB': return language === 'ar' ? 'اللاعب الثاني' : 'Player B';
-      case 'controller': return language === 'ar' ? 'تحكم' : 'Controller';
-      default: return type;
+      case 'host':
+        return language === 'ar' ? 'المقدم' : 'Host';
+      case 'playerA':
+        return language === 'ar' ? 'اللاعب الأول' : 'Player A';
+      case 'playerB':
+        return language === 'ar' ? 'اللاعب الثاني' : 'Player B';
+      case 'controller':
+        return language === 'ar' ? 'تحكم' : 'Controller';
+      default:
+        return type;
     }
   };
 
@@ -157,14 +207,18 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <div className="text-gray-400 text-sm font-arabic">جاري الاتصال...</div>
+              <div className="text-gray-400 text-sm font-arabic">
+                جاري الاتصال...
+              </div>
             </div>
           </div>
         ) : joinError ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <div className="text-red-400 text-lg mb-2">⚠️</div>
-              <div className="text-red-400 text-sm font-arabic">{joinError}</div>
+              <div className="text-red-400 text-sm font-arabic">
+                {joinError}
+              </div>
               <button
                 onClick={() => {
                   setJoinError(null);
@@ -184,11 +238,15 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
                 <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4 mx-auto animate-pulse">
                   {myParticipant.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="text-white font-arabic font-semibold">{myParticipant.name}</div>
-                <div className="text-blue-200 text-sm font-arabic mt-1">محاكاة فيديو - وضع التطوير</div>
+                <div className="text-white font-arabic font-semibold">
+                  {myParticipant.name}
+                </div>
+                <div className="text-blue-200 text-sm font-arabic mt-1">
+                  محاكاة فيديو - وضع التطوير
+                </div>
               </div>
             </div>
-            
+
             {/* Simulated video controls */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
               <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
@@ -210,7 +268,7 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
             <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full">
               {/* Daily's video elements will be injected here */}
             </div>
-            
+
             {/* Participant count overlay */}
             <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-arabic">
               {participantIds.length} مشارك
@@ -222,7 +280,9 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
               <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center text-white text-xl font-bold mb-2">
                 {myParticipant.name.charAt(0).toUpperCase()}
               </div>
-              <div className="text-gray-400 text-sm font-arabic">انتظار المشاركين الآخرين</div>
+              <div className="text-gray-400 text-sm font-arabic">
+                انتظار المشاركين الآخرين
+              </div>
             </div>
           </div>
         ) : (
@@ -238,11 +298,23 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
       {/* Connection status */}
       <div className="p-2 bg-gray-800/60 border-t border-gray-600/50">
         <div className="flex items-center justify-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${
-            hasJoined ? 'bg-green-400' : joinError ? 'bg-red-400' : 'bg-yellow-400'
-          }`}></div>
+          <div
+            className={`w-2 h-2 rounded-full ${
+              hasJoined
+                ? 'bg-green-400'
+                : joinError
+                  ? 'bg-red-400'
+                  : 'bg-yellow-400'
+            }`}
+          ></div>
           <span className="text-xs text-gray-400 font-arabic">
-            {hasJoined ? (devModeSimulation ? 'محاكاة نشطة' : 'متصل') : joinError ? 'خطأ' : 'غير متصل'}
+            {hasJoined
+              ? devModeSimulation
+                ? 'محاكاة نشطة'
+                : 'متصل'
+              : joinError
+                ? 'خطأ'
+                : 'غير متصل'}
           </span>
         </div>
       </div>
@@ -250,16 +322,16 @@ function VideoRoomContent({ roomType, gameId, myParticipant, roomUrl, showAlertM
   );
 }
 
-function VideoRoomFrame({ 
-  roomType, 
-  gameId, 
-  myParticipant, 
-  roomUrl, 
-  isRoomCreated, 
-  onCreateRoom, 
-  onDeleteRoom, 
+function VideoRoomFrame({
+  roomType,
+  gameId,
+  myParticipant,
+  roomUrl,
+  isRoomCreated,
+  onCreateRoom,
+  onDeleteRoom,
   onJoinRoom,
-  showAlertMessage 
+  showAlertMessage,
 }: VideoRoomFrameProps) {
   // Use a single shared call object instance managed at the top level
   const callObjectRef = useRef<DailyCall | null>(null);
@@ -268,22 +340,27 @@ function VideoRoomFrame({
   // Create Daily call object for this room only when needed and no duplicates exist
   const callObject = useMemo<DailyCall | null>(() => {
     try {
-      // In development mode, always try to create, but handle failures gracefully
-      if (isDevelopmentMode()) {
-        // For development, we'll use a mock or simplified approach
-        console.log(`[VideoGrid] Skipping Daily call object creation in dev mode for ${roomType}`);
+      // In development mode, check if we should use simulation or real integration
+      if (shouldUseSimulationMode()) {
+        // For simulation, we'll use a mock or simplified approach
+        console.log(
+          `[VideoGrid] Skipping Daily call object creation in simulation mode for ${roomType}`,
+        );
         return null;
       }
 
-      // In production, only create if we don't have one and it's actually needed
+      // In production or development with real integration, create call object if needed
       if (!callObjectRef.current && isRoomCreated && roomUrl) {
         callObjectRef.current = DailyIframe.createCallObject();
         console.log(`[VideoGrid] Created Daily call object for ${roomType}`);
       }
-      
+
       return callObjectRef.current;
     } catch (error) {
-      console.warn(`[VideoGrid] Failed to create Daily call object for ${roomType}:`, error);
+      console.warn(
+        `[VideoGrid] Failed to create Daily call object for ${roomType}:`,
+        error,
+      );
       return null;
     }
   }, [roomType, isRoomCreated, roomUrl]);
@@ -316,20 +393,30 @@ function VideoRoomFrame({
       try {
         callObjectRef.current.destroy();
         callObjectRef.current = null;
-        console.log(`[VideoGrid] Cleaned up call object for deleted ${roomType} room`);
+        console.log(
+          `[VideoGrid] Cleaned up call object for deleted ${roomType} room`,
+        );
       } catch (error) {
-        console.warn(`[VideoGrid] Error cleaning up ${roomType} call object:`, error);
+        console.warn(
+          `[VideoGrid] Error cleaning up ${roomType} call object:`,
+          error,
+        );
       }
     }
   }, [isRoomCreated, roomType]);
 
   const getRoomLabel = (type: string) => {
     switch (type) {
-      case 'host': return language === 'ar' ? 'المقدم' : 'Host';
-      case 'playerA': return language === 'ar' ? 'اللاعب الأول' : 'Player A';
-      case 'playerB': return language === 'ar' ? 'اللاعب الثاني' : 'Player B';
-      case 'controller': return language === 'ar' ? 'تحكم' : 'Controller';
-      default: return type;
+      case 'host':
+        return language === 'ar' ? 'المقدم' : 'Host';
+      case 'playerA':
+        return language === 'ar' ? 'اللاعب الأول' : 'Player A';
+      case 'playerB':
+        return language === 'ar' ? 'اللاعب الثاني' : 'Player B';
+      case 'controller':
+        return language === 'ar' ? 'تحكم' : 'Controller';
+      default:
+        return type;
     }
   };
 
@@ -355,7 +442,7 @@ function VideoRoomFrame({
                   onClick={onJoinRoom}
                   className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-arabic transition-colors"
                 >
-                  {isDevelopmentMode() ? 'تفعيل محاكاة' : 'تفعيل مدمج'}
+                  {shouldUseSimulationMode() ? 'تفعيل محاكاة' : 'تفعيل مدمج'}
                 </button>
                 <button
                   onClick={onDeleteRoom}
@@ -372,9 +459,9 @@ function VideoRoomFrame({
       {/* Video content */}
       <div className="flex-1">
         {isRoomCreated && roomUrl ? (
-          isDevelopmentMode() ? (
+          shouldUseSimulationMode() ? (
             // Development mode: Use our enhanced VideoRoomContent without DailyProvider
-            <VideoRoomContent 
+            <VideoRoomContent
               roomType={roomType}
               gameId={gameId}
               myParticipant={myParticipant}
@@ -384,7 +471,7 @@ function VideoRoomFrame({
           ) : callObject ? (
             // Production mode: Use DailyProvider only when we have a valid call object
             <DailyProvider callObject={callObject}>
-              <VideoRoomContent 
+              <VideoRoomContent
                 roomType={roomType}
                 gameId={gameId}
                 myParticipant={myParticipant}
@@ -420,83 +507,119 @@ function VideoRoomFrame({
   );
 }
 
-export default function VideoGrid({ gameId, myParticipant, showAlertMessage, className = '' }: VideoGridProps) {
+export default function VideoGrid({
+  gameId,
+  myParticipant,
+  showAlertMessage,
+  className = '',
+}: VideoGridProps) {
   const { createVideoRoom, endVideoRoom } = useGameActions();
-  
+
   // Room states
   const [rooms, setRooms] = useState({
     host: { url: '', created: false, loading: false },
     playerA: { url: '', created: false, loading: false },
-    playerB: { url: '', created: false, loading: false }
+    playerB: { url: '', created: false, loading: false },
   });
 
   // Create room function
-  const handleCreateRoom = useCallback(async (roomType: 'host' | 'playerA' | 'playerB') => {
-    setRooms(prev => ({ ...prev, [roomType]: { ...prev[roomType], loading: true } }));
-    
-    try {
-      const roomName = `${gameId}-${roomType}`;
-      const result = await createVideoRoom(roomName);
-      
-      if (result.success && result.roomUrl) {
-        setRooms(prev => ({ 
-          ...prev, 
-          [roomType]: { url: result.roomUrl!, created: true, loading: false } 
+  const handleCreateRoom = useCallback(
+    async (roomType: 'host' | 'playerA' | 'playerB') => {
+      setRooms((prev) => ({
+        ...prev,
+        [roomType]: { ...prev[roomType], loading: true },
+      }));
+
+      try {
+        const roomName = `${gameId}-${roomType}`;
+        const result = await createVideoRoom(roomName);
+
+        if (result.success && result.roomUrl) {
+          setRooms((prev) => ({
+            ...prev,
+            [roomType]: { url: result.roomUrl!, created: true, loading: false },
+          }));
+          showAlertMessage(`تم إنشاء غرفة ${roomType} بنجاح`, 'success');
+        } else {
+          throw new Error(result.error || 'فشل في إنشاء الغرفة');
+        }
+      } catch (error) {
+        console.error(`Error creating ${roomType} room:`, error);
+        showAlertMessage(`فشل في إنشاء غرفة ${roomType}`, 'error');
+        setRooms((prev) => ({
+          ...prev,
+          [roomType]: { ...prev[roomType], loading: false },
         }));
-        showAlertMessage(`تم إنشاء غرفة ${roomType} بنجاح`, 'success');
-      } else {
-        throw new Error(result.error || 'فشل في إنشاء الغرفة');
       }
-    } catch (error) {
-      console.error(`Error creating ${roomType} room:`, error);
-      showAlertMessage(`فشل في إنشاء غرفة ${roomType}`, 'error');
-      setRooms(prev => ({ ...prev, [roomType]: { ...prev[roomType], loading: false } }));
-    }
-  }, [gameId, createVideoRoom, showAlertMessage]);
+    },
+    [gameId, createVideoRoom, showAlertMessage],
+  );
 
   // Delete room function
-  const handleDeleteRoom = useCallback(async (roomType: 'host' | 'playerA' | 'playerB') => {
-    setRooms(prev => ({ ...prev, [roomType]: { ...prev[roomType], loading: true } }));
-    
-    try {
-      const roomName = `${gameId}-${roomType}`;
-      await endVideoRoom(roomName);
-      
-      setRooms(prev => ({ 
-        ...prev, 
-        [roomType]: { url: '', created: false, loading: false } 
+  const handleDeleteRoom = useCallback(
+    async (roomType: 'host' | 'playerA' | 'playerB') => {
+      setRooms((prev) => ({
+        ...prev,
+        [roomType]: { ...prev[roomType], loading: true },
       }));
-      showAlertMessage(`تم حذف غرفة ${roomType}`, 'success');
-    } catch (error) {
-      console.error(`Error deleting ${roomType} room:`, error);
-      showAlertMessage(`فشل في حذف غرفة ${roomType}`, 'error');
-      setRooms(prev => ({ ...prev, [roomType]: { ...prev[roomType], loading: false } }));
-    }
-  }, [gameId, endVideoRoom, showAlertMessage]);
+
+      try {
+        const roomName = `${gameId}-${roomType}`;
+        await endVideoRoom(roomName);
+
+        setRooms((prev) => ({
+          ...prev,
+          [roomType]: { url: '', created: false, loading: false },
+        }));
+        showAlertMessage(`تم حذف غرفة ${roomType}`, 'success');
+      } catch (error) {
+        console.error(`Error deleting ${roomType} room:`, error);
+        showAlertMessage(`فشل في حذف غرفة ${roomType}`, 'error');
+        setRooms((prev) => ({
+          ...prev,
+          [roomType]: { ...prev[roomType], loading: false },
+        }));
+      }
+    },
+    [gameId, endVideoRoom, showAlertMessage],
+  );
 
   // Join room function - now activates embedded video instead of opening new tab
-  const handleJoinRoom = useCallback((roomType: 'host' | 'playerA' | 'playerB') => {
-    const room = rooms[roomType];
-    if (room.url) {
-      // Instead of opening in new tab, show message that video is embedded
-      if (isDevelopmentMode()) {
-        showAlertMessage(`تم تفعيل محاكاة الفيديو لغرفة ${roomType} في وضع التطوير`, 'success');
-      } else {
-        showAlertMessage(`تم تفعيل غرفة ${roomType} المدمجة في الصفحة`, 'success');
+  const handleJoinRoom = useCallback(
+    (roomType: 'host' | 'playerA' | 'playerB') => {
+      const room = rooms[roomType];
+      if (room.url) {
+        // Instead of opening in new tab, show message that video is embedded
+        if (shouldUseSimulationMode()) {
+          showAlertMessage(
+            `تم تفعيل محاكاة الفيديو لغرفة ${roomType} في وضع التطوير`,
+            'success',
+          );
+        } else {
+          showAlertMessage(
+            `تم تفعيل غرفة ${roomType} المدمجة في الصفحة`,
+            'success',
+          );
+        }
       }
-    }
-  }, [rooms, showAlertMessage]);
+    },
+    [rooms, showAlertMessage],
+  );
 
   // Delete all rooms
   const handleDeleteAllRooms = useCallback(async () => {
-    const roomTypes: ('host' | 'playerA' | 'playerB')[] = ['host', 'playerA', 'playerB'];
-    
+    const roomTypes: ('host' | 'playerA' | 'playerB')[] = [
+      'host',
+      'playerA',
+      'playerB',
+    ];
+
     for (const roomType of roomTypes) {
       if (rooms[roomType].created) {
         await handleDeleteRoom(roomType);
       }
     }
-    
+
     showAlertMessage('تم حذف جميع الغرف', 'success');
   }, [rooms, handleDeleteRoom, showAlertMessage]);
 
@@ -520,14 +643,18 @@ export default function VideoGrid({ gameId, myParticipant, showAlertMessage, cla
             disabled={rooms.playerA.created || rooms.playerA.loading}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded font-arabic transition-colors"
           >
-            {rooms.playerA.loading ? 'جاري الإنشاء...' : 'إنشاء غرفة اللاعب الأول'}
+            {rooms.playerA.loading
+              ? 'جاري الإنشاء...'
+              : 'إنشاء غرفة اللاعب الأول'}
           </button>
           <button
             onClick={() => handleCreateRoom('playerB')}
             disabled={rooms.playerB.created || rooms.playerB.loading}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded font-arabic transition-colors"
           >
-            {rooms.playerB.loading ? 'جاري الإنشاء...' : 'إنشاء غرفة اللاعب الثاني'}
+            {rooms.playerB.loading
+              ? 'جاري الإنشاء...'
+              : 'إنشاء غرفة اللاعب الثاني'}
           </button>
           <button
             onClick={handleDeleteAllRooms}
@@ -543,7 +670,7 @@ export default function VideoGrid({ gameId, myParticipant, showAlertMessage, cla
         <h3 className="text-lg font-bold text-white mb-4 text-center font-arabic">
           شبكة الفيديو - ثلاث غرف منفصلة
         </h3>
-        
+
         <div className="flex flex-col lg:flex-row lg:gap-1 min-h-[400px] lg:min-h-[500px]">
           {/* Host room */}
           <VideoRoomFrame
@@ -557,10 +684,10 @@ export default function VideoGrid({ gameId, myParticipant, showAlertMessage, cla
             onJoinRoom={() => handleJoinRoom('host')}
             showAlertMessage={showAlertMessage}
           />
-          
+
           {/* Vertical divider for large screens only */}
           <div className="hidden lg:block w-px bg-gray-600" />
-          
+
           {/* Player A room */}
           <VideoRoomFrame
             roomType="playerA"
@@ -573,10 +700,10 @@ export default function VideoGrid({ gameId, myParticipant, showAlertMessage, cla
             onJoinRoom={() => handleJoinRoom('playerA')}
             showAlertMessage={showAlertMessage}
           />
-          
+
           {/* Vertical divider for large screens only */}
           <div className="hidden lg:block w-px bg-gray-600" />
-          
+
           {/* Player B room */}
           <VideoRoomFrame
             roomType="playerB"
@@ -597,11 +724,13 @@ export default function VideoGrid({ gameId, myParticipant, showAlertMessage, cla
             💡 كل إطار هو غرفة Daily.co منفصلة مع تحكم مستقل
           </p>
           <p className="text-blue-200 text-xs text-center mt-1 font-arabic">
-            الغرف المنشأة: {Object.values(rooms).filter(r => r.created).length}/3
+            الغرف المنشأة:{' '}
+            {Object.values(rooms).filter((r) => r.created).length}/3
           </p>
-          {isDevelopmentMode() && (
+          {shouldUseSimulationMode() && (
             <p className="text-yellow-300 text-xs text-center mt-1 font-arabic">
-              🔧 وضع التطوير: يتم استخدام محاكاة الفيديو بدلاً من Daily.co الفعلي
+              🔧 وضع المحاكاة: يتم استخدام محاكاة الفيديو بدلاً من Daily.co
+              الفعلي
             </p>
           )}
         </div>

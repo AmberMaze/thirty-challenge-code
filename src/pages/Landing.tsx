@@ -1,9 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useAtomValue } from 'jotai';
-import { isArabicAtom } from '@/state/languageAtoms';
 import ActiveGames from '@/components/ActiveGames';
+import { useTranslation } from '@/hooks/useTranslation';
+import { isArabicAtom } from '@/state/languageAtoms';
+import { motion } from 'framer-motion';
+import { useAtomValue } from 'jotai';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Landing page with simple navigation options. Hosts can create a
@@ -25,10 +25,6 @@ export default function Landing() {
 
   const handleJoinGameById = (gameId: string) => {
     navigate(`/join?gameId=${gameId}`);
-  };
-
-  const handleAlphaQuiz = () => {
-    navigate('/alpha-quiz');
   };
 
   return (
@@ -85,13 +81,6 @@ export default function Landing() {
         >
           {t('joinSession')}
         </button>
-        
-        <button
-          onClick={handleAlphaQuiz}
-          className={`w-full px-6 py-3 text-lg rounded-xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-black border border-orange-400 transition-all shadow-lg ${isArabic ? 'font-arabic' : ''}`}
-        >
-          {t('alphaQuiz')}
-        </button>
       </motion.div>
 
       <motion.div
@@ -100,15 +89,8 @@ export default function Landing() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
       >
-        <p>
-          {t('createSessionDesc')}
-        </p>
-        <p className="mt-1">
-          {t('joinSessionDesc')}
-        </p>
-        <p className="mt-1 text-orange-300">
-          {t('alphaQuizDesc')}
-        </p>
+        <p>{t('createSessionDesc')}</p>
+        <p className="mt-1">{t('joinSessionDesc')}</p>
       </motion.div>
     </motion.div>
   );

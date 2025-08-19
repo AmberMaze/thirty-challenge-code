@@ -1,0 +1,57 @@
+# Supabase Configuration File
+# Generated for Thirty Challenge Quiz App
+
+# Project settings
+project_id = "zgvmkjefgdabumvafqch"
+name = "Thirty Challenge Quiz"
+
+# Database settings
+[db]
+port = 54321
+major_version = 15
+
+# Authentication
+[auth]
+enabled = true
+site_url = "https://thirtyquiz.tyshub.xyz"
+additional_redirect_urls = ["http://localhost:3000", "http://localhost:5173"]
+
+# Email configuration (for production)
+[auth.email]
+enable_signup = false
+double_confirm_change_email = true
+enable_confirmations = false
+
+# Security settings
+[auth.security]
+update_password_require_reauthentication = false
+
+# API settings
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+# Database configuration
+[database]
+listen_addresses = ["*"]
+log_statement = "all"
+
+# Storage configuration
+[storage]
+enabled = true
+image_transformation_enabled = false
+
+# Edge Functions
+[functions]
+enabled = false
+
+# Analytics
+[analytics]
+enabled = false
+
+# Environment-specific overrides
+[local_config]
+# Local development overrides can be added here

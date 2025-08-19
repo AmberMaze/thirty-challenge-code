@@ -8,8 +8,6 @@ export interface Translations {
   joinSession: string;
   createSessionDesc: string;
   joinSessionDesc: string;
-  alphaQuiz: string;
-  alphaQuizDesc: string;
 
   // Common UI
   loading: string;
@@ -80,7 +78,7 @@ export interface Translations {
   updating: string;
   enterHostName: string;
   backToHome: string;
-  
+
   // Error messages for Create Session
   configWarning: string;
   featuresNotWorkProperly: string;
@@ -95,7 +93,7 @@ export interface Translations {
   sessionIdAlreadyUsed: string;
   refreshPageAndTryAgain: string;
   connectionTimeout: string;
-  
+
   // Segment names
   segmentWsha: string;
   segmentAuct: string;
@@ -132,7 +130,7 @@ export interface Translations {
   english: string;
   arabic: string;
   switchLanguage: string;
-  
+
   // Lobby Page
   waitingLobby: string;
   lobbySessionCode: string;
@@ -148,7 +146,7 @@ export interface Translations {
   videoRoomUsingSession: string;
   cameraControls: string;
   dailyKitchenSink: string;
-  
+
   // Control Room Page
   controlRoom: string;
   playersCode: string;
@@ -236,10 +234,9 @@ export const translations: Record<Language, Translations> = {
     startChallenge: 'Start the challenge with your friends now!',
     createSession: 'Create New Session',
     joinSession: 'Join Session',
-    createSessionDesc: 'Create New Session: You will become the host and control the game',
+    createSessionDesc:
+      'Create New Session: You will become the host and control the game',
     joinSessionDesc: 'Join Session: Enter as a player in an existing session',
-    alphaQuiz: 'Alpha: Quiz 🚀',
-    alphaQuizDesc: 'Alpha Quiz: Simplified version for testing (no video)',
 
     // Common UI
     loading: 'Loading...',
@@ -284,13 +281,15 @@ export const translations: Record<Language, Translations> = {
     aboutToJoinGame: 'You are about to join game',
     firstPlayer: 'first player',
     secondPlayer: 'second player',
-    moveToLobbyWait: 'You will be moved to the waiting lobby to start video and wait until the host starts the game.',
-    noVideoRoomYet: 'No video room yet. Contact the host to create the room first.',
+    moveToLobbyWait:
+      'You will be moved to the waiting lobby to start video and wait until the host starts the game.',
+    noVideoRoomYet:
+      'No video room yet. Contact the host to create the room first.',
     contactHostCreateRoom: 'Contact the host to create the room first.',
     failedJoinGame: 'Failed to join game. Try again',
     errorJoiningGame: 'Error occurred while joining game',
 
-    // Create Session Page  
+    // Create Session Page
     hostName: 'Host Name',
     gameSettings: 'Game Settings',
     segmentSettings: 'Segment Settings',
@@ -304,28 +303,32 @@ export const translations: Record<Language, Translations> = {
     sessionId: 'Session ID',
     sessionIdReady: 'Session ID ready',
     sessionIdGenerating: 'Creating session...',
-    fillDataAndConfirm: 'Fill in the data and click confirm to create the session',
+    fillDataAndConfirm:
+      'Fill in the data and click confirm to create the session',
     confirmSession: 'Confirm Session',
     waitingSessionCreation: 'Waiting for session creation...',
     updating: 'Updating...',
     enterHostName: 'Enter host name',
     backToHome: 'Back to homepage',
-    
+
     // Error messages for Create Session
     configWarning: 'Warning',
     featuresNotWorkProperly: 'Some features may not work correctly.',
-    canContinueButProblems: 'You can continue but may encounter synchronization issues',
+    canContinueButProblems:
+      'You can continue but may encounter synchronization issues',
     sessionIdNotGenerated: 'Session ID not generated yet. Please wait.',
     cannotCreateSession: 'Cannot create session',
     checkSystemSettings: 'Please check system settings.',
     failedCreateSessionNew: 'Failed to create session. Please try again.',
     tryAgain: 'Try again',
-    connectionFailed: 'Connection to server failed. Please check your internet connection and try again.',
+    connectionFailed:
+      'Connection to server failed. Please check your internet connection and try again.',
     checkInternetAndTryAgain: 'Check internet connection and try again',
-    sessionIdAlreadyUsed: 'Session ID already in use. Please refresh the page and try again.',
+    sessionIdAlreadyUsed:
+      'Session ID already in use. Please refresh the page and try again.',
     refreshPageAndTryAgain: 'Refresh page and try again',
     connectionTimeout: 'Connection timeout. Please try again.',
-    
+
     // Segment names
     segmentWsha: 'What do you know',
     segmentAuct: 'Auction',
@@ -362,7 +365,7 @@ export const translations: Record<Language, Translations> = {
     english: 'English',
     arabic: 'العربية',
     switchLanguage: 'Switch Language',
-    
+
     // Lobby Page
     waitingLobby: 'Waiting Lobby',
     lobbySessionCode: 'Session Code',
@@ -378,7 +381,7 @@ export const translations: Record<Language, Translations> = {
     videoRoomUsingSession: '• Video room uses session ID directly',
     cameraControls: '• Camera and microphone controls',
     dailyKitchenSink: '• Enhanced Daily.co Kitchen Sink application',
-    
+
     // Control Room Page
     controlRoom: 'Control Room',
     playersCode: 'Players Code',
@@ -395,8 +398,10 @@ export const translations: Record<Language, Translations> = {
     noVideoRoom: 'No video room',
     manageVideoLobby: 'Manage Video in Lobby',
     importantVideoInfo: 'Important Information - Video Control',
-    controlRoomGameOnly: 'This control room is for game management only - does not contain video settings',
-    videoManagementInLobby: 'To manage video and interact with players, please use the waiting lobby',
+    controlRoomGameOnly:
+      'This control room is for game management only - does not contain video settings',
+    videoManagementInLobby:
+      'To manage video and interact with players, please use the waiting lobby',
     goToLobby: 'Go to Waiting Lobby',
     showParticipantInfo: 'Show participant information (for reference)',
     participantInfo: 'Participant Information:',
@@ -404,7 +409,8 @@ export const translations: Record<Language, Translations> = {
     controlRoomFirstPlayer: 'First Player',
     controlRoomSecondPlayer: 'Second Player',
     notJoinedYet: 'Not joined yet',
-    videoInteractionTip: '💡 To interact with video and participants, use the waiting lobby',
+    videoInteractionTip:
+      '💡 To interact with video and participants, use the waiting lobby',
 
     // Video Component Translations
     dailyVideoSystem: 'Daily.co Video System',
@@ -434,7 +440,8 @@ export const translations: Record<Language, Translations> = {
     connectedWaiting: 'Connected, waiting for participants...',
     enterRoomAndJoin: 'Enter room URL and click "Join Call"',
     videoSystemReady: '✅ Enhanced Daily.co Application - Auto Settings',
-    autoLoadedSettings: '✅ Updated Daily.co Kitchen Sink App - Auto-load settings',
+    autoLoadedSettings:
+      '✅ Updated Daily.co Kitchen Sink App - Auto-load settings',
     roomLinkAutoLoaded: '• Room URL auto-loaded from session',
     userNameFromParticipant: '• User name loaded from participant info',
     tokenAutoGenerated: '• Login token auto-generated',
@@ -450,7 +457,8 @@ export const translations: Record<Language, Translations> = {
     loadingVideoComponents: 'Loading video components...',
     preparingVideoConnection: 'Preparing video connection...',
     failedInitVideoComponents: 'Failed to initialize video components',
-    failedGenerateToken: 'Failed to generate login token, you can continue without it',
+    failedGenerateToken:
+      'Failed to generate login token, you can continue without it',
     failedJoinCall: 'Failed to join call',
     failedLeaveCall: 'Error leaving call',
     unknownError: 'Unknown error',
@@ -466,8 +474,6 @@ export const translations: Record<Language, Translations> = {
     joinSession: 'الانضمام لجلسة',
     createSessionDesc: 'إنشاء جلسة جديدة: ستصبح المقدم وتتحكم في اللعبة',
     joinSessionDesc: 'الانضمام لجلسة: ادخل كلاعب في جلسة موجودة',
-    alphaQuiz: 'Alpha: Quiz 🚀',
-    alphaQuizDesc: 'Alpha Quiz: نسخة مبسطة للاختبار (بدون فيديو)',
 
     // Common UI
     loading: 'جاري التحميل...',
@@ -512,7 +518,8 @@ export const translations: Record<Language, Translations> = {
     aboutToJoinGame: 'أنت على وشك الانضمام للعبة',
     firstPlayer: 'لاعب أول',
     secondPlayer: 'لاعب ثاني',
-    moveToLobbyWait: 'سيتم نقلك إلى صالة الانتظار لبدء الفيديو والانتظار حتى يبدأ المقدم اللعبة.',
+    moveToLobbyWait:
+      'سيتم نقلك إلى صالة الانتظار لبدء الفيديو والانتظار حتى يبدأ المقدم اللعبة.',
     noVideoRoomYet: 'لا توجد غرفة فيديو بعد.',
     contactHostCreateRoom: 'اتصل بالمقدم لإنشاء الغرفة أولاً.',
     failedJoinGame: 'فشل في الانضمام للعبة. حاول مرة أخرى',
@@ -538,7 +545,7 @@ export const translations: Record<Language, Translations> = {
     updating: 'جاري التحديث...',
     enterHostName: 'أدخل اسم المقدم',
     backToHome: 'العودة للصفحة الرئيسية',
-    
+
     // Error messages for Create Session
     configWarning: 'تحذير',
     featuresNotWorkProperly: 'قد لا تعمل بعض الميزات بشكل صحيح.',
@@ -548,12 +555,14 @@ export const translations: Record<Language, Translations> = {
     checkSystemSettings: 'يرجى التحقق من إعدادات النظام.',
     failedCreateSessionNew: 'فشل في إنشاء الجلسة. يرجى المحاولة مرة أخرى.',
     tryAgain: 'حاول مرة أخرى',
-    connectionFailed: 'فشل في الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.',
+    connectionFailed:
+      'فشل في الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.',
     checkInternetAndTryAgain: 'تحقق من اتصال الإنترنت وحاول مرة أخرى',
-    sessionIdAlreadyUsed: 'معرف الجلسة مستخدم بالفعل. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
+    sessionIdAlreadyUsed:
+      'معرف الجلسة مستخدم بالفعل. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
     refreshPageAndTryAgain: 'حدث الصفحة وحاول مرة أخرى',
     connectionTimeout: 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.',
-    
+
     // Segment names
     segmentWsha: 'وش تعرف',
     segmentAuct: 'المزاد',
@@ -590,7 +599,7 @@ export const translations: Record<Language, Translations> = {
     english: 'English',
     arabic: 'العربية',
     switchLanguage: 'تغيير اللغة',
-    
+
     // Lobby Page
     waitingLobby: 'صالة الانتظار',
     lobbySessionCode: 'رمز الجلسة',
@@ -606,7 +615,7 @@ export const translations: Record<Language, Translations> = {
     videoRoomUsingSession: '• غرفة الفيديو تستخدم معرف الجلسة مباشرة',
     cameraControls: '• تحكم في الكاميرا والميكروفون',
     dailyKitchenSink: '• تطبيق Daily.co Kitchen Sink المطور',
-    
+
     // Control Room Page
     controlRoom: 'غرفة التحكم',
     playersCode: 'رمز اللاعبين',
@@ -623,8 +632,10 @@ export const translations: Record<Language, Translations> = {
     noVideoRoom: 'لا توجد غرفة فيديو',
     manageVideoLobby: 'إدارة الفيديو في الصالة',
     importantVideoInfo: 'معلومات هامة - التحكم في الفيديو',
-    controlRoomGameOnly: 'هذه غرفة التحكم للعبة فقط - لا تحتوي على إعدادات الفيديو',
-    videoManagementInLobby: 'لإدارة الفيديو والمشاركة مع اللاعبين، يرجى استخدام صالة الانتظار',
+    controlRoomGameOnly:
+      'هذه غرفة التحكم للعبة فقط - لا تحتوي على إعدادات الفيديو',
+    videoManagementInLobby:
+      'لإدارة الفيديو والمشاركة مع اللاعبين، يرجى استخدام صالة الانتظار',
     goToLobby: 'الذهاب لصالة الانتظار',
     showParticipantInfo: 'عرض معلومات المشاركين (للمرجع)',
     participantInfo: 'معلومات المشاركين:',
@@ -632,7 +643,8 @@ export const translations: Record<Language, Translations> = {
     controlRoomFirstPlayer: 'اللاعب الأول',
     controlRoomSecondPlayer: 'اللاعب الثاني',
     notJoinedYet: 'لم ينضم بعد',
-    videoInteractionTip: '💡 للتفاعل مع الفيديو والمشاركين، استخدم صالة الانتظار',
+    videoInteractionTip:
+      '💡 للتفاعل مع الفيديو والمشاركين، استخدم صالة الانتظار',
 
     // Video Component Translations
     dailyVideoSystem: 'نظام Daily.co للفيديو',
@@ -662,7 +674,8 @@ export const translations: Record<Language, Translations> = {
     connectedWaiting: 'متصل، في انتظار المشاركين...',
     enterRoomAndJoin: 'أدخل رابط الغرفة وانقر "انضمام للمكالمة"',
     videoSystemReady: '✅ تطبيق Daily.co المحسن - تحميل تلقائي للإعدادات',
-    autoLoadedSettings: '✅ تطبيق Daily.co Kitchen Sink المحسن - تحميل تلقائي للإعدادات',
+    autoLoadedSettings:
+      '✅ تطبيق Daily.co Kitchen Sink المحسن - تحميل تلقائي للإعدادات',
     roomLinkAutoLoaded: '• رابط الغرفة محمل تلقائياً من الجلسة',
     userNameFromParticipant: '• اسم المستخدم محمل من معلومات المشارك',
     tokenAutoGenerated: '• رمز الدخول يتم إنشاؤه تلقائياً',
@@ -688,6 +701,9 @@ export const translations: Record<Language, Translations> = {
   },
 };
 
-export const getTranslation = (language: Language, key: keyof Translations): string => {
+export const getTranslation = (
+  language: Language,
+  key: keyof Translations,
+): string => {
   return translations[language][key];
 };
