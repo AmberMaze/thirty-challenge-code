@@ -94,6 +94,8 @@
   "src/pages/Join.tsx": [],
   "src/pages/Landing.tsx": [],
   "src/pages/Lobby.tsx": [],
+  "src/pages/LobbyFixed.tsx": [],
+  "src/pages/LobbyOld.tsx": [],
   "src/pages/NotFound.tsx": [],
   "src/pages/QuizRoom.tsx": [],
   "src/pages/Scoreboard.tsx": [],
