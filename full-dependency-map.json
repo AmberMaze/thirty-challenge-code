@@ -2,29 +2,10 @@
   "netlify/functions/check-daily-room.ts": [],
   "netlify/functions/create-daily-room.ts": [],
   "netlify/functions/create-daily-token.ts": [],
+  "netlify/functions/daily-diagnostics.ts": [],
   "netlify/functions/delete-daily-room.ts": [],
   "netlify/functions/game-event.ts": [],
   "src/App.tsx": [],
-  "src/alphaquiz/components/AlphaBell.tsx": [
-    "src/alphaquiz/state/alphaAtoms.ts"
-  ],
-  "src/alphaquiz/components/AlphaScoreboard.tsx": [
-    "src/alphaquiz/state/alphaAtoms.ts"
-  ],
-  "src/alphaquiz/pages/AlphaEntry.tsx": [
-    "src/alphaquiz/state/alphaAtoms.ts"
-  ],
-  "src/alphaquiz/pages/AlphaHost.tsx": [
-    "src/alphaquiz/components/AlphaBell.tsx",
-    "src/alphaquiz/components/AlphaScoreboard.tsx",
-    "src/alphaquiz/state/alphaAtoms.ts"
-  ],
-  "src/alphaquiz/pages/AlphaPlayer.tsx": [
-    "src/alphaquiz/components/AlphaBell.tsx",
-    "src/alphaquiz/components/AlphaScoreboard.tsx",
-    "src/alphaquiz/state/alphaAtoms.ts"
-  ],
-  "src/alphaquiz/state/alphaAtoms.ts": [],
   "src/components/ActiveGames.tsx": [],
   "src/components/AlertBanner.tsx": [
     "src/utils/debugLog.ts"
@@ -45,9 +26,6 @@
   "src/components/VideoGrid.tsx": [],
   "src/components/VideoRoom.tsx": [
     "src/components/AlertBanner.tsx"
-  ],
-  "src/components/VideoRoomLazy.tsx": [
-    "src/components/VideoRoom.tsx"
   ],
   "src/components/__tests__/SimpleKitchenSinkVideo.test.tsx": [
     "src/components/SimpleKitchenSinkVideo.tsx"
@@ -95,7 +73,6 @@
   "src/pages/Landing.tsx": [],
   "src/pages/Lobby.tsx": [],
   "src/pages/LobbyFixed.tsx": [],
-  "src/pages/LobbyOld.tsx": [],
   "src/pages/NotFound.tsx": [],
   "src/pages/QuizRoom.tsx": [],
   "src/pages/Scoreboard.tsx": [],
@@ -118,6 +95,7 @@
   "src/state/syncAtoms.ts": [],
   "src/state/videoAtoms.ts": [],
   "src/tests/setup.ts": [],
+  "src/types/database.ts": [],
   "src/types/game.ts": [],
   "src/utils/__tests__/debugLog.test.ts": [
     "src/utils/debugLog.ts"
