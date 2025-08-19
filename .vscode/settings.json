@@ -1,5 +1,82 @@
 {
     "githubPullRequests.ignoredPullRequestBranches": [
         "main"
-    ]
+    ],
+    // TypeScript & JavaScript
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.suggest.autoImports": true,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    // Code Actions
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    // Tailwind CSS
+    "tailwindCSS.includeLanguages": {
+        "typescript": "javascript",
+        "typescriptreact": "javascript"
+    },
+    // File Associations
+    "files.associations": {
+        "*.css": "tailwindcss",
+        "*.env": "dotenv",
+        "*.env.*": "dotenv"
+    },
+    // ESLint
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    ],
+    "eslint.format.enable": true,
+    // Editor Settings
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.wordWrap": "on",
+    "editor.rulers": [
+        80,
+        120
+    ],
+    "editor.minimap.enabled": true,
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+    // File Explorer
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js",
+        "*.tsx": "${capture}.js",
+        "package.json": "package-lock.json, pnpm-lock.yaml, yarn.lock",
+        "tailwind.config.*": "postcss.config.*"
+    },
+    // Search
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.git": true,
+        "**/coverage": true,
+        "**/out": true
+    },
+    // Git
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    // Terminal
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.fontSize": 14,
+    // Emmet
+    "emmet.includeLanguages": {
+        "typescript": "html",
+        "typescriptreact": "html"
+    },
+    // Auto Save
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    // Workspace Trust
+    "security.workspace.trust.untrustedFiles": "prompt",
+    "markdown.validate.enabled": true
 }

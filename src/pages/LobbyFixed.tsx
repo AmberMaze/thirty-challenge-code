@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { useAtomValue } from 'jotai';
-import { useGameState, useGameActions, useLobbyActions, useGameSync } from '@/hooks/useGameAtoms';
-import { gameSyncInstanceAtom, lobbyParticipantsAtom } from '@/state';
-import SimpleKitchenSinkVideoLazy from '@/components/SimpleKitchenSinkVideoLazy';
 import AlertBanner from '@/components/AlertBanner';
 import LanguageToggle from '@/components/LanguageToggle';
+import SimpleKitchenSinkVideoLazy from '@/components/SimpleKitchenSinkVideoLazy';
+import { useGameActions, useGameState, useGameSync, useLobbyActions } from '@/hooks/useGameAtoms';
 import { useTranslation } from '@/hooks/useTranslation';
+import { gameSyncInstanceAtom, lobbyParticipantsAtom } from '@/state';
 import { debugLog } from '@/utils/debugLog';
+import { useAtomValue } from 'jotai';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 interface LobbyParticipant {
   id: string;
@@ -27,10 +27,10 @@ export default function Lobby() {
   const { loadGameState, setHostConnected, startSession } = useGameActions();
   const { myParticipant, setParticipant } = useLobbyActions();
   const { t, language } = useTranslation();
-  
+
   // Initialize game sync
   useGameSync();
-  
+
   // Get sync instance for cleanup
   const gameSyncInstance = useAtomValue(gameSyncInstanceAtom);
 
@@ -47,16 +47,16 @@ export default function Lobby() {
 
   // Get lobby participants to properly count connections
   const lobbyParticipants = useAtomValue(lobbyParticipantsAtom);
-  
+
   const connectedPlayers = useMemo(() => {
     const gamePlayersCount = Object.values(state.players).filter(
       (p) => p.isConnected && (p.id === 'playerA' || p.id === 'playerB'),
     ).length;
-    
+
     const lobbyPlayersCount = lobbyParticipants.filter(
       (p) => p.isConnected && p.type === 'player'
     ).length;
-    
+
     return Math.max(gamePlayersCount, lobbyPlayersCount);
   }, [state.players, lobbyParticipants]);
 
@@ -89,11 +89,11 @@ export default function Lobby() {
       }
 
       initializationRef.current.isInitializing = true;
-      
+
       try {
         debugLog('Lobby', 'initializing_game', { gameId });
         const result = await loadGameState(gameId);
-        
+
         if (!result.success) {
           // If no game exists and user is a host, create a new one
           const { role, hostName: urlHostName } = searchParamsObj;
@@ -115,7 +115,7 @@ export default function Lobby() {
             showAlertMessage(`${t('failedLoadSessionData')}: ${result.error}`, 'error');
           }
         }
-        
+
         initializationRef.current.hasInitialized = true;
       } catch (error) {
         console.error('Error loading game state:', error);
@@ -127,7 +127,7 @@ export default function Lobby() {
 
     // Small delay to avoid race conditions
     const timeoutId = setTimeout(initializeGame, 100);
-    
+
     return () => {
       clearTimeout(timeoutId);
     };
@@ -136,7 +136,7 @@ export default function Lobby() {
   // Participant setup effect - runs when URL params change
   useEffect(() => {
     const { role, name, flag, club, hostName } = searchParamsObj;
-    
+
     if (!role) return;
 
     let participant: LobbyParticipant | null = null;
@@ -175,12 +175,12 @@ export default function Lobby() {
   // Host connection effect - separate from participant setup
   useEffect(() => {
     const { role } = searchParamsObj;
-    
+
     if (role === 'controller' || role === 'host') {
       const timeoutId = setTimeout(() => {
         setHostConnected(true);
       }, 1000);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [searchParamsObj, setHostConnected]);
@@ -189,7 +189,7 @@ export default function Lobby() {
   useEffect(() => {
     return () => {
       const { role } = searchParamsObj;
-      
+
       if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
         // Debounced cleanup to prevent flapping
         setTimeout(() => {
@@ -213,7 +213,7 @@ export default function Lobby() {
         console.log('Tab hidden, heartbeat will continue but presence may timeout');
       }
     };
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -254,7 +254,7 @@ export default function Lobby() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#10102a] to-blue-900 p-4">
       {/* Language Toggle */}
       <LanguageToggle />
-      
+
       {/* Alert Banner */}
       <AlertBanner
         message={alertMessage}
@@ -310,12 +310,12 @@ export default function Lobby() {
           {myParticipant.type === 'controller' && (
             <button
               onClick={() => {
-                navigate('/control-room', { 
-                  state: { 
-                    gameId: gameId, 
-                    hostCode: state.hostCode, 
-                    hostName: state.hostName || 'Controller' 
-                  } 
+                navigate('/control-room', {
+                  state: {
+                    gameId: gameId,
+                    hostCode: state.hostCode,
+                    hostName: state.hostName || 'Controller'
+                  }
                 });
               }}
               className={`px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
@@ -328,12 +328,12 @@ export default function Lobby() {
           {myParticipant.type === 'host' && (
             <button
               onClick={() => {
-                navigate('/control-room', { 
-                  state: { 
-                    gameId: gameId, 
-                    hostCode: state.hostCode, 
-                    hostName: state.hostName || 'Host' 
-                  } 
+                navigate('/control-room', {
+                  state: {
+                    gameId: gameId,
+                    hostCode: state.hostCode,
+                    hostName: state.hostName || 'Host'
+                  }
                 });
               }}
               className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
@@ -345,8 +345,8 @@ export default function Lobby() {
           {/* Leave Session Button for all participants */}
           <button
             onClick={() => {
-              const confirmMessage = language === 'ar' 
-                ? 'هل أنت متأكد من مغادرة هذه الجلسة؟' 
+              const confirmMessage = language === 'ar'
+                ? 'هل أنت متأكد من مغادرة هذه الجلسة؟'
                 : 'Are you sure you want to leave this session?';
               if (window.confirm(confirmMessage)) {
                 navigate('/');

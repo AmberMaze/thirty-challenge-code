@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAtomValue } from 'jotai';
 import { useGameState, useGameActions, useLobbyActions, useGameSync } from '@/hooks/useGameAtoms';
@@ -8,16 +8,8 @@ import AlertBanner from '@/components/AlertBanner';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useTranslation } from '@/hooks/useTranslation';
 import { debugLog } from '@/utils/debugLog';
-
-interface LobbyParticipant {
-  id: string;
-  name: string;
-  type: 'host' | 'controller' | 'player';
-  playerId?: string;
-  flag?: string;
-  club?: string;
-  isConnected: boolean;
-}
+import type { LobbyParticipant } from '@/state';
+import { AtomGameSync } from '@/lib/atomGameSync';
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -28,22 +20,17 @@ export default function Lobby() {
   const { myParticipant, setParticipant } = useLobbyActions();
   const { t, language } = useTranslation();
   
+  debugLog('Lobby', 'component_render', { gameId, players: Object.keys(state.players) });
+  
   // Initialize game sync
   useGameSync();
   
   // Get sync instance for cleanup
   const gameSyncInstance = useAtomValue(gameSyncInstanceAtom);
 
-  // Alert state
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
   const [showAlert, setShowAlert] = useState(false);
-
-  // Refs to prevent stale closures
-  const initializationRef = useRef<{ hasInitialized: boolean; isInitializing: boolean }>({
-    hasInitialized: false,
-    isInitializing: false
-  });
 
   // Get lobby participants to properly count connections
   const lobbyParticipants = useAtomValue(lobbyParticipantsAtom);
@@ -76,168 +63,202 @@ export default function Lobby() {
     hostName: searchParams.get('hostName'),
   }), [searchParams]);
 
-  // Game initialization effect - runs once when gameId changes
   useEffect(() => {
-    if (!gameId || initializationRef.current.hasInitialized || initializationRef.current.isInitializing) {
-      return;
-    }
+  if (!gameId) return;
 
-    const initializeGame = async () => {
-      if (state.gameId === gameId) {
-        initializationRef.current.hasInitialized = true;
-        return;
-      }
+  let isMounted = true;
 
-      initializationRef.current.isInitializing = true;
-      
+  // snapshot functions to avoid stale closures
+  const currentLoadGameState = loadGameState;
+  const currentStartSession = startSession;
+  const currentSetHostConnected = setHostConnected;
+  const currentSetParticipant = setParticipant;
+  const currentShowAlertMessage = showAlertMessage;
+  const currentT = t;
+
+  // helper to load or create game state
+  const initializeGameState = async () => {
+    if (state.gameId !== gameId) {
+      console.log('Loading game state for:', gameId);
       try {
-        debugLog('Lobby', 'initializing_game', { gameId });
-        const result = await loadGameState(gameId);
-        
+        const result = await currentLoadGameState(gameId);
+        if (!isMounted) return;
+
         if (!result.success) {
           // If no game exists and user is a host, create a new one
           const { role, hostName: urlHostName } = searchParamsObj;
           if (role === 'host') {
             try {
-              await startSession(
+              await currentStartSession(
                 gameId,
                 'HOST',
                 urlHostName || (language === 'ar' ? 'المقدم' : 'Host'),
                 { WSHA: 4, AUCT: 4, BELL: 10, SING: 10, REMO: 4 }
               );
-              showAlertMessage(t('sessionCreatedSuccessfully'), 'success');
+              currentShowAlertMessage(currentT('sessionCreatedSuccessfully'), 'success');
             } catch (createError) {
               console.error('Failed to create new game:', createError);
-              showAlertMessage(t('failedCreateSession'), 'error');
+              currentShowAlertMessage(currentT('failedCreateSession'), 'error');
             }
           } else {
             console.error('Failed to load game state:', result.error);
-            showAlertMessage(`${t('failedLoadSessionData')}: ${result.error}`, 'error');
+            currentShowAlertMessage(`${currentT('failedLoadSessionData')}: ${result.error}`, 'error');
           }
         }
-        
-        initializationRef.current.hasInitialized = true;
       } catch (error) {
+        if (!isMounted) return;
         console.error('Error loading game state:', error);
-        showAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
-      } finally {
-        initializationRef.current.isInitializing = false;
+        currentShowAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
       }
+    }
+  };
+
+  // delay initialization slightly to avoid race conditions
+  const initTimeout = setTimeout(() => {
+    if (isMounted) {
+      initializeGameState();
+    }
+  }, 500);
+
+  // read URL params for role and details
+  const { role, name, flag, club, hostName } = searchParamsObj;
+
+  let participant: LobbyParticipant | null = null;
+  let hostTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  if (role === 'controller') {
+    participant = {
+      id: 'controller',
+      name: hostName || state.hostName || 'Controller',
+      type: 'controller',
+      isConnected: true,
     };
-
-    // Small delay to avoid race conditions
-    const timeoutId = setTimeout(initializeGame, 100);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [gameId, state.gameId, loadGameState, startSession, searchParamsObj, language, showAlertMessage, t]);
-
-  // Participant setup effect - runs when URL params change
-  useEffect(() => {
-    const { role, name, flag, club, hostName } = searchParamsObj;
-    
-    if (!role) return;
-
-    let participant: LobbyParticipant | null = null;
-
-    if (role === 'controller') {
-      participant = {
-        id: 'controller',
-        name: hostName || state.hostName || 'Controller',
-        type: 'controller',
-        isConnected: true,
-      };
-    } else if (role === 'host') {
-      participant = {
-        id: 'host',
-        name: hostName || state.hostName || 'Host',
-        type: 'host',
-        isConnected: true,
-      };
-    } else if (role === 'playerA' || role === 'playerB') {
-      participant = {
-        id: role,
-        name: name || 'لاعب',
-        type: 'player',
-        playerId: role,
-        flag: flag || undefined,
-        club: club || undefined,
-        isConnected: true,
-      };
-    }
-
-    if (participant) {
-      setParticipant(participant);
-    }
-  }, [searchParamsObj, state.hostName, setParticipant]);
-
-  // Host connection effect - separate from participant setup
-  useEffect(() => {
-    const { role } = searchParamsObj;
-    
-    if (role === 'controller' || role === 'host') {
-      const timeoutId = setTimeout(() => {
-        setHostConnected(true);
-      }, 1000);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [searchParamsObj, setHostConnected]);
-
-  // Cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      const { role } = searchParamsObj;
-      
-      if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
-        // Debounced cleanup to prevent flapping
-        setTimeout(() => {
-          setHostConnected(false);
-        }, 1000);
+    // schedule host-connected update without aborting the effect
+    hostTimeout = setTimeout(() => {
+      if (isMounted) {
+        currentSetHostConnected(true);
       }
+    }, 1000);
+  } else if (role === 'host') {
+    participant = {
+      id: 'host',
+      name: hostName || state.hostName || 'Host',
+      type: 'host',
+      isConnected: true,
     };
-  }, [myParticipant, setHostConnected, searchParamsObj]);
+    hostTimeout = setTimeout(() => {
+      if (isMounted) {
+        currentSetHostConnected(true);
+      }
+    }, 1000);
+  } else if (role === 'playerA' || role === 'playerB') {
+    participant = {
+      id: role,
+      name: name || 'لاعب',
+      type: 'player',
+      playerId: role,
+      flag: flag || undefined,
+      club: club || undefined,
+      isConnected: true,
+    };
+  }
 
-  // Page unload cleanup effect
+  // now that participant is defined, store it in Jotai
+  if (participant && isMounted) {
+    currentSetParticipant(participant);
+  }
+
+  // cleanup: clear any timers and mark effect as unmounted
+  return () => {
+    isMounted = false;
+    clearTimeout(initTimeout);
+    if (hostTimeout) {
+      clearTimeout(hostTimeout);
+    }
+  };
+}, [
+  gameId,
+  searchParamsObj,
+  state.gameId,
+  state.hostName,
+  language,
+  loadGameState,
+  startSession,
+  setHostConnected,
+  setParticipant,
+  showAlertMessage,
+  t,
+]);
+
+
+  // Set up cleanup when user leaves the page
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    // Handle browser tab close/refresh - synchronous version
+    const handleBeforeUnloadSync = () => {
       if (myParticipant && myParticipant.type === 'player' && myParticipant.playerId) {
-        // Log for debugging - actual cleanup would require serverless function
-        console.log('Page unloading, player will be marked disconnected by presence timeout');
+        // Use navigator.sendBeacon for reliable delivery on page unload
+        const payload = JSON.stringify({
+          playerId: myParticipant.playerId,
+          is_connected: false,
+          last_active: new Date().toISOString()
+        });
+        
+        // Try to send a beacon to mark player as disconnected
+        // Note: This would require a serverless function endpoint to handle the beacon
+        const hasBeaconSupport = typeof navigator.sendBeacon !== 'undefined';
+        const ENABLE_BEACON = false; // Disabled for now - would need serverless function
+        if (hasBeaconSupport && ENABLE_BEACON) {
+          navigator.sendBeacon('/api/disconnect-player', payload);
+        } else {
+          console.log('Page unloading, player will be marked disconnected by presence timeout');
+        }
       }
     };
 
+    window.addEventListener('beforeunload', handleBeforeUnloadSync);
+    
+    // Also handle visibility change (tab switching)
     const handleVisibilityChange = () => {
       if (document.hidden && myParticipant && myParticipant.type === 'player' && myParticipant.playerId) {
         console.log('Tab hidden, heartbeat will continue but presence may timeout');
       }
     };
     
-    window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleBeforeUnloadSync);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [myParticipant]);
+  }, [myParticipant, setHostConnected]);
 
-  // Heartbeat effect for players
+  // Separate effect for component unmount cleanup
+  useEffect(() => {
+    const currentSetHostConnected = setHostConnected;
+    
+    return () => {
+      // Debounce cleanup operations to prevent flapping
+      if (myParticipant && (myParticipant.type === 'controller' || myParticipant.type === 'host')) {
+        setTimeout(() => {
+          currentSetHostConnected(false);
+        }, 1000);
+      }
+    };
+  }, [myParticipant, setHostConnected]);
+
+  // Start heartbeat for players when they connect
   useEffect(() => {
     if (
       myParticipant &&
       myParticipant.type === 'player' &&
       myParticipant.playerId &&
-      gameSyncInstance &&
-      typeof gameSyncInstance.startHeartbeat === 'function'
+      gameSyncInstance instanceof AtomGameSync
     ) {
       console.log(`Starting heartbeat for player ${myParticipant.playerId}`);
       gameSyncInstance.startHeartbeat(myParticipant.playerId);
     }
   }, [myParticipant, gameSyncInstance]);
 
-  // Loading state
   if (!myParticipant || !gameId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#10102a] to-blue-900 flex items-center justify-center">
@@ -276,6 +297,7 @@ export default function Lobby() {
             <p className={`text-white/70 ${language === 'ar' ? 'font-arabic' : ''}`}>
               {t('connectedPlayers')}: {connectedPlayers}/2
             </p>
+
           </div>
         </div>
 
@@ -310,6 +332,7 @@ export default function Lobby() {
           {myParticipant.type === 'controller' && (
             <button
               onClick={() => {
+                // Navigate back to control room
                 navigate('/control-room', { 
                   state: { 
                     gameId: gameId, 
@@ -328,6 +351,7 @@ export default function Lobby() {
           {myParticipant.type === 'host' && (
             <button
               onClick={() => {
+                // Navigate to control room
                 navigate('/control-room', { 
                   state: { 
                     gameId: gameId, 
@@ -349,6 +373,7 @@ export default function Lobby() {
                 ? 'هل أنت متأكد من مغادرة هذه الجلسة؟' 
                 : 'Are you sure you want to leave this session?';
               if (window.confirm(confirmMessage)) {
+                // Navigate back to home
                 navigate('/');
               }
             }}
@@ -357,6 +382,7 @@ export default function Lobby() {
             {language === 'ar' ? 'مغادرة الجلسة' : 'Leave Session'}
           </button>
         </div>
+
       </div>
     </div>
   );
