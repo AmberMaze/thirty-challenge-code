@@ -1,9 +1,17 @@
 import { GameDatabase } from '@/lib/gameDatabase';
+import { PlayerManager } from '@/lib/playerManager';
+import type { PlayerId } from '@/types/game';
 import { debugError, debugLog, debugWarn } from './debugLog';
 
 export interface HeartbeatConfig {
   playerId: string;
+  gameId: string;
   intervalMs?: number; // Default: 60000 (60s)
+  playerData?: {
+    name?: string;
+    flag?: string;
+    club?: string;
+  };
   onError?: (_err: Error) => void;
 }
 
@@ -70,11 +78,17 @@ export class HeartbeatManager {
     }
 
     try {
-      const now = new Date().toISOString();
-      const result = await GameDatabase.updatePlayerById(this.config.playerId, {
-        is_connected: true,
-        last_active: now,
-      });
+      // Use PlayerManager to ensure player exists before updating
+      const result = await PlayerManager.updatePlayerConnection(
+        this.config.playerId as PlayerId,
+        this.config.gameId,
+        true,
+        {
+          name: this.config.playerData?.name || this.config.playerId,
+          flag: this.config.playerData?.flag,
+          club: this.config.playerData?.club,
+        },
+      );
 
       if (!result.success) {
         // Only log error if it's not a "not found" error (player might not exist yet)
@@ -107,11 +121,11 @@ export class HeartbeatManager {
    */
   async markDisconnected(): Promise<void> {
     try {
-      const now = new Date().toISOString();
-      const result = await GameDatabase.updatePlayerById(this.config.playerId, {
-        is_connected: false,
-        last_active: now,
-      });
+      const result = await PlayerManager.updatePlayerConnection(
+        this.config.playerId as PlayerId,
+        this.config.gameId,
+        false,
+      );
 
       if (!result.success && result.error !== 'Player not found') {
         debugWarn('Failed to mark player as disconnected', 'HeartbeatManager', {
@@ -144,7 +158,11 @@ export class MultiPlayerHeartbeat {
   /**
    * Start heartbeat for a specific player
    */
-  startForPlayer(playerId: string, onError?: (_err: Error) => void): void {
+  startForPlayer(
+    playerId: string,
+    gameId: string,
+    onError?: (_err: Error) => void,
+  ): void {
     if (this.heartbeats.has(playerId)) {
       debugWarn('Heartbeat already exists for player', 'MultiPlayerHeartbeat', {
         playerId,
@@ -154,6 +172,7 @@ export class MultiPlayerHeartbeat {
 
     const heartbeat = new HeartbeatManager({
       playerId,
+      gameId,
       onError,
     });
 

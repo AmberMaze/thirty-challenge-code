@@ -409,9 +409,13 @@ export class AtomGameSync {
    * Start heartbeat for a player to keep their last_active updated
    */
   startHeartbeat(playerId: PlayerId) {
-    this.heartbeatManager.startForPlayer(playerId, (error) => {
-      console.warn(`Heartbeat error for player ${playerId}:`, error);
-    });
+    this.heartbeatManager.startForPlayer(
+      playerId,
+      this.gameId,
+      (error: Error) => {
+        console.warn(`Heartbeat error for player ${playerId}:`, error);
+      },
+    );
   }
 
   /**

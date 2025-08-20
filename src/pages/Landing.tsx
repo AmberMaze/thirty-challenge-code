@@ -5,11 +5,13 @@ import { isArabicAtom } from '@/state/languageAtoms';
 import {
   backgroundMusicEnabledAtom,
   backgroundMusicVolumeAtom,
+  backgroundStyleAtom,
+  customColorsAtom,
   isDarkModeAtom,
   soundEffectsEnabledAtom,
   soundEffectsVolumeAtom,
   themeAtom,
-  toggleThemeAtom,
+  type BackgroundStyle,
   type Theme,
 } from '@/state/themeAtoms';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -25,19 +27,20 @@ export default function Landing() {
   const { t } = useTranslation();
   const isArabic = useAtomValue(isArabicAtom);
   const isDarkMode = useAtomValue(isDarkModeAtom);
-  const [, toggleTheme] = useAtom(toggleThemeAtom);
 
   // Theme configuration state
   const [showThemeSettings, setShowThemeSettings] = useState(false);
   const [theme, setTheme] = useAtom(themeAtom);
+  const [backgroundStyle, setBackgroundStyle] = useAtom(backgroundStyleAtom);
+  const [customColors, setCustomColors] = useAtom(customColorsAtom);
   const [soundEffectsEnabled, setSoundEffectsEnabled] = useAtom(
     soundEffectsEnabledAtom,
   );
-  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useAtom(
-    backgroundMusicEnabledAtom,
-  );
   const [soundEffectsVolume, setSoundEffectsVolume] = useAtom(
     soundEffectsVolumeAtom,
+  );
+  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useAtom(
+    backgroundMusicEnabledAtom,
   );
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useAtom(
     backgroundMusicVolumeAtom,
@@ -58,13 +61,23 @@ export default function Landing() {
   const themeOptions: { value: Theme; label: string; preview: string }[] = [
     {
       value: 'dark',
-      label: 'Dark Theme',
+      label: 'Dark Football',
       preview: 'bg-gradient-to-br from-gray-900 to-blue-900',
     },
     {
       value: 'light',
-      label: 'Light Theme',
+      label: 'Light Clean',
       preview: 'bg-gradient-to-br from-blue-50 to-white',
+    },
+    {
+      value: 'football',
+      label: 'Football Green',
+      preview: 'bg-gradient-to-br from-green-900 to-emerald-800',
+    },
+    {
+      value: 'neon',
+      label: 'Neon Cyber',
+      preview: 'bg-gradient-to-br from-black to-purple-900',
     },
   ];
 
@@ -226,6 +239,118 @@ export default function Landing() {
                     </div>
                   </div>
 
+                  {/* Background Style */}
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-3 ${
+                        isDarkMode ? 'text-white' : 'text-black'
+                      } ${isArabic ? 'font-arabic' : ''}`}
+                    >
+                      Background Style
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(
+                        [
+                          'gradient',
+                          'solid',
+                          'pattern',
+                          'animated',
+                          'mesh',
+                          'waves',
+                        ] as BackgroundStyle[]
+                      ).map((style) => (
+                        <motion.button
+                          key={style}
+                          onClick={() => setBackgroundStyle(style)}
+                          className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                            backgroundStyle === style
+                              ? isDarkMode
+                                ? 'border-green-400 bg-green-400/10'
+                                : 'border-green-600 bg-green-50'
+                              : isDarkMode
+                                ? 'border-slate-600 hover:border-slate-500'
+                                : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <span
+                            className={`font-medium capitalize ${
+                              isDarkMode ? 'text-white' : 'text-black'
+                            } ${isArabic ? 'font-arabic' : ''}`}
+                          >
+                            {style}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Colors */}
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-3 ${
+                        isDarkMode ? 'text-white' : 'text-black'
+                      } ${isArabic ? 'font-arabic' : ''}`}
+                    >
+                      Custom Colors
+                    </label>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label
+                            className={`block text-xs mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
+                            Primary
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="color"
+                              value={customColors.primary}
+                              onChange={(e) =>
+                                setCustomColors({
+                                  ...customColors,
+                                  primary: e.target.value,
+                                })
+                              }
+                              className="w-8 h-8 rounded border-none cursor-pointer"
+                            />
+                            <span
+                              className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                            >
+                              {customColors.primary}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <label
+                            className={`block text-xs mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
+                            Secondary
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="color"
+                              value={customColors.secondary}
+                              onChange={(e) =>
+                                setCustomColors({
+                                  ...customColors,
+                                  secondary: e.target.value,
+                                })
+                              }
+                              className="w-8 h-8 rounded border-none cursor-pointer"
+                            />
+                            <span
+                              className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                            >
+                              {customColors.secondary}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Sound Settings */}
                   <div>
                     <label
@@ -354,22 +479,6 @@ export default function Landing() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Quick Theme Toggle */}
-                  <div>
-                    <button
-                      onClick={() => toggleTheme()}
-                      className={`w-full p-3 rounded-lg border-2 transition-all ${
-                        isDarkMode
-                          ? 'border-yellow-400 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
-                          : 'border-blue-600 bg-blue-50 text-blue-600 hover:bg-blue-100'
-                      } ${isArabic ? 'font-arabic' : ''}`}
-                    >
-                      {isDarkMode
-                        ? '☀️ Switch to Light Mode'
-                        : '🌙 Switch to Dark Mode'}
-                    </button>
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -434,12 +543,112 @@ export default function Landing() {
             <ActiveGames onJoinGame={handleJoinGameById} />
           </motion.div>
 
+          {/* Quick Preview Section */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mb-8 w-full max-w-md"
+          >
+            <div
+              className={`bg-white/5 backdrop-blur-sm rounded-xl p-6 border ${
+                isDarkMode ? 'border-white/10' : 'border-black/10'
+              }`}
+            >
+              <h3
+                className={`text-lg font-bold mb-4 text-center ${
+                  isDarkMode ? 'text-accent2' : 'text-green-700'
+                } ${isArabic ? 'font-arabic' : ''}`}
+              >
+                {isArabic ? 'معاينة سريعة' : 'Quick Preview'}
+              </h3>
+
+              {/* Sample Question */}
+              <div
+                className={`bg-white/5 rounded-lg p-4 mb-4 border ${
+                  isDarkMode ? 'border-white/5' : 'border-black/5'
+                }`}
+              >
+                <p
+                  className={`text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-white/70' : 'text-gray-600'
+                  } ${isArabic ? 'font-arabic' : ''}`}
+                >
+                  {isArabic ? 'سؤال تجريبي:' : 'Sample Question:'}
+                </p>
+                <p
+                  className={`text-white font-medium ${isArabic ? 'font-arabic' : ''}`}
+                >
+                  {isArabic
+                    ? 'أي فريق فاز بكأس العالم 2022؟'
+                    : 'Which team won the 2022 World Cup?'}
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  {['Argentina', 'France', 'Brazil', 'Croatia'].map(
+                    (option, index) => (
+                      <motion.div
+                        key={option}
+                        className={`p-2 rounded text-sm text-center cursor-pointer transition-all ${
+                          index === 0
+                            ? isDarkMode
+                              ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                              : 'bg-green-100 text-green-700 border border-green-300'
+                            : isDarkMode
+                              ? 'bg-white/5 hover:bg-white/10 text-white/80 border border-white/10'
+                              : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
+                        } ${isArabic ? 'font-arabic' : ''}`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {option}
+                      </motion.div>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              {/* Game Stats */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                {[
+                  { label: isArabic ? 'الأسئلة' : 'Questions', value: '30+' },
+                  { label: isArabic ? 'الفئات' : 'Categories', value: '4' },
+                  { label: isArabic ? 'المدة' : 'Duration', value: '15m' },
+                ].map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    className={`p-3 rounded-lg ${
+                      isDarkMode ? 'bg-white/5' : 'bg-gray-50'
+                    }`}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                  >
+                    <div
+                      className={`text-lg font-bold ${
+                        isDarkMode ? 'text-accent2' : 'text-green-600'
+                      }`}
+                    >
+                      {stat.value}
+                    </div>
+                    <div
+                      className={`text-xs ${
+                        isDarkMode ? 'text-white/60' : 'text-gray-500'
+                      } ${isArabic ? 'font-arabic' : ''}`}
+                    >
+                      {stat.label}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
           {/* Action Buttons */}
           <motion.div
             className="flex flex-col gap-6 items-center w-full max-w-md"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.9 }}
           >
             <motion.button
               onClick={handleCreateSession}

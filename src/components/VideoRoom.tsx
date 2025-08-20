@@ -1,4 +1,5 @@
 import { useGameActions, useGameState } from '@/hooks/useGameAtoms';
+import { debugError, debugLog, debugWarn } from '@/utils/debugLog';
 import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
 import {
   DailyProvider,
@@ -54,7 +55,9 @@ function VideoControls({ gameId, userRole, onLeave }: VideoControlsProps) {
     try {
       await daily.setLocalVideo(!isVideoOn);
     } catch (error) {
-      console.error('Failed to toggle video:', error);
+      debugError('Failed to toggle video', 'VideoControls', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }, [daily, isVideoOn]);
 
@@ -63,7 +66,9 @@ function VideoControls({ gameId, userRole, onLeave }: VideoControlsProps) {
     try {
       await daily.setLocalAudio(!isAudioOn);
     } catch (error) {
-      console.error('Failed to toggle audio:', error);
+      debugError('Failed to toggle audio', 'VideoControls', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }, [daily, isAudioOn]);
 
@@ -76,7 +81,9 @@ function VideoControls({ gameId, userRole, onLeave }: VideoControlsProps) {
         await daily.startScreenShare();
       }
     } catch (error) {
-      console.error('Failed to toggle screen share:', error);
+      debugError('Failed to toggle screen share', 'VideoControls', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }, [daily, isScreenSharing]);
 
@@ -85,7 +92,9 @@ function VideoControls({ gameId, userRole, onLeave }: VideoControlsProps) {
       try {
         await daily.leave();
       } catch (error) {
-        console.error('Failed to leave call:', error);
+        debugError('Failed to leave call', 'VideoControls', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     }
     onLeave?.();
@@ -101,7 +110,10 @@ function VideoControls({ gameId, userRole, onLeave }: VideoControlsProps) {
           await endVideoRoom(gameId);
           onLeave?.();
         } catch (error) {
-          console.error('Failed to delete room:', error);
+          debugError('Failed to delete room', 'VideoControls', {
+            gameId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
         }
       }
     }
@@ -289,14 +301,12 @@ function VideoRoomContent({
   const { generateDailyToken } = useGameActions();
   // Track join or permission errors to surface to the user via an alert banner
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [connectionState, setConnectionState] = useState<string>('new');
 
   // Listen to Daily events for better connection handling
   useDailyEvent(
     'joined-meeting',
     useCallback(() => {
-      console.log('[VideoRoom] Successfully joined meeting');
-      setConnectionState('joined');
+      debugLog('Successfully joined meeting', 'VideoRoom');
       setJoinError(null);
     }, []),
   );
@@ -304,16 +314,14 @@ function VideoRoomContent({
   useDailyEvent(
     'left-meeting',
     useCallback(() => {
-      console.log('[VideoRoom] Left meeting');
-      setConnectionState('left');
+      debugLog('Left meeting', 'VideoRoom');
     }, []),
   );
 
   useDailyEvent(
     'error',
     useCallback((event) => {
-      console.error('[VideoRoom] Daily error:', event);
-      setConnectionState('error');
+      debugError('Daily error occurred', 'VideoRoom', { event });
       setJoinError('Connection error occurred');
     }, []),
   );
@@ -321,20 +329,18 @@ function VideoRoomContent({
   useDailyEvent(
     'participant-joined',
     useCallback((event) => {
-      console.log(
-        '[VideoRoom] Participant joined:',
-        event?.participant?.user_name,
-      );
+      debugLog('Participant joined', 'VideoRoom', {
+        userName: event?.participant?.user_name,
+      });
     }, []),
   );
 
   useDailyEvent(
     'participant-left',
     useCallback((event) => {
-      console.log(
-        '[VideoRoom] Participant left:',
-        event?.participant?.user_name,
-      );
+      debugLog('Participant left', 'VideoRoom', {
+        userName: event?.participant?.user_name,
+      });
     }, []),
   );
 
@@ -380,7 +386,7 @@ function VideoRoomContent({
     const joinRoom = async () => {
       try {
         const userInfo = getUserInfo();
-        console.log('[VideoRoom] Joining with user info:', userInfo);
+        debugLog('Joining with user info', 'VideoRoom', { userInfo });
 
         // Generate token for this user
         const token = await generateDailyToken(
@@ -405,15 +411,22 @@ function VideoRoomContent({
         try {
           await daily.setLocalVideo(true);
         } catch (cameraError) {
-          console.error('[VideoRoom] Camera permission error:', cameraError);
+          debugError('Camera permission error', 'VideoRoom', {
+            error:
+              cameraError instanceof Error
+                ? cameraError.message
+                : 'Unknown error',
+          });
           setJoinError(
             'Unable to access your camera. Please allow camera permissions and refresh.',
           );
         }
 
-        console.log('[VideoRoom] Successfully joined the call');
+        debugLog('Successfully joined the call', 'VideoRoom');
       } catch (error) {
-        console.error('[VideoRoom] Failed to join call:', error);
+        debugError('Failed to join call', 'VideoRoom', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         setJoinError('Failed to join the video call. Please try again.');
       }
     };
@@ -425,7 +438,11 @@ function VideoRoomContent({
   useEffect(() => {
     return () => {
       if (daily) {
-        daily.leave().catch(console.error);
+        daily.leave().catch((error) => {
+          debugError('Error during daily cleanup', 'VideoRoom', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        });
       }
     };
   }, [daily]);
@@ -529,7 +546,9 @@ export default function VideoRoom(props: VideoRoomProps) {
     try {
       return DailyIframe.createCallObject();
     } catch (error) {
-      console.warn('[VideoRoom] Failed to create Daily call object:', error);
+      debugWarn('Failed to create Daily call object', 'VideoRoom', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       // Return a typed mock to avoid runtime issues while satisfying TypeScript
       return null as unknown as DailyCall;
     }
@@ -553,7 +572,9 @@ export default function VideoRoom(props: VideoRoomProps) {
             callObject.destroy();
           }
         } catch (error) {
-          console.warn('[VideoRoom] Error during cleanup:', error);
+          debugWarn('Error during cleanup', 'VideoRoom', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
         }
       }
     };

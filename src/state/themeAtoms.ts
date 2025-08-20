@@ -1,7 +1,13 @@
 import { atom } from 'jotai';
 
 export type Theme = 'light' | 'dark' | 'football' | 'neon';
-export type BackgroundStyle = 'gradient' | 'solid' | 'pattern' | 'animated';
+export type BackgroundStyle =
+  | 'gradient'
+  | 'solid'
+  | 'pattern'
+  | 'animated'
+  | 'mesh'
+  | 'waves';
 
 // Core theme atom
 export const themeAtom = atom<Theme>('dark');
