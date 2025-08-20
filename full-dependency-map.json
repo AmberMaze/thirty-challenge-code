@@ -1,10 +1,12 @@
 {
+  "netlify/functions/batch-check-rooms.ts": [],
   "netlify/functions/check-daily-room.ts": [],
   "netlify/functions/create-daily-room.ts": [],
   "netlify/functions/create-daily-token.ts": [],
   "netlify/functions/daily-diagnostics.ts": [],
   "netlify/functions/delete-daily-room.ts": [],
   "netlify/functions/game-event.ts": [],
+  "netlify/functions/get-room-presence.ts": [],
   "src/App.tsx": [],
   "src/components/ActiveGames.tsx": [],
   "src/components/AlertBanner.tsx": [
@@ -22,6 +24,7 @@
   "src/components/SimpleKitchenSinkVideoLazy.tsx": [
     "src/components/SimpleKitchenSinkVideo.tsx"
   ],
+  "src/components/ThemeConfigurator.tsx": [],
   "src/components/Timer.tsx": [],
   "src/components/VideoGrid.tsx": [],
   "src/components/VideoRoom.tsx": [
@@ -60,7 +63,9 @@
     "src/lib/supabaseLazy.ts",
     "src/types/game.ts"
   ],
-  "src/lib/supabaseClient.ts": [],
+  "src/lib/playerManager.ts": [
+    "src/lib/gameDatabase.ts"
+  ],
   "src/lib/supabaseLazy.ts": [],
   "src/lib/translations.ts": [],
   "src/main.tsx": [
@@ -72,7 +77,6 @@
   "src/pages/Join.tsx": [],
   "src/pages/Landing.tsx": [],
   "src/pages/Lobby.tsx": [],
-  "src/pages/LobbyFixed.tsx": [],
   "src/pages/NotFound.tsx": [],
   "src/pages/QuizRoom.tsx": [],
   "src/pages/Scoreboard.tsx": [],
@@ -93,6 +97,7 @@
   ],
   "src/state/languageAtoms.ts": [],
   "src/state/syncAtoms.ts": [],
+  "src/state/themeAtoms.ts": [],
   "src/state/videoAtoms.ts": [],
   "src/tests/setup.ts": [],
   "src/types/database.ts": [],
@@ -102,7 +107,9 @@
   ],
   "src/utils/debugLog.ts": [],
   "src/utils/debugNetworkRequests.ts": [],
-  "src/utils/heartbeat.ts": [],
+  "src/utils/heartbeat.ts": [
+    "src/utils/debugLog.ts"
+  ],
   "src/utils/teamUtils.ts": [],
   "src/vite-env.d.ts": []
 }
