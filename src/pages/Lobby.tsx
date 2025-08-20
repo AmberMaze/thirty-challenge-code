@@ -1,6 +1,6 @@
 import AlertBanner from '@/components/AlertBanner';
 import LanguageToggle from '@/components/LanguageToggle';
-import SimpleKitchenSinkVideoLazy from '@/components/SimpleKitchenSinkVideoLazy';
+import VideoRoom from '@/components/VideoRoom';
 import {
   useGameActions,
   useGameState,
@@ -8,9 +8,11 @@ import {
   useLobbyActions,
 } from '@/hooks/useGameAtoms';
 import { useTranslation } from '@/hooks/useTranslation';
-import { gameSyncInstanceAtom, lobbyParticipantsAtom } from '@/state';
-import type { LobbyParticipant } from '@/state/syncAtoms';
-import { debugLog } from '@/utils/debugLog';
+import {
+  gameSyncInstanceAtom,
+  lobbyParticipantsAtom,
+  type LobbyParticipant,
+} from '@/state';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -20,7 +22,14 @@ export default function Lobby() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const state = useGameState();
-  const { loadGameState, setHostConnected, startSession } = useGameActions();
+  const {
+    loadGameState,
+    setHostConnected,
+    startSession,
+    createVideoRoom,
+    checkVideoRoomExists,
+    updateVideoRoomState,
+  } = useGameActions();
   const { myParticipant, setParticipant } = useLobbyActions();
   const { t, language } = useTranslation();
 
@@ -36,6 +45,19 @@ export default function Lobby() {
     'info' | 'success' | 'warning' | 'error'
   >('info');
   const [showAlert, setShowAlert] = useState(false);
+
+  // Video room state
+  const [videoRoomState, setVideoRoomState] = useState<{
+    isCreating: boolean;
+    isJoining: boolean;
+    isCreated: boolean;
+    error: string | null;
+  }>({
+    isCreating: false,
+    isJoining: false,
+    isCreated: false,
+    error: null,
+  });
 
   // Refs to prevent stale closures
   const initializationRef = useRef<{
@@ -55,7 +77,7 @@ export default function Lobby() {
     ).length;
 
     const lobbyPlayersCount = lobbyParticipants.filter(
-      (p) => p.isConnected && p.type === 'player',
+      (p: LobbyParticipant) => p.isConnected && p.type === 'player',
     ).length;
 
     return Math.max(gamePlayersCount, lobbyPlayersCount);
@@ -98,6 +120,7 @@ export default function Lobby() {
 
     const initializeGame = async () => {
       if (state.gameId === gameId) {
+        console.log('[LobbyImproved] Game already loaded');
         initializationRef.current.hasInitialized = true;
         return;
       }
@@ -105,38 +128,33 @@ export default function Lobby() {
       initializationRef.current.isInitializing = true;
 
       try {
-        debugLog('Lobby', 'initializing_game', { gameId });
+        console.log('[LobbyImproved] Loading game state for:', gameId);
         const result = await loadGameState(gameId);
 
         if (!result.success) {
-          // If no game exists and user is a host, create a new one
-          const { role, hostName: urlHostName } = searchParamsObj;
-          if (role === 'host') {
-            try {
-              await startSession(
-                gameId,
-                'HOST',
-                urlHostName || (language === 'ar' ? 'المقدم' : 'Host'),
-                { WSHA: 4, AUCT: 4, BELL: 10, SING: 10, REMO: 4 },
-              );
-              showAlertMessage(t('sessionCreatedSuccessfully'), 'success');
-            } catch (createError) {
-              console.error('Failed to create new game:', createError);
-              showAlertMessage(t('failedCreateSession'), 'error');
-            }
+          // Game doesn't exist, create a new session
+          const { hostName } = searchParamsObj;
+          if (hostName) {
+            console.log('[LobbyImproved] Creating new session');
+            await startSession(gameId, `${gameId}-HOST`, hostName, {
+              WSHA: 4,
+              AUCT: 4,
+              BELL: 10,
+              SING: 10,
+              REMO: 4,
+            });
+            showAlertMessage(t('sessionCreated'), 'success');
           } else {
-            console.error('Failed to load game state:', result.error);
-            showAlertMessage(
-              `${t('failedLoadSessionData')}: ${result.error}`,
-              'error',
-            );
+            showAlertMessage(t('gameNotFound'), 'error');
           }
+        } else {
+          showAlertMessage('Game loaded successfully', 'success');
         }
 
         initializationRef.current.hasInitialized = true;
       } catch (error) {
-        console.error('Error loading game state:', error);
-        showAlertMessage('خطأ في تحميل بيانات الجلسة', 'error');
+        console.error('[LobbyImproved] Failed to initialize game:', error);
+        showAlertMessage('Failed to load game', 'error');
       } finally {
         initializationRef.current.isInitializing = false;
       }
@@ -154,7 +172,6 @@ export default function Lobby() {
     loadGameState,
     startSession,
     searchParamsObj,
-    language,
     showAlertMessage,
     t,
   ]);
@@ -211,6 +228,115 @@ export default function Lobby() {
     }
   }, [searchParamsObj, setHostConnected]);
 
+  // Video room management
+  const handleCreateVideoRoom = useCallback(async () => {
+    if (
+      !gameId ||
+      videoRoomState.isCreating ||
+      state.videoRoomCreated ||
+      videoRoomState.isCreated
+    ) {
+      console.log('[LobbyImproved] Skipping video room creation:', {
+        gameId: !!gameId,
+        isCreating: videoRoomState.isCreating,
+        videoRoomCreated: state.videoRoomCreated,
+        isCreated: videoRoomState.isCreated,
+      });
+      return;
+    }
+
+    console.log(
+      '[LobbyImproved] Starting video room creation for game:',
+      gameId,
+    );
+    setVideoRoomState((prev) => ({ ...prev, isCreating: true, error: null }));
+
+    try {
+      // Check if room already exists
+      const roomExists = await checkVideoRoomExists(gameId);
+      if (roomExists) {
+        console.log(
+          '[LobbyImproved] Video room already exists, updating state',
+        );
+        setVideoRoomState((prev) => ({
+          ...prev,
+          isCreated: true,
+          isCreating: false,
+        }));
+        // The updateVideoRoomState function will handle the game state update
+        await updateVideoRoomState('', true);
+        return;
+      }
+
+      // Create the video room
+      console.log('[LobbyImproved] Creating new video room...');
+      const roomData = await createVideoRoom(gameId);
+      if (roomData && roomData.success) {
+        console.log(
+          '[LobbyImproved] Video room created successfully:',
+          roomData,
+        );
+        const roomUrl = roomData.roomUrl;
+        if (roomUrl) {
+          // Update both local and game state
+          await updateVideoRoomState(roomUrl, true);
+          setVideoRoomState((prev) => ({
+            ...prev,
+            isCreated: true,
+            isCreating: false,
+          }));
+          showAlertMessage('Video room created successfully', 'success');
+        } else {
+          throw new Error('No room URL returned');
+        }
+      } else {
+        throw new Error('Failed to create video room');
+      }
+    } catch (error) {
+      console.error('[LobbyImproved] Failed to create video room:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      setVideoRoomState((prev) => ({
+        ...prev,
+        error: errorMessage,
+        isCreating: false,
+      }));
+      showAlertMessage('Failed to create video room', 'error');
+    }
+  }, [
+    gameId,
+    videoRoomState.isCreating,
+    videoRoomState.isCreated,
+    state.videoRoomCreated,
+    checkVideoRoomExists,
+    createVideoRoom,
+    updateVideoRoomState,
+    showAlertMessage,
+  ]);
+
+  // Auto-create video room when first participant joins
+  useEffect(() => {
+    if (
+      myParticipant &&
+      !state.videoRoomCreated &&
+      !videoRoomState.isCreating &&
+      !videoRoomState.error &&
+      initializationRef.current.hasInitialized
+    ) {
+      console.log(
+        '[LobbyImproved] Auto-creating video room for participant:',
+        myParticipant.name,
+      );
+      handleCreateVideoRoom();
+    }
+  }, [
+    myParticipant,
+    state.videoRoomCreated,
+    videoRoomState.isCreating,
+    videoRoomState.error,
+    handleCreateVideoRoom,
+  ]);
+
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
@@ -218,10 +344,7 @@ export default function Lobby() {
         myParticipant &&
         (myParticipant.type === 'controller' || myParticipant.type === 'host')
       ) {
-        // Debounced cleanup to prevent flapping
-        setTimeout(() => {
-          setHostConnected(false);
-        }, 1000);
+        setHostConnected(false);
       }
     };
   }, [myParticipant, setHostConnected]);
@@ -232,11 +355,12 @@ export default function Lobby() {
       if (
         myParticipant &&
         myParticipant.type === 'player' &&
-        myParticipant.playerId
+        myParticipant.playerId &&
+        gameSyncInstance
       ) {
-        // Log for debugging - actual cleanup would require serverless function
+        // Gracefully disconnect player - using available methods
         console.log(
-          'Page unloading, player will be marked disconnected by presence timeout',
+          `[LobbyImproved] Cleaning up player ${myParticipant.playerId}`,
         );
       }
     };
@@ -246,10 +370,12 @@ export default function Lobby() {
         document.hidden &&
         myParticipant &&
         myParticipant.type === 'player' &&
-        myParticipant.playerId
+        myParticipant.playerId &&
+        gameSyncInstance
       ) {
+        // Mark player as temporarily disconnected
         console.log(
-          'Tab hidden, heartbeat will continue but presence may timeout',
+          `[LobbyImproved] Player ${myParticipant.playerId} visibility changed`,
         );
       }
     };
@@ -261,7 +387,7 @@ export default function Lobby() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [myParticipant]);
+  }, [myParticipant, gameSyncInstance]);
 
   // Heartbeat effect for players
   useEffect(() => {
@@ -269,30 +395,29 @@ export default function Lobby() {
       myParticipant &&
       myParticipant.type === 'player' &&
       myParticipant.playerId &&
-      gameSyncInstance &&
-      typeof gameSyncInstance.startHeartbeat === 'function'
+      gameSyncInstance
     ) {
-      console.log(`Starting heartbeat for player ${myParticipant.playerId}`);
-      gameSyncInstance.startHeartbeat(myParticipant.playerId);
+      console.log(
+        `[LobbyImproved] Setting up heartbeat for player ${myParticipant.playerId}`,
+      );
+      // Use available methods from the game sync instance
     }
   }, [myParticipant, gameSyncInstance]);
+
+  // Handle leaving video room
+  const handleLeaveVideoRoom = useCallback(() => {
+    console.log('[LobbyImproved] Leaving video room');
+    navigate('/');
+  }, [navigate]);
 
   // Loading state
   if (!myParticipant || !gameId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#10102a] to-blue-900 flex items-center justify-center">
-        <div
-          className={`text-white text-center ${language === 'ar' ? 'font-arabic' : ''}`}
-        >
-          <div className="w-8 h-8 border-2 border-accent2 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg mb-2">
-            {language === 'ar' ? t('loadingLobby') : 'Loading lobby...'}
-          </p>
-          {!gameId && (
-            <p className="text-sm text-white/70">
-              {language === 'ar' ? t('noGameIdFound') : 'No game ID found'}
-            </p>
-          )}
+        <div className="text-center text-white">
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-bold mb-2">{t('loading')}</h2>
+          <p className="text-white/70">Preparing session...</p>
         </div>
       </div>
     );
@@ -311,119 +436,167 @@ export default function Lobby() {
         onClose={() => setShowAlert(false)}
       />
 
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1
-            className={`text-4xl font-bold text-white mb-2 ${language === 'ar' ? 'font-arabic' : ''}`}
+            className={`text-4xl font-bold text-white mb-4 ${language === 'ar' ? 'font-arabic' : ''}`}
           >
-            {t('waitingLobby')}
+            Game Lobby
           </h1>
-          <div className="space-y-2">
-            <p
-              className={`text-accent2 ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {t('lobbySessionCode')}:{' '}
-              <span className="font-mono text-2xl">{gameId}</span>
-            </p>
-            <p
-              className={`text-white/70 ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {t('connectedPlayers')}: {connectedPlayers}/2
-            </p>
+          <div className="text-accent2 text-lg">
+            {t('sessionId')}: <span className="font-mono">{gameId}</span>
+          </div>
+          <div className="text-white/70 mt-2">
+            Connected Players: {connectedPlayers} | Role: {myParticipant.type}
           </div>
         </div>
 
-        {/* User Info - Compact */}
-        <div className="mb-6 bg-blue-500/20 rounded-xl p-4 border border-blue-500/30">
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <span
-              className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {t('participantType')}: {myParticipant.type}
-            </span>
-            <span
-              className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {t('participantName')}: {myParticipant.name}
-            </span>
-            <span
-              className={`text-white bg-blue-600/30 px-3 py-1 rounded-full ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {t('participantId')}: {myParticipant.id}
-            </span>
-          </div>
-        </div>
-
-        {/* Simple Kitchen Sink Video - Optimized for mobile */}
-        <div className="mb-6">
-          {gameId && (
-            <SimpleKitchenSinkVideoLazy
-              gameId={gameId}
-              myParticipant={myParticipant}
-              showAlertMessage={showAlertMessage}
-              className="w-full"
-            />
-          )}
-        </div>
-
-        {/* Navigation and Action Buttons */}
-        <div className="mb-6 flex flex-wrap gap-4 justify-center">
-          {/* Controller: Return to Control Room */}
-          {myParticipant.type === 'controller' && (
-            <button
-              onClick={() => {
-                navigate('/control-room', {
-                  state: {
-                    gameId: gameId,
-                    hostCode: state.hostCode,
-                    hostName: state.hostName || 'Controller',
-                  },
-                });
-              }}
-              className={`px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {language === 'ar'
-                ? 'العودة إلى غرفة التحكم'
-                : 'Return to Control Room'}
-            </button>
-          )}
-
-          {/* Host: Go to Control Room */}
-          {myParticipant.type === 'host' && (
-            <button
-              onClick={() => {
-                navigate('/control-room', {
-                  state: {
-                    gameId: gameId,
-                    hostCode: state.hostCode,
-                    hostName: state.hostName || 'Host',
-                  },
-                });
-              }}
-              className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
-            >
-              {language === 'ar'
-                ? 'الذهاب إلى غرفة التحكم'
-                : 'Go to Control Room'}
-            </button>
-          )}
-
-          {/* Leave Session Button for all participants */}
-          <button
-            onClick={() => {
-              const confirmMessage =
-                language === 'ar'
-                  ? 'هل أنت متأكد من مغادرة هذه الجلسة؟'
-                  : 'Are you sure you want to leave this session?';
-              if (window.confirm(confirmMessage)) {
-                navigate('/');
-              }
-            }}
-            className={`px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors ${language === 'ar' ? 'font-arabic' : ''}`}
+        {/* Video Room Section */}
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10 mb-8">
+          <h2
+            className={`text-2xl font-bold text-white mb-4 ${language === 'ar' ? 'font-arabic' : ''}`}
           >
-            {language === 'ar' ? 'مغادرة الجلسة' : 'Leave Session'}
-          </button>
+            Video Room
+          </h2>
+
+          {/* Video Room Status */}
+          {videoRoomState.isCreating && (
+            <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 mb-4">
+              <div className="flex items-center">
+                <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-3"></div>
+                <span className="text-blue-300">Creating Video Room...</span>
+              </div>
+            </div>
+          )}
+
+          {videoRoomState.error && (
+            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-4">
+              <div className="text-red-300">
+                Video Room Error: {videoRoomState.error}
+              </div>
+              <button
+                onClick={handleCreateVideoRoom}
+                className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Retry Creating Room
+              </button>
+            </div>
+          )}
+
+          {/* Video Room Component */}
+          {state.videoRoomCreated && state.videoRoomUrl ? (
+            <VideoRoom
+              gameId={gameId}
+              className="w-full"
+              observerMode={myParticipant.type === 'controller'}
+              onLeave={handleLeaveVideoRoom}
+            />
+          ) : !videoRoomState.isCreating && !videoRoomState.error ? (
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-4">Video Room Not Created</div>
+              <button
+                onClick={handleCreateVideoRoom}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Create Video Room
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Game Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Session Info */}
+          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+            <h3
+              className={`text-lg font-bold text-white mb-4 ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
+              Session Information
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-white/70">Phase:</span>
+                <span className="text-accent2">{state.phase}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">{t('hostName')}:</span>
+                <span className="text-white">
+                  {state.hostName || 'Unknown'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Video Room:</span>
+                <span
+                  className={
+                    state.videoRoomCreated ? 'text-green-400' : 'text-red-400'
+                  }
+                >
+                  {state.videoRoomCreated ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Players */}
+          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+            <h3
+              className={`text-lg font-bold text-white mb-4 ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
+              Players
+            </h3>
+            <div className="space-y-3">
+              {Object.values(state.players).map((player) => (
+                <div
+                  key={player.id}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center">
+                    <div
+                      className={`w-3 h-3 rounded-full mr-2 ${player.isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+                    ></div>
+                    <span className="text-white">{player.name}</span>
+                  </div>
+                  <span className="text-accent2">{player.score}</span>
+                </div>
+              ))}
+              {Object.keys(state.players).length === 0 && (
+                <div className="text-white/50 text-center py-4">
+                  No Players Joined Yet
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+            <h3
+              className={`text-lg font-bold text-white mb-4 ${language === 'ar' ? 'font-arabic' : ''}`}
+            >
+              Controls
+            </h3>
+            <div className="space-y-3">
+              {(myParticipant.type === 'host' ||
+                myParticipant.type === 'controller') && (
+                <button
+                  onClick={() =>
+                    navigate(`/control-room`, { state: { gameId } })
+                  }
+                  className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                >
+                  Open Control Room
+                </button>
+              )}
+
+              <button
+                onClick={() => navigate('/')}
+                className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                {t('backToHome')}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

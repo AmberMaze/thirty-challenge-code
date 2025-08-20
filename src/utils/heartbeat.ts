@@ -1,4 +1,5 @@
 import { GameDatabase } from '@/lib/gameDatabase';
+import { debugError, debugLog, debugWarn } from './debugLog';
 
 export interface HeartbeatConfig {
   playerId: string;
@@ -23,12 +24,14 @@ export class HeartbeatManager {
    */
   start(): void {
     if (this.isActive) {
-      console.warn('Heartbeat already active for player:', this.config.playerId);
+      debugWarn('Heartbeat already active', 'HeartbeatManager', {
+        playerId: this.config.playerId,
+      });
       return;
     }
 
     this.isActive = true;
-    
+
     // Initial heartbeat to mark as connected
     this.beat();
 
@@ -37,7 +40,10 @@ export class HeartbeatManager {
       this.beat();
     }, this.config.intervalMs);
 
-    console.log(`Heartbeat started for player ${this.config.playerId} with ${this.config.intervalMs}ms interval`);
+    debugLog('Heartbeat started', 'HeartbeatManager', {
+      playerId: this.config.playerId,
+      intervalMs: this.config.intervalMs,
+    });
   }
 
   /**
@@ -48,9 +54,11 @@ export class HeartbeatManager {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
-    
+
     this.isActive = false;
-    console.log(`Heartbeat stopped for player ${this.config.playerId}`);
+    debugLog('Heartbeat stopped', 'HeartbeatManager', {
+      playerId: this.config.playerId,
+    });
   }
 
   /**
@@ -71,14 +79,26 @@ export class HeartbeatManager {
       if (!result.success) {
         // Only log error if it's not a "not found" error (player might not exist yet)
         if (result.error !== 'Player not found') {
-          console.warn(`Heartbeat failed for player ${this.config.playerId}:`, result.error);
-          this.config.onError?.(new Error(result.error || 'Unknown heartbeat error'));
+          debugWarn('Heartbeat failed', 'HeartbeatManager', {
+            playerId: this.config.playerId,
+            error: result.error,
+          });
+          this.config.onError?.(
+            new Error(result.error || 'Unknown heartbeat error'),
+          );
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Heartbeat error for player ${this.config.playerId}:`, errorMessage);
-      this.config.onError?.(error instanceof Error ? error : new Error(errorMessage));
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      debugError('Heartbeat operation failed', 'HeartbeatManager', {
+        playerId: this.config.playerId,
+        operation: 'heartbeat-beat',
+        error: errorMessage,
+      });
+      this.config.onError?.(
+        error instanceof Error ? error : new Error(errorMessage),
+      );
     }
   }
 
@@ -94,10 +114,16 @@ export class HeartbeatManager {
       });
 
       if (!result.success && result.error !== 'Player not found') {
-        console.warn(`Failed to mark player ${this.config.playerId} as disconnected:`, result.error);
+        debugWarn('Failed to mark player as disconnected', 'HeartbeatManager', {
+          playerId: this.config.playerId,
+          error: result.error,
+        });
       }
     } catch (error) {
-      console.error(`Error marking player ${this.config.playerId} as disconnected:`, error);
+      debugError('Error marking player as disconnected', 'HeartbeatManager', {
+        playerId: this.config.playerId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -120,7 +146,9 @@ export class MultiPlayerHeartbeat {
    */
   startForPlayer(playerId: string, onError?: (_err: Error) => void): void {
     if (this.heartbeats.has(playerId)) {
-      console.warn(`Heartbeat already exists for player ${playerId}`);
+      debugWarn('Heartbeat already exists for player', 'MultiPlayerHeartbeat', {
+        playerId,
+      });
       return;
     }
 
@@ -162,7 +190,14 @@ export class MultiPlayerHeartbeat {
           last_active: now,
         });
       } catch (error) {
-        console.error(`Error marking player ${playerId} as disconnected:`, error);
+        debugError(
+          'Error marking player as disconnected',
+          'MultiPlayerHeartbeat',
+          {
+            playerId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        );
       }
     }
   }
@@ -172,7 +207,7 @@ export class MultiPlayerHeartbeat {
    */
   async stopAll(): Promise<void> {
     const promises: Promise<void>[] = [];
-    
+
     for (const [, heartbeat] of this.heartbeats) {
       promises.push(heartbeat.markDisconnected());
       heartbeat.stop();

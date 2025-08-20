@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --brand-dark: #19194d;
-  --brand-grad: #6e45e2;
-  --brand-light: #efefef;
-  --accent-blue: #50aaf2;
+  --brand-dark: #0f172a;
+  --brand-grad: #22c55e;
+  --brand-light: #f8fafc;
+  --accent-blue: #0ea5e9;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --football-green: #22c55e;
+  --football-dark: #15803d;
   --font-header: 'DG Bebo', sans-serif;
   --font-body: 'Almarai', sans-serif;
 }

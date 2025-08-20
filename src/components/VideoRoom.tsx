@@ -1,22 +1,176 @@
-import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
-import {
-  useDaily,
-  useParticipantIds,
-  useParticipant,
-  DailyProvider,
-} from '@daily-co/daily-react';
+import { useGameActions, useGameState } from '@/hooks/useGameAtoms';
 import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
-import { useGameState, useGameActions } from '@/hooks/useGameAtoms';
+import {
+  DailyProvider,
+  useDaily,
+  useDailyEvent,
+  useLocalParticipant,
+  useParticipant,
+  useParticipantIds,
+} from '@daily-co/daily-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AlertBanner from './AlertBanner';
 
 interface VideoRoomProps {
   gameId: string;
   className?: string;
   observerMode?: boolean;
+  onLeave?: () => void;
 }
 
 interface ParticipantVideoProps {
   participantId: string;
+}
+
+interface VideoControlsProps {
+  gameId: string;
+  userRole: string;
+  onLeave?: () => void;
+}
+
+// Video controls component
+function VideoControls({ gameId, userRole, onLeave }: VideoControlsProps) {
+  const daily = useDaily();
+  const localParticipant = useLocalParticipant();
+  const { endVideoRoom } = useGameActions();
+
+  const [isVideoOn, setIsVideoOn] = useState(false);
+  const [isAudioOn, setIsAudioOn] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  // Update local states based on participant data
+  useEffect(() => {
+    if (localParticipant) {
+      setIsVideoOn(localParticipant.tracks?.video?.state === 'playable');
+      setIsAudioOn(localParticipant.tracks?.audio?.state === 'playable');
+      setIsScreenSharing(
+        localParticipant.tracks?.screenVideo?.state === 'playable',
+      );
+    }
+  }, [localParticipant]);
+
+  const toggleVideo = useCallback(async () => {
+    if (!daily) return;
+    try {
+      await daily.setLocalVideo(!isVideoOn);
+    } catch (error) {
+      console.error('Failed to toggle video:', error);
+    }
+  }, [daily, isVideoOn]);
+
+  const toggleAudio = useCallback(async () => {
+    if (!daily) return;
+    try {
+      await daily.setLocalAudio(!isAudioOn);
+    } catch (error) {
+      console.error('Failed to toggle audio:', error);
+    }
+  }, [daily, isAudioOn]);
+
+  const toggleScreenShare = useCallback(async () => {
+    if (!daily) return;
+    try {
+      if (isScreenSharing) {
+        await daily.stopScreenShare();
+      } else {
+        await daily.startScreenShare();
+      }
+    } catch (error) {
+      console.error('Failed to toggle screen share:', error);
+    }
+  }, [daily, isScreenSharing]);
+
+  const leaveCall = useCallback(async () => {
+    if (daily) {
+      try {
+        await daily.leave();
+      } catch (error) {
+        console.error('Failed to leave call:', error);
+      }
+    }
+    onLeave?.();
+  }, [daily, onLeave]);
+
+  const deleteRoom = useCallback(async () => {
+    if (userRole === 'host' || userRole === 'controller') {
+      const confirmed = window.confirm(
+        'Are you sure you want to delete this room?',
+      );
+      if (confirmed) {
+        try {
+          await endVideoRoom(gameId);
+          onLeave?.();
+        } catch (error) {
+          console.error('Failed to delete room:', error);
+        }
+      }
+    }
+  }, [userRole, gameId, endVideoRoom, onLeave]);
+
+  return (
+    <div className="flex flex-wrap gap-2 justify-center p-4 bg-black/20 rounded-lg mt-4">
+      {/* Video toggle */}
+      <button
+        onClick={toggleVideo}
+        className={`px-3 py-2 rounded-lg text-sm transition-all ${
+          isVideoOn
+            ? 'bg-green-600 hover:bg-green-700 text-white'
+            : 'bg-red-600 hover:bg-red-700 text-white'
+        }`}
+        title={isVideoOn ? 'Turn video off' : 'Turn video on'}
+      >
+        📹 {isVideoOn ? 'Video On' : 'Video Off'}
+      </button>
+
+      {/* Audio toggle */}
+      <button
+        onClick={toggleAudio}
+        className={`px-3 py-2 rounded-lg text-sm transition-all ${
+          isAudioOn
+            ? 'bg-green-600 hover:bg-green-700 text-white'
+            : 'bg-red-600 hover:bg-red-700 text-white'
+        }`}
+        title={isAudioOn ? 'Mute audio' : 'Unmute audio'}
+      >
+        🎤 {isAudioOn ? 'Audio On' : 'Audio Off'}
+      </button>
+
+      {/* Screen share (only for hosts and controllers) */}
+      {(userRole === 'host' || userRole === 'controller') && (
+        <button
+          onClick={toggleScreenShare}
+          className={`px-3 py-2 rounded-lg text-sm transition-all ${
+            isScreenSharing
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : 'bg-gray-600 hover:bg-gray-700 text-white'
+          }`}
+          title={isScreenSharing ? 'Stop screen share' : 'Start screen share'}
+        >
+          🖥️ {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
+        </button>
+      )}
+
+      {/* Leave call */}
+      <button
+        onClick={leaveCall}
+        className="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm transition-all"
+        title="Leave call"
+      >
+        📞 Leave
+      </button>
+
+      {/* Delete room (only hosts/controllers) */}
+      {(userRole === 'host' || userRole === 'controller') && (
+        <button
+          onClick={deleteRoom}
+          className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-all"
+          title="Delete room"
+        >
+          🗑️ Delete Room
+        </button>
+      )}
+    </div>
+  );
 }
 
 function ParticipantVideo({ participantId }: ParticipantVideoProps) {
@@ -127,6 +281,7 @@ function VideoRoomContent({
   gameId,
   className = '',
   observerMode = false,
+  onLeave,
 }: VideoRoomProps) {
   const daily = useDaily();
   const participantIds = useParticipantIds();
@@ -134,6 +289,54 @@ function VideoRoomContent({
   const { generateDailyToken } = useGameActions();
   // Track join or permission errors to surface to the user via an alert banner
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [connectionState, setConnectionState] = useState<string>('new');
+
+  // Listen to Daily events for better connection handling
+  useDailyEvent(
+    'joined-meeting',
+    useCallback(() => {
+      console.log('[VideoRoom] Successfully joined meeting');
+      setConnectionState('joined');
+      setJoinError(null);
+    }, []),
+  );
+
+  useDailyEvent(
+    'left-meeting',
+    useCallback(() => {
+      console.log('[VideoRoom] Left meeting');
+      setConnectionState('left');
+    }, []),
+  );
+
+  useDailyEvent(
+    'error',
+    useCallback((event) => {
+      console.error('[VideoRoom] Daily error:', event);
+      setConnectionState('error');
+      setJoinError('Connection error occurred');
+    }, []),
+  );
+
+  useDailyEvent(
+    'participant-joined',
+    useCallback((event) => {
+      console.log(
+        '[VideoRoom] Participant joined:',
+        event?.participant?.user_name,
+      );
+    }, []),
+  );
+
+  useDailyEvent(
+    'participant-left',
+    useCallback((event) => {
+      console.log(
+        '[VideoRoom] Participant left:',
+        event?.participant?.user_name,
+      );
+    }, []),
+  );
 
   // Get user info from URL parameters
   const getUserInfo = useCallback(() => {
@@ -298,6 +501,19 @@ function VideoRoomContent({
             Connected participants: {participantIds.length}
           </p>
         </div>
+
+        {/* Video Controls */}
+        <VideoControls
+          gameId={gameId}
+          userRole={
+            getUserInfo().isHost
+              ? 'host'
+              : getUserInfo().isObserver
+                ? 'controller'
+                : 'player'
+          }
+          onLeave={onLeave}
+        />
       </div>
     </div>
   );

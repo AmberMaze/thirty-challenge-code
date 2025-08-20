@@ -1,22 +1,22 @@
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseLazy';
 import type { GameRecord, PlayerRecord } from '@/lib/gameDatabase';
-import { GameDatabase } from '@/lib/gameDatabase';
-import type { GameState, PlayerId, Player } from '@/types/game';
-import type { RealtimeChannel } from '@supabase/supabase-js';
-import { createStore } from 'jotai';
-import { MultiPlayerHeartbeat } from '@/utils/heartbeat';
-type Store = ReturnType<typeof createStore>;
-import { 
-  updateGameStateAtom, 
-  addPlayerAtom, 
-  updatePlayerAtom,
-  isConnectedToSupabaseAtom,
+import { PlayerManager } from '@/lib/playerManager';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseLazy';
+import {
+  addPlayerAtom,
+  broadcastEventAtom,
   connectionErrorAtom,
   gameSyncInstanceAtom,
+  isConnectedToSupabaseAtom,
   lobbyParticipantsAtom,
-  broadcastEventAtom,
-  type LobbyParticipant
+  updateGameStateAtom,
+  updatePlayerAtom,
+  type LobbyParticipant,
 } from '@/state';
+import type { GameState, Player, PlayerId } from '@/types/game';
+import { MultiPlayerHeartbeat } from '@/utils/heartbeat';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+import { createStore } from 'jotai';
+type Store = ReturnType<typeof createStore>;
 
 function mapPlayerRecord(record: PlayerRecord): Player {
   return {
@@ -72,7 +72,7 @@ export class AtomGameSync {
     try {
       // Use lazy Supabase client
       const supabase = await getSupabase();
-      
+
       // Create channel for real-time presence and broadcasts
       this.channel = supabase.channel(`game:${this.gameId}`, {
         config: {
@@ -90,7 +90,7 @@ export class AtomGameSync {
           if (data.payload?.gameState) {
             this.store.set(updateGameStateAtom, data.payload.gameState);
           }
-        }
+        },
       );
 
       // Listen for player events with correct payload structure
@@ -102,7 +102,7 @@ export class AtomGameSync {
           if (data.payload?.playerId && data.payload?.playerData) {
             this.store.set(addPlayerAtom, data.payload.playerData as Player);
           }
-        }
+        },
       );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,10 +113,10 @@ export class AtomGameSync {
           if (data.payload?.playerId) {
             this.store.set(updatePlayerAtom, {
               playerId: data.payload.playerId,
-              update: { isConnected: false }
+              update: { isConnected: false },
             });
           }
-        }
+        },
       );
 
       // Handle presence updates
@@ -146,7 +146,7 @@ export class AtomGameSync {
           (payload) => {
             const newRow = payload.new as GameRecord;
             this.store.set(updateGameStateAtom, mapRecordToState(newRow));
-          }
+          },
         )
         .on(
           'postgres_changes',
@@ -159,7 +159,7 @@ export class AtomGameSync {
           (payload) => {
             const pl = payload.new as PlayerRecord;
             this.store.set(addPlayerAtom, mapPlayerRecord(pl));
-          }
+          },
         )
         .on(
           'postgres_changes',
@@ -175,7 +175,7 @@ export class AtomGameSync {
               playerId: pl.id as PlayerId,
               update: mapPlayerRecord(pl),
             });
-          }
+          },
         )
         .subscribe();
 
@@ -190,10 +190,12 @@ export class AtomGameSync {
 
       // Store the instance reference
       this.store.set(gameSyncInstanceAtom, this);
-
     } catch (error) {
       console.error('Failed to connect to game sync:', error);
-      this.store.set(connectionErrorAtom, error instanceof Error ? error.message : 'Connection failed');
+      this.store.set(
+        connectionErrorAtom,
+        error instanceof Error ? error.message : 'Connection failed',
+      );
       this.store.set(isConnectedToSupabaseAtom, false);
     }
   }
@@ -222,64 +224,81 @@ export class AtomGameSync {
     // Clear existing participants first, then add current ones
     // This ensures we have accurate presence tracking
     this.store.set(lobbyParticipantsAtom, participants);
-    
+
     // Also update player connection status if they are tracked players
-    participants.forEach(participant => {
-      if (participant.playerId && (participant.playerId === 'playerA' || participant.playerId === 'playerB')) {
+    participants.forEach((participant) => {
+      if (
+        participant.playerId &&
+        (participant.playerId === 'playerA' ||
+          participant.playerId === 'playerB')
+      ) {
         this.store.set(updatePlayerAtom, {
           playerId: participant.playerId,
-          update: { isConnected: true, name: participant.name }
+          update: { isConnected: true, name: participant.name },
         });
-        
+
         // Start heartbeat for connected player
         this.startHeartbeat(participant.playerId);
-        
-        // Update database to reflect connection status - method already checks if player exists
-        GameDatabase.updatePlayerById(participant.playerId, { 
-          is_connected: true,
-          last_active: new Date().toISOString()
-        }).then(result => {
-          if (!result.success) {
-            // Only warn if it's not a "not found" error
-            if (result.error !== 'Player not found') {
-              console.warn(`Failed to update player ${participant.playerId} connection:`, result.error);
+
+        // Use PlayerManager to ensure player exists before updating
+        PlayerManager.updatePlayerConnection(
+          participant.playerId,
+          this.gameId,
+          true,
+          {
+            name: participant.name,
+            flag: participant.flag,
+            club: participant.club,
+          },
+        )
+          .then((result) => {
+            if (!result.success) {
+              console.warn(
+                `Failed to update player ${participant.playerId} connection:`,
+                result.error,
+              );
             } else {
-              console.log(`Player ${participant.playerId} not found for connection update`);
+              console.log(
+                `Player ${participant.playerId} connection updated successfully`,
+              );
             }
-          }
-        }).catch(console.error);
+          })
+          .catch(console.error);
       }
     });
 
     // Mark players as disconnected if they're not in presence
-    const presentPlayerIds = new Set(participants
-      .filter(p => p.playerId)
-      .map(p => p.playerId));
-      
-    ['playerA', 'playerB'].forEach(playerId => {
+    const presentPlayerIds = new Set(
+      participants.filter((p) => p.playerId).map((p) => p.playerId),
+    );
+
+    ['playerA', 'playerB'].forEach((playerId) => {
       if (!presentPlayerIds.has(playerId as PlayerId)) {
         this.store.set(updatePlayerAtom, {
           playerId: playerId as PlayerId,
-          update: { isConnected: false }
+          update: { isConnected: false },
         });
-        
+
         // Stop heartbeat and mark as disconnected
         this.stopHeartbeat(playerId as PlayerId);
-        
-        // Update database to reflect disconnection - method already checks if player exists
-        GameDatabase.updatePlayerById(playerId, { 
-          is_connected: false,
-          last_active: new Date().toISOString()
-        }).then(result => {
-          if (!result.success) {
-            // Only warn if it's not a "not found" error
-            if (result.error !== 'Player not found') {
-              console.warn(`Failed to update player ${playerId} disconnection:`, result.error);
+
+        // Use PlayerManager to safely update disconnection status
+        PlayerManager.updatePlayerConnection(
+          playerId as PlayerId,
+          this.gameId,
+          false,
+        )
+          .then((result) => {
+            if (!result.success) {
+              console.warn(
+                `Failed to update player ${playerId} disconnection:`,
+                result.error,
+              );
             } else {
-              console.log(`Player ${playerId} not found for disconnection update`);
+              console.log(`Player ${playerId} marked as disconnected`);
             }
-          }
-        }).catch(console.error);
+          })
+          .catch(console.error);
       }
     });
   }
@@ -315,7 +334,7 @@ export class AtomGameSync {
     try {
       // Use proper Supabase v2 broadcast API format
       const result = await this.channel.send({
-        type: 'broadcast', 
+        type: 'broadcast',
         event: 'player_join',
         payload: { playerId, playerData },
       });
@@ -411,7 +430,10 @@ export class AtomGameSync {
 }
 
 // Factory function to create and connect game sync
-export async function createAtomGameSync(gameId: string, store: Store): Promise<AtomGameSync> {
+export async function createAtomGameSync(
+  gameId: string,
+  store: Store,
+): Promise<AtomGameSync> {
   const gameSync = new AtomGameSync(gameId, store);
   await gameSync.connect();
   return gameSync;

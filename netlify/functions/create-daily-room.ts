@@ -5,7 +5,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // Function to check if video room is already being created
-async function checkVideoRoomStatus(gameId: string): Promise<{ alreadyCreated: boolean; roomUrl?: string }> {
+async function checkVideoRoomStatus(
+  gameId: string,
+): Promise<{ alreadyCreated: boolean; roomUrl?: string }> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.log('Supabase not configured, skipping database check');
     return { alreadyCreated: false };
@@ -28,7 +30,12 @@ async function checkVideoRoomStatus(gameId: string): Promise<{ alreadyCreated: b
     }
 
     if (data?.video_room_created && data?.video_room_url) {
-      console.log('Video room already exists for game:', gameId, 'URL:', data.video_room_url);
+      console.log(
+        'Video room already exists for game:',
+        gameId,
+        'URL:',
+        data.video_room_url,
+      );
       return { alreadyCreated: true, roomUrl: data.video_room_url };
     }
 
@@ -59,7 +66,7 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
@@ -73,9 +80,9 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         error: 'Daily API key not configured',
-        code: 'MISSING_API_KEY'
+        code: 'MISSING_API_KEY',
       }),
     };
   }
@@ -88,9 +95,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid JSON in request body',
-          code: 'INVALID_JSON'
+          code: 'INVALID_JSON',
         }),
       };
     }
@@ -102,9 +109,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Room name is required',
-          code: 'MISSING_ROOM_NAME'
+          code: 'MISSING_ROOM_NAME',
         }),
       };
     }
@@ -114,9 +121,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Room name must be a string',
-          code: 'INVALID_ROOM_NAME_TYPE'
+          code: 'INVALID_ROOM_NAME_TYPE',
         }),
       };
     }
@@ -126,9 +133,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Room name too long (max 200 characters)',
-          code: 'ROOM_NAME_TOO_LONG'
+          code: 'ROOM_NAME_TOO_LONG',
         }),
       };
     }
@@ -140,7 +147,7 @@ export const handler: Handler = async (event) => {
     // Check if room is already created in database to prevent duplicates
     console.log('Checking database for existing video room:', roomNameForDaily);
     const roomStatus = await checkVideoRoomStatus(roomNameForDaily);
-    
+
     if (roomStatus.alreadyCreated && roomStatus.roomUrl) {
       console.log('Room already exists in database, returning existing URL');
       return {
@@ -161,25 +168,30 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Prepare room configuration with safe defaults
+    // Prepare room configuration with safe defaults and extended expiry
     const roomConfig = {
       name: roomNameForDaily,
       properties: {
-        max_participants: Math.min(Math.max(Number(properties.max_participants) || 10, 2), 50),
+        max_participants: Math.min(
+          Math.max(Number(properties.max_participants) || 10, 2),
+          50,
+        ),
         enable_screenshare: Boolean(properties.enable_screenshare ?? true),
         enable_chat: Boolean(properties.enable_chat ?? true),
         start_video_off: Boolean(properties.start_video_off ?? false),
         start_audio_off: Boolean(properties.start_audio_off ?? false),
         enable_recording: Boolean(properties.enable_recording ?? false),
-        exp: Math.round(Date.now() / 1000) + 3600, // Room expires in 1 hour
+        enable_knocking: Boolean(properties.enable_knocking ?? true), // Enable waiting room
+        exp: Math.round(Date.now() / 1000) + 150 * 60, // Room expires in 150 minutes (2.5 hours)
+        eject_at_room_exp: true, // Automatically eject participants when room expires
         ...properties,
       },
     };
 
-    console.log('Creating Daily.co room:', { 
-      original: roomName, 
+    console.log('Creating Daily.co room:', {
+      original: roomName,
       roomNameForDaily: roomNameForDaily,
-      properties: roomConfig.properties 
+      properties: roomConfig.properties,
     });
 
     // Create room using Daily.co API with enhanced error handling
@@ -196,7 +208,7 @@ export const handler: Handler = async (event) => {
     if (!response.ok) {
       const errorText = await response.text();
       let errorData;
-      
+
       try {
         errorData = JSON.parse(errorText);
       } catch {
@@ -207,28 +219,31 @@ export const handler: Handler = async (event) => {
         status: response.status,
         statusText: response.statusText,
         error: errorData,
-        request: roomConfig
+        request: roomConfig,
       });
 
       // Map common Daily.co errors to user-friendly messages
       const errorMessage = (() => {
         if (response.status === 401) return 'Invalid Daily.co API key';
         if (response.status === 403) return 'Access denied to Daily.co API';
-        if (response.status === 409) return 'Room already exists with this name';
+        if (response.status === 409)
+          return 'Room already exists with this name';
         if (response.status === 429) return 'Too many requests to Daily.co API';
-        if (errorData?.info?.includes('invalid property')) return `Invalid property: ${errorData.info}`;
-        if (errorData?.error === 'invalid-request-error') return `Invalid request: ${errorData.info || 'check room configuration'}`;
+        if (errorData?.info?.includes('invalid property'))
+          return `Invalid property: ${errorData.info}`;
+        if (errorData?.error === 'invalid-request-error')
+          return `Invalid request: ${errorData.info || 'check room configuration'}`;
         return `Daily.co API error: ${errorData?.error || errorText || response.statusText}`;
       })();
 
       return {
         statusCode: response.status >= 500 ? 502 : response.status,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: errorMessage,
           code: 'DAILY_API_ERROR',
           status: response.status,
-          details: errorData
+          details: errorData,
         }),
       };
     }
@@ -240,9 +255,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 502,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Daily.co API returned incomplete room data',
-          code: 'INCOMPLETE_ROOM_DATA'
+          code: 'INCOMPLETE_ROOM_DATA',
         }),
       };
     }
@@ -255,17 +270,17 @@ export const handler: Handler = async (event) => {
       // Example: https://daily.co/room-name -> https://thirty.daily.co/room-name
       const roomName = room.name;
       finalUrl = `https://${customDomain.trim()}/${roomName}`;
-      console.log('Using custom Daily.co domain:', { 
-        original: room.url, 
+      console.log('Using custom Daily.co domain:', {
+        original: room.url,
         custom: finalUrl,
-        domain: customDomain.trim()
+        domain: customDomain.trim(),
       });
     }
 
-    console.log('Successfully created Daily.co room:', { 
-      name: room.name, 
+    console.log('Successfully created Daily.co room:', {
+      name: room.name,
       url: finalUrl,
-      created: room.created_at 
+      created: room.created_at,
     });
 
     return {
@@ -289,10 +304,10 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
     };
   }

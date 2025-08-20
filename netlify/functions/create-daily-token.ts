@@ -27,7 +27,7 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
@@ -41,9 +41,9 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         error: 'Daily API key not configured',
-        code: 'MISSING_API_KEY'
+        code: 'MISSING_API_KEY',
       }),
     };
   }
@@ -56,24 +56,30 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid JSON in request body',
-          code: 'INVALID_JSON'
+          code: 'INVALID_JSON',
         }),
       };
     }
 
-    const { room, user, isHost = false, isObserver = false, role } = requestBody;
+    const {
+      room,
+      user,
+      isHost = false,
+      isObserver = false,
+      role,
+    } = requestBody;
 
     // Validate required parameters
     if (!room || !user) {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Room and user are required',
           code: 'MISSING_PARAMETERS',
-          required: ['room', 'user']
+          required: ['room', 'user'],
         }),
       };
     }
@@ -83,9 +89,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Room and user must be strings',
-          code: 'INVALID_PARAMETER_TYPE'
+          code: 'INVALID_PARAMETER_TYPE',
         }),
       };
     }
@@ -94,9 +100,9 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Room and user names too long (max 200 characters)',
-          code: 'PARAMETER_TOO_LONG'
+          code: 'PARAMETER_TOO_LONG',
         }),
       };
     }
@@ -117,14 +123,23 @@ export const handler: Handler = async (event) => {
         user_id: generateUniqueUserId(getUserRole()), // Add unique user_id based on role
         is_owner: Boolean(isHost),
         enable_screenshare: Boolean(isHost && !isObserver),
-        enable_recording: false,
+        enable_recording: Boolean(isHost && !isObserver),
         start_video_off: Boolean(isObserver),
         start_audio_off: Boolean(isObserver),
-        exp: Math.round(Date.now() / 1000) + 3600, // Token expires in 1 hour
+        enable_prejoin_ui: false, // Disable prejoin for seamless experience
+        enable_network_ui: Boolean(isHost), // Only hosts can see network info
+        enable_people_ui: Boolean(isHost || !isObserver), // Hosts and players can see participant list
+        eject_at_token_exp: true, // Automatically eject when token expires
+        exp: Math.round(Date.now() / 1000) + 160 * 60, // Token expires in 160 minutes (slightly longer than room)
       },
     };
 
-    console.log('Creating Daily.co token for:', { room: room.trim(), user: user.trim(), isHost, isObserver });
+    console.log('Creating Daily.co token for:', {
+      room: room.trim(),
+      user: user.trim(),
+      isHost,
+      isObserver,
+    });
 
     const response = await fetch('https://api.daily.co/v1/meeting-tokens', {
       method: 'POST',
@@ -139,7 +154,7 @@ export const handler: Handler = async (event) => {
     if (!response.ok) {
       const errorText = await response.text();
       let errorData;
-      
+
       try {
         errorData = JSON.parse(errorText);
       } catch {
@@ -150,7 +165,7 @@ export const handler: Handler = async (event) => {
         status: response.status,
         statusText: response.statusText,
         error: errorData,
-        request: tokenRequest
+        request: tokenRequest,
       });
 
       // Map common Daily.co errors to user-friendly messages
@@ -159,18 +174,19 @@ export const handler: Handler = async (event) => {
         if (response.status === 403) return 'Access denied to Daily.co API';
         if (response.status === 404) return 'Daily.co room not found';
         if (response.status === 429) return 'Too many requests to Daily.co API';
-        if (errorData?.info?.includes('invalid property')) return `Invalid property: ${errorData.info}`;
+        if (errorData?.info?.includes('invalid property'))
+          return `Invalid property: ${errorData.info}`;
         return `Daily.co API error: ${errorData?.error || errorText || response.statusText}`;
       })();
 
       return {
         statusCode: response.status >= 500 ? 502 : response.status,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: errorMessage,
           code: 'DAILY_API_ERROR',
           status: response.status,
-          details: errorData
+          details: errorData,
         }),
       };
     }
@@ -182,14 +198,17 @@ export const handler: Handler = async (event) => {
       return {
         statusCode: 502,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Daily.co API did not return a token',
-          code: 'NO_TOKEN_RETURNED'
+          code: 'NO_TOKEN_RETURNED',
         }),
       };
     }
 
-    console.log('Successfully created Daily.co token for:', { room: room.trim(), user: user.trim() });
+    console.log('Successfully created Daily.co token for:', {
+      room: room.trim(),
+      user: user.trim(),
+    });
 
     return {
       statusCode: 200,
@@ -211,10 +230,10 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
     };
   }
