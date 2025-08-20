@@ -9,7 +9,9 @@
   "netlify/functions/get-room-presence.ts": [],
   "src/App.tsx": [],
   "src/components/ActiveGames.tsx": [],
-  "src/components/AlertBanner.tsx": ["src/utils/debugLog.ts"],
+  "src/components/AlertBanner.tsx": [
+    "src/utils/debugLog.ts"
+  ],
   "src/components/Buzzer.tsx": [],
   "src/components/ConfirmationModal.tsx": [],
   "src/components/ConnectionBanner.tsx": [],
@@ -20,8 +22,7 @@
   "src/components/ThemeConfigurator.tsx": [],
   "src/components/Timer.tsx": [],
   "src/components/VideoRoom.tsx": [
-    "src/components/AlertBanner.tsx",
-    "src/utils/debugLog.ts"
+    "src/components/AlertBanner.tsx"
   ],
   "src/context/GameContext.tsx": [
     "src/context/defaults.ts",
@@ -31,7 +32,9 @@
   "src/context/GameContextDefinition.ts": [],
   "src/context/defaults.ts": [],
   "src/context/gameReducer.ts": [],
-  "src/context/initialGameState.ts": ["src/context/defaults.ts"],
+  "src/context/initialGameState.ts": [
+    "src/context/defaults.ts"
+  ],
   "src/data/questions.ts": [],
   "src/hooks/useErrorLog.ts": [],
   "src/hooks/useGame.ts": [],
@@ -40,16 +43,22 @@
   "src/hooks/useTranslation.ts": [],
   "src/lib/atomGameSync.ts": [],
   "src/lib/dailyConfig.ts": [],
-  "src/lib/gameDatabase.ts": ["src/lib/supabaseLazy.ts"],
+  "src/lib/gameDatabase.ts": [
+    "src/lib/supabaseLazy.ts"
+  ],
   "src/lib/gameSync.ts": [
     "src/lib/gameDatabase.ts",
     "src/lib/supabaseLazy.ts",
     "src/types/game.ts"
   ],
-  "src/lib/playerManager.ts": ["src/lib/gameDatabase.ts"],
+  "src/lib/playerManager.ts": [
+    "src/lib/gameDatabase.ts"
+  ],
   "src/lib/supabaseLazy.ts": [],
   "src/lib/translations.ts": [],
-  "src/main.tsx": ["src/App.tsx"],
+  "src/main.tsx": [
+    "src/App.tsx"
+  ],
   "src/pages/ControlRoom.tsx": [],
   "src/pages/CreateSession.tsx": [],
   "src/pages/FinalScores.tsx": [],
@@ -81,10 +90,14 @@
   "src/tests/setup.ts": [],
   "src/types/database.ts": [],
   "src/types/game.ts": [],
-  "src/utils/__tests__/debugLog.test.ts": ["src/utils/debugLog.ts"],
+  "src/utils/__tests__/debugLog.test.ts": [
+    "src/utils/debugLog.ts"
+  ],
   "src/utils/debugLog.ts": [],
   "src/utils/debugNetworkRequests.ts": [],
-  "src/utils/heartbeat.ts": ["src/utils/debugLog.ts"],
+  "src/utils/heartbeat.ts": [
+    "src/utils/debugLog.ts"
+  ],
   "src/utils/teamUtils.ts": [],
   "src/vite-env.d.ts": []
 }
