@@ -9,9 +9,11 @@ import {
   fontSizeMultiplierAtom,
   highContrastAtom,
   isDarkModeAtom,
+  selectedTeamAtom,
   showBackgroundPatternAtom,
   soundEffectsEnabledAtom,
   soundEffectsVolumeAtom,
+  teamPaletteAtom,
   themeAtom,
   toggleThemeAtom,
   type BackgroundStyle,
@@ -19,6 +21,8 @@ import {
 } from '@/state/themeAtoms';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtom, useAtomValue } from 'jotai';
+import { useState } from 'react';
+import TeamPicker from '@/components/ThemePicker/TeamPicker';
 
 interface ThemeConfiguratorProps {
   isOpen: boolean;
@@ -33,12 +37,17 @@ export default function ThemeConfigurator({
 }: ThemeConfiguratorProps) {
   const isArabic = useAtomValue(isArabicAtom);
   const isDarkMode = useAtomValue(isDarkModeAtom);
+  const [showTeamPicker, setShowTeamPicker] = useState(false);
 
   // Theme state
   const [theme, setTheme] = useAtom(themeAtom);
   const [, toggleTheme] = useAtom(toggleThemeAtom);
   const [backgroundStyle, setBackgroundStyle] = useAtom(backgroundStyleAtom);
   const [customColors, setCustomColors] = useAtom(customColorsAtom);
+
+  // Team theme state
+  const selectedTeam = useAtomValue(selectedTeamAtom);
+  const teamPalette = useAtomValue(teamPaletteAtom);
 
   // Audio state
   const [soundEffectsEnabled, setSoundEffectsEnabled] = useAtom(
@@ -123,13 +132,14 @@ export default function ThemeConfigurator({
         'dark',
         'football',
         'neon',
+        'team',
       );
 
       // Add the specific theme class
       document.documentElement.classList.add(newTheme);
 
       // Add 'dark' class for dark mode themes (for Tailwind dark: variants)
-      if (newTheme === 'dark' || newTheme === 'neon') {
+      if (newTheme === 'dark' || newTheme === 'neon' || newTheme === 'team') {
         document.documentElement.classList.add('dark');
       }
     }
@@ -239,6 +249,94 @@ export default function ThemeConfigurator({
                         </div>
                       </motion.button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Team Theme */}
+                <div>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-sm">⚽</span>
+                    <label
+                      className={`text-sm font-medium ${
+                        isDarkMode ? 'text-white' : 'text-black'
+                      } ${isArabic ? 'font-arabic' : ''}`}
+                    >
+                      Team Theme
+                    </label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Team Selection Button */}
+                    <motion.button
+                      onClick={() => setShowTeamPicker(true)}
+                      className={`w-full p-3 rounded-lg border-2 transition-all ${
+                        theme === 'team'
+                          ? isDarkMode
+                            ? 'border-orange-400 bg-orange-400/10'
+                            : 'border-orange-600 bg-orange-50'
+                          : isDarkMode
+                            ? 'border-slate-600 hover:border-slate-500'
+                            : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                          {selectedTeam ? (
+                            <img
+                              src={selectedTeam.logoUrl}
+                              alt={selectedTeam.name}
+                              className="w-8 h-8 object-contain"
+                            />
+                          ) : (
+                            <span className="text-white text-xl">⚽</span>
+                          )}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div
+                            className={`font-medium ${
+                              isDarkMode ? 'text-white' : 'text-black'
+                            } ${isArabic ? 'font-arabic' : ''}`}
+                          >
+                            {selectedTeam ? selectedTeam.name : 'Select Team'}
+                          </div>
+                          <div
+                            className={`text-xs ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                            }`}
+                          >
+                            {selectedTeam ? 'Team-based color theme' : 'Choose a football team for colors'}
+                          </div>
+                        </div>
+                        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          →
+                        </span>
+                      </div>
+                    </motion.button>
+
+                    {/* Color Palette Preview */}
+                    {teamPalette && theme === 'team' && (
+                      <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                        <div className={`text-xs font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+                          Extracted Colors
+                        </div>
+                        <div className="flex gap-2">
+                          {teamPalette.colors.map((color, index) => (
+                            <div key={index} className="flex flex-col items-center">
+                              <div
+                                className="w-8 h-8 rounded border border-white/20"
+                                style={{ backgroundColor: color }}
+                                title={`${color} (${Math.round(teamPalette.weights[index] * 100)}%)`}
+                              />
+                              <span className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {Math.round(teamPalette.weights[index] * 100)}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -736,6 +834,12 @@ export default function ThemeConfigurator({
           </motion.div>
         </>
       )}
+      
+      {/* Team Picker Modal */}
+      <TeamPicker 
+        isOpen={showTeamPicker} 
+        onClose={() => setShowTeamPicker(false)} 
+      />
     </AnimatePresence>
   );
 }

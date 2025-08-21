@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
-export type Theme = 'light' | 'dark' | 'football' | 'neon';
+export type Theme = 'light' | 'dark' | 'football' | 'neon' | 'team';
 export type BackgroundStyle =
   | 'gradient'
   | 'solid'
@@ -19,7 +19,7 @@ export const backgroundStyleAtom = atom<BackgroundStyle>('gradient');
 // Derived atom for dark mode class
 export const isDarkModeAtom = atom((get) => {
   const theme = get(themeAtom);
-  return theme === 'dark' || theme === 'neon';
+  return theme === 'dark' || theme === 'neon' || theme === 'team';
 });
 
 // Toggle theme atom
@@ -93,7 +93,19 @@ export const themePresetsAtom = atom((get) => {
       backgroundClass:
         'bg-gradient-to-br from-black via-gray-900 to-purple-900',
     },
-  };
+    team: {
+      name: 'Team Theme',
+      colors: {
+        primary: '#22c55e',
+        secondary: '#38bdf8',
+        accent: '#6a5acd',
+        background: '#0f172a',
+        surface: 'rgba(15, 23, 42, 0.8)',
+      },
+      backgroundClass:
+        'bg-gradient-to-br from-brand-dark via-slate-900 to-football-dark',
+    },
+  } as const;
 
   const currentTheme = get(themeAtom);
   return { presets, current: presets[currentTheme] };
@@ -124,3 +136,26 @@ export const autoThemeScheduleAtom = atom({
 export const highContrastAtom = atom(false);
 export const fontSizeMultiplierAtom = atom(1.0); // 0.8 to 1.5
 export const dyslexiaFriendlyFontAtom = atom(false);
+
+// Team theme atoms
+export const selectedTeamAtom = atom<{ id: string; name: string; logoUrl: string } | null>(null);
+export const teamPaletteAtom = atom<{ colors: string[]; weights: number[] } | null>(null);
+
+/**
+ * Apply team palette colors to CSS variables
+ */
+export function applyThemePalette(palette: { colors: string[]; weights: number[] } | null) {
+  if (!palette || typeof document === 'undefined') return;
+  
+  const { colors } = palette;
+  
+  if (colors.length > 0) {
+    document.documentElement.style.setProperty('--tc-primary', colors[0] || '#22c55e');
+  }
+  if (colors.length > 1) {
+    document.documentElement.style.setProperty('--tc-secondary', colors[1] || '#38bdf8');
+  }
+  if (colors.length > 2) {
+    document.documentElement.style.setProperty('--tc-accent', colors[2] || '#6a5acd');
+  }
+}
