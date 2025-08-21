@@ -18,6 +18,24 @@
 
 ---
 
+## [Latest] - 2025-08-21
+
+### ✨ Added - User Flow State Diagrams
+
+- **NEW**: Comprehensive user flow state diagrams generation system
+- **Files Created**:
+  - `.github/workflows/generate-flow.yml` - CI workflow for automatic diagram generation
+  - `scripts/generate-user-flows.mjs` - JavaScript script to generate Draw.io state diagrams
+  - `docs/flows/` directory with 6 state diagrams (frontend + backend for each user role)
+  - `docs/flows/README.md` - Documentation for flow diagrams
+- **Package.json**: Added `flow:generate` script for manual generation
+- **Purpose**: Replace single mermaid flow with comprehensive state diagrams showing:
+  - Controller flow (frontend + backend)
+  - Host flow (frontend + backend)
+  - Player flow (frontend + backend)
+- **Format**: Draw.io XML format for easy editing and visualization
+- **Automation**: GitHub Actions workflow generates diagrams on code changes
+
 ## 📅 2025 Changelog
 
 ### August 21, 2025 - Documentation Consolidation & MCP Setup
