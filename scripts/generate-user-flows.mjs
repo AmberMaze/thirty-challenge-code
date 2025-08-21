@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -15,7 +15,7 @@ if (!existsSync(flowsDir)) {
 
 /**
  * Generate Draw.io XML format state diagrams for user flows
- * 
+ *
  * User Roles:
  * 1. Controller - Creates sessions, manages control room
  * 2. Host - Joins sessions, manages video, controls quiz
@@ -25,9 +25,9 @@ if (!existsSync(flowsDir)) {
 // Color scheme for different components
 const colors = {
   frontend: '#4F46E5', // Indigo
-  backend: '#DC2626',  // Red
-  shared: '#059669',   // Green
-  transition: '#7C3AED' // Purple
+  backend: '#DC2626', // Red
+  shared: '#059669', // Green
+  transition: '#7C3AED', // Purple
 };
 
 // Generate Controller Frontend Flow
@@ -549,40 +549,55 @@ function wrapInDrawioFormat(content, title) {
 console.log('🎯 Generating User Flow State Diagrams...');
 
 const diagrams = [
-  { 
-    name: 'controller-frontend-flow.drawio', 
-    content: wrapInDrawioFormat(generateControllerFrontendFlow(), 'Controller Frontend Flow'),
-    title: 'Controller Frontend User Flow'
+  {
+    name: 'controller-frontend-flow.drawio',
+    content: wrapInDrawioFormat(
+      generateControllerFrontendFlow(),
+      'Controller Frontend Flow',
+    ),
+    title: 'Controller Frontend User Flow',
   },
-  { 
-    name: 'controller-backend-flow.drawio', 
-    content: wrapInDrawioFormat(generateControllerBackendFlow(), 'Controller Backend Flow'),
-    title: 'Controller Backend State Flow'
+  {
+    name: 'controller-backend-flow.drawio',
+    content: wrapInDrawioFormat(
+      generateControllerBackendFlow(),
+      'Controller Backend Flow',
+    ),
+    title: 'Controller Backend State Flow',
   },
-  { 
-    name: 'host-frontend-flow.drawio', 
-    content: wrapInDrawioFormat(generateHostFrontendFlow(), 'Host Frontend Flow'),
-    title: 'Host Frontend User Flow'
+  {
+    name: 'host-frontend-flow.drawio',
+    content: wrapInDrawioFormat(
+      generateHostFrontendFlow(),
+      'Host Frontend Flow',
+    ),
+    title: 'Host Frontend User Flow',
   },
-  { 
-    name: 'host-backend-flow.drawio', 
+  {
+    name: 'host-backend-flow.drawio',
     content: wrapInDrawioFormat(generateHostBackendFlow(), 'Host Backend Flow'),
-    title: 'Host Backend State Flow'
+    title: 'Host Backend State Flow',
   },
-  { 
-    name: 'player-frontend-flow.drawio', 
-    content: wrapInDrawioFormat(generatePlayerFrontendFlow(), 'Player Frontend Flow'),
-    title: 'Player Frontend User Flow'
+  {
+    name: 'player-frontend-flow.drawio',
+    content: wrapInDrawioFormat(
+      generatePlayerFrontendFlow(),
+      'Player Frontend Flow',
+    ),
+    title: 'Player Frontend User Flow',
   },
-  { 
-    name: 'player-backend-flow.drawio', 
-    content: wrapInDrawioFormat(generatePlayerBackendFlow(), 'Player Backend Flow'),
-    title: 'Player Backend State Flow'
-  }
+  {
+    name: 'player-backend-flow.drawio',
+    content: wrapInDrawioFormat(
+      generatePlayerBackendFlow(),
+      'Player Backend Flow',
+    ),
+    title: 'Player Backend State Flow',
+  },
 ];
 
 // Write all diagram files
-diagrams.forEach(diagram => {
+diagrams.forEach((diagram) => {
   const filePath = join(flowsDir, diagram.name);
   writeFileSync(filePath, diagram.content);
   console.log(`✅ Generated: ${diagram.title} -> ${diagram.name}`);
@@ -647,6 +662,10 @@ Generated on: ${new Date().toISOString()}
 writeFileSync(join(flowsDir, 'README.md'), readmeContent);
 console.log('📚 Generated: Flow diagrams README');
 
-console.log(`\n🎉 Successfully generated ${diagrams.length} user flow diagrams!`);
+console.log(
+  `\n🎉 Successfully generated ${diagrams.length} user flow diagrams!`,
+);
 console.log('📁 Location: docs/flows/');
-console.log('🔧 Open .drawio files in draw.io or VS Code with Draw.io Integration extension');
+console.log(
+  '🔧 Open .drawio files in draw.io or VS Code with Draw.io Integration extension',
+);

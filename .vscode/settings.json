@@ -122,7 +122,8 @@
   // Path Intellisense
   "path-intellisense.autoSlashAfterDirectory": true,
   // Supabase extension (only applies if installed)
-  "supabase.telemetry.enabled": false,
+  "supabase.telemetry.enabled": true,
+  
   // Performance
   "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   // Chrome/Browser Debugging

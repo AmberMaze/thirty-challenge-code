@@ -15,7 +15,25 @@ Sections
 
 - Real-time sync: improve reconnection resilience for Supabase channels
 
-- Video rooms: automatic cleanup of stale Daily rooms (Netlify function review)
+- ~~Video rooms: automatic cleanup of stale Daily rooms (Netlify function review)~~
+  - Rationale: Implemented comprehensive Daily.co room management with cleanup_expired_rooms() function and rooms table in Supabase migration — 2025-01-23
+
+## Database & Backend
+
+- ~~Review existing Supabase schema and improve security policies~~
+  - Rationale: Completed comprehensive Supabase security overhaul with authentication-based RLS policies replacing insecure "Anyone can..." policies — 2025-01-23
+
+- ~~Create and implement new table "Rooms" for Daily.co room information~~
+  - Rationale: Implemented rooms table with proper foreign keys, constraints, and integration with games table — 2025-01-23
+
+- ~~Implement game event logging improvements~~
+  - Rationale: Enhanced game_events table with player attribution, sequence numbering, and metadata fields — 2025-01-23
+
+- ~~Optimize player session tracking~~
+  - Rationale: Added last_seen, connection_status, session_id to players table with utility functions for real-time tracking — 2025-01-23
+
+- ~~Add game state management enhancements~~
+  - Rationale: Added settings jsonb and last_activity timestamp to games table for better state management — 2025-01-23
 
 ## Features
 
@@ -57,3 +75,4 @@ Notes
 Change log
 
 - 2025-08-21: Initial TODOs.md created — Copilot
+- 2025-01-23: Completed all Supabase database improvements and marked related TODOs as finished — Copilot
