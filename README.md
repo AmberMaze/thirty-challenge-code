@@ -1,6 +1,6 @@
 # Thirty Challenge - Real-time Football Quiz Web App
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/your-site-id/deploy-status)](https://app.netlify.com/sites/your-site/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/b79ae85c-abc9-4765-bd94-af406a733ee5/deploy-status)](https://app.netlify.com/projects/thirtychallenge/deploys)
 [![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/ellerbrock/typescript-badges/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -14,7 +14,7 @@
 
 ## 🚀 Live Demo
 
-Visit **[quiz.tyshub.xyz](https://quiz.tyshub.xyz)** to experience the app in action!
+Visit **[thirtyquiz.tyshub.xyz](https://thirtyquiz.tyshub.xyz/)** to experience the app in action!
 
 ## 📋 Table of Contents
 
