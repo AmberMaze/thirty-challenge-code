@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { myRoleAtom, myPlayerIdAtom, playersAtom, gamePhaseAtom } from '../state/alphaAtoms';
+import {
+  myRoleAtom,
+  myPlayerIdAtom,
+  playersAtom,
+  gamePhaseAtom,
+} from '../state/alphaAtoms';
 
 /**
  * Alpha Quiz entry page - simplified entry without room IDs
@@ -18,45 +23,50 @@ export default function AlphaEntry() {
 
   const joinAsHost = () => {
     if (!playerName.trim()) return;
-    
+
     const hostId = 'host-' + Date.now();
     setMyRole('host');
     setMyPlayerId(hostId);
-    setPlayers([{
-      id: hostId,
-      name: playerName.trim(),
-      role: 'host',
-      score: 0,
-      strikes: 0,
-    }]);
+    setPlayers([
+      {
+        id: hostId,
+        name: playerName.trim(),
+        role: 'host',
+        score: 0,
+        strikes: 0,
+      },
+    ]);
     setGamePhase('waiting');
     navigate('/alpha-quiz/host');
   };
 
   const joinAsPlayer = () => {
     if (!playerName.trim()) return;
-    
-    const existingPlayers = players.filter(p => p.role !== 'host');
-    
+
+    const existingPlayers = players.filter((p) => p.role !== 'host');
+
     if (existingPlayers.length >= 2) {
       alert('عذراً، اللعبة ممتلئة! يمكن للاعبين اثنين فقط الانضمام.');
       return;
     }
-    
+
     const playerRole = existingPlayers.length === 0 ? 'player-a' : 'player-b';
     const playerId = `${playerRole}-${Date.now()}`;
-    
+
     setMyRole(playerRole);
     setMyPlayerId(playerId);
-    
-    setPlayers(prev => [...prev, {
-      id: playerId,
-      name: playerName.trim(),
-      role: playerRole,
-      score: 0,
-      strikes: 0,
-    }]);
-    
+
+    setPlayers((prev) => [
+      ...prev,
+      {
+        id: playerId,
+        name: playerName.trim(),
+        role: playerRole,
+        score: 0,
+        strikes: 0,
+      },
+    ]);
+
     navigate('/alpha-quiz/player');
   };
 
@@ -80,7 +90,7 @@ export default function AlphaEntry() {
         <h1 className="text-3xl font-bold text-center mb-2 text-accent2 font-arabic">
           Alpha Quiz 🚀
         </h1>
-        
+
         <p className="text-center mb-6 text-white/70 font-arabic text-sm">
           نسخة مبسطة بدون فيديو - للاختبار فقط
         </p>
@@ -119,12 +129,8 @@ export default function AlphaEntry() {
           </div>
 
           <div className="pt-4 text-center text-white/60 text-sm space-y-1">
-            <p className="font-arabic">
-              المقدم: يرى الأسئلة ويتحكم في اللعبة
-            </p>
-            <p className="font-arabic">
-              اللاعب: يشارك في الإجابة على الأسئلة
-            </p>
+            <p className="font-arabic">المقدم: يرى الأسئلة ويتحكم في اللعبة</p>
+            <p className="font-arabic">اللاعب: يشارك في الإجابة على الأسئلة</p>
             <p className="font-arabic text-orange-300">
               ⚠️ يمكن لاعبين فقط + مقدم واحد
             </p>

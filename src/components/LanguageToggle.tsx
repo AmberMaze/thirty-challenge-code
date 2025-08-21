@@ -12,7 +12,10 @@ export default function LanguageToggle() {
   const toggleLanguage = useSetAtom(toggleLanguageAtom);
 
   const handleToggle = () => {
-    debugLog('LanguageToggle', 'toggle', { from: language, to: language === 'en' ? 'ar' : 'en' });
+    debugLog('LanguageToggle', 'toggle', {
+      from: language,
+      to: language === 'en' ? 'ar' : 'en',
+    });
     toggleLanguage();
   };
 

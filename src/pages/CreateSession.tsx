@@ -43,7 +43,9 @@ export default function CreateSession() {
   useEffect(() => {
     const configError = getConfigurationError();
     if (configError) {
-      setError(`${t('configWarning')}: ${configError}. ${t('featuresNotWorkProperly')}`);
+      setError(
+        `${t('configWarning')}: ${configError}. ${t('featuresNotWorkProperly')}`,
+      );
     }
   }, [t]);
 
@@ -55,7 +57,7 @@ export default function CreateSession() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!gameId) {
       setError(t('sessionIdNotGenerated'));
       return;
@@ -64,43 +66,45 @@ export default function CreateSession() {
     // Check for configuration issues before attempting to create
     const configError = getConfigurationError();
     if (configError) {
-      setError(`${t('cannotCreateSession')}: ${configError}. ${t('checkSystemSettings')}`);
+      setError(
+        `${t('cannotCreateSession')}: ${configError}. ${t('checkSystemSettings')}`,
+      );
       return;
     }
 
     try {
       setIsCreating(true);
       setError('');
-      
+
       // Create game record and update to LOBBY phase in one step
       const result = await GameDatabase.createGame(
         gameId,
         hostCode,
         hostName,
-        segmentSettings
+        segmentSettings,
       );
-      
+
       if (!result) {
         throw new Error('Failed to create game record');
       }
-      
+
       // Update game to LOBBY phase with host details
       await updateToLobbyPhase(gameId, hostCode, hostName, segmentSettings);
-      
+
       // Navigate to control room
-      nav('/control-room', { 
-        state: { 
-          gameId, 
-          hostCode, 
-          hostName 
-        } 
+      nav('/control-room', {
+        state: {
+          gameId,
+          hostCode,
+          hostName,
+        },
       });
     } catch (err) {
       console.error('Failed to create and setup session:', err);
-      
+
       // Provide specific error messages based on error type
       let errorMessage = t('failedCreateSessionNew');
-      
+
       if (err instanceof Error) {
         if (err.message.includes('fetch')) {
           errorMessage = t('connectionFailed');
@@ -110,7 +114,7 @@ export default function CreateSession() {
           errorMessage = t('connectionTimeout');
         }
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsCreating(false);
@@ -131,16 +135,22 @@ export default function CreateSession() {
         {isCreating && !gameId && (
           <div className="text-center p-4 bg-blue-500/20 rounded-lg border border-blue-500/30">
             <div className="w-6 h-6 border-2 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-blue-300 font-arabic text-sm">{t('sessionIdGenerating')}</p>
+            <p className="text-blue-300 font-arabic text-sm">
+              {t('sessionIdGenerating')}
+            </p>
           </div>
         )}
 
         {/* Session ID Display */}
         {gameId && !isCreating && (
           <div className="text-center p-4 bg-green-500/20 rounded-lg border border-green-500/30">
-            <p className="text-green-300 font-arabic text-sm mb-1">{t('sessionIdReady')}</p>
+            <p className="text-green-300 font-arabic text-sm mb-1">
+              {t('sessionIdReady')}
+            </p>
             <p className="text-white font-mono text-lg">{gameId}</p>
-            <p className="text-green-200 font-arabic text-xs mt-1">{t('fillDataAndConfirm')}</p>
+            <p className="text-green-200 font-arabic text-xs mt-1">
+              {t('fillDataAndConfirm')}
+            </p>
           </div>
         )}
 
@@ -212,10 +222,16 @@ export default function CreateSession() {
 
         <button
           type="submit"
-          disabled={isCreating || !gameId || !hostName.trim() || !hostCode.trim()}
+          disabled={
+            isCreating || !gameId || !hostName.trim() || !hostCode.trim()
+          }
           className="w-full py-3 bg-accent2 hover:bg-accent disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-arabic transition-colors focus:outline-none focus:ring-2 focus:ring-accent2"
         >
-          {isCreating ? t('updating') : gameId ? `${t('confirmSession')} — ${gameId}` : t('waitingSessionCreation')}
+          {isCreating
+            ? t('updating')
+            : gameId
+              ? `${t('confirmSession')} — ${gameId}`
+              : t('waitingSessionCreation')}
         </button>
 
         <div className="text-center">

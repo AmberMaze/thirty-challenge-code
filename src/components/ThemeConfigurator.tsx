@@ -5,6 +5,7 @@ import {
   backgroundMusicVolumeAtom,
   backgroundOpacityAtom,
   backgroundStyleAtom,
+  customColorsAtom,
   fontSizeMultiplierAtom,
   highContrastAtom,
   isDarkModeAtom,
@@ -37,6 +38,7 @@ export default function ThemeConfigurator({
   const [theme, setTheme] = useAtom(themeAtom);
   const [, toggleTheme] = useAtom(toggleThemeAtom);
   const [backgroundStyle, setBackgroundStyle] = useAtom(backgroundStyleAtom);
+  const [customColors, setCustomColors] = useAtom(customColorsAtom);
 
   // Audio state
   const [soundEffectsEnabled, setSoundEffectsEnabled] = useAtom(
@@ -115,8 +117,18 @@ export default function ThemeConfigurator({
     setTheme(newTheme);
     // Apply theme-specific document classes
     if (typeof document !== 'undefined') {
-      document.documentElement.className = '';
+      // Remove all theme classes
+      document.documentElement.classList.remove(
+        'light',
+        'dark',
+        'football',
+        'neon',
+      );
+
+      // Add the specific theme class
       document.documentElement.classList.add(newTheme);
+
+      // Add 'dark' class for dark mode themes (for Tailwind dark: variants)
       if (newTheme === 'dark' || newTheme === 'neon') {
         document.documentElement.classList.add('dark');
       }
@@ -260,6 +272,105 @@ export default function ThemeConfigurator({
                         {option.label}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Custom Colors */}
+                <div>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-sm">🎨</span>
+                    <label
+                      className={`text-sm font-medium ${
+                        isDarkMode ? 'text-white' : 'text-black'
+                      } ${isArabic ? 'font-arabic' : ''}`}
+                    >
+                      Custom Colors
+                    </label>
+                  </div>
+                  <div className="space-y-3">
+                    {/* Primary Color */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-sm ${
+                          isDarkMode ? 'text-white' : 'text-black'
+                        } ${isArabic ? 'font-arabic' : ''}`}
+                      >
+                        Primary
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-8 h-8 rounded border-2 border-white/20"
+                          style={{ backgroundColor: customColors.primary }}
+                        />
+                        <input
+                          type="color"
+                          value={customColors.primary}
+                          onChange={(e) =>
+                            setCustomColors((prev: typeof customColors) => ({
+                              ...prev,
+                              primary: e.target.value,
+                            }))
+                          }
+                          className="w-8 h-8 rounded border-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Secondary Color */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-sm ${
+                          isDarkMode ? 'text-white' : 'text-black'
+                        } ${isArabic ? 'font-arabic' : ''}`}
+                      >
+                        Secondary
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-8 h-8 rounded border-2 border-white/20"
+                          style={{ backgroundColor: customColors.secondary }}
+                        />
+                        <input
+                          type="color"
+                          value={customColors.secondary}
+                          onChange={(e) =>
+                            setCustomColors((prev: typeof customColors) => ({
+                              ...prev,
+                              secondary: e.target.value,
+                            }))
+                          }
+                          className="w-8 h-8 rounded border-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Accent Color */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-sm ${
+                          isDarkMode ? 'text-white' : 'text-black'
+                        } ${isArabic ? 'font-arabic' : ''}`}
+                      >
+                        Accent
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-8 h-8 rounded border-2 border-white/20"
+                          style={{ backgroundColor: customColors.accent }}
+                        />
+                        <input
+                          type="color"
+                          value={customColors.accent}
+                          onChange={(e) =>
+                            setCustomColors((prev: typeof customColors) => ({
+                              ...prev,
+                              accent: e.target.value,
+                            }))
+                          }
+                          className="w-8 h-8 rounded border-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -594,6 +705,13 @@ export default function ThemeConfigurator({
                       // Reset to defaults
                       setTheme('dark');
                       setBackgroundStyle('gradient');
+                      setCustomColors({
+                        primary: '#22c55e',
+                        secondary: '#38bdf8',
+                        accent: '#6a5acd',
+                        background: '#0f172a',
+                        surface: 'rgba(15, 23, 42, 0.8)',
+                      });
                       setSoundEffectsEnabled(true);
                       setSoundEffectsVolume(50);
                       setBackgroundMusicEnabled(true);

@@ -69,18 +69,18 @@ Thirty Challenge is a modern, real-time football quiz application designed for c
 
 ## 🛠 Tech Stack
 
-| Category | Technology | Version | Purpose |
-|----------|------------|---------|---------|
-| **Frontend** | React | 19 | UI Framework |
-| **Build Tool** | Vite | 7 | Development & Build |
-| **Styling** | Tailwind CSS | 3.4 | Utility-first CSS |
-| **Language** | TypeScript | 5.8.3 | Type Safety |
-| **State** | Jotai | 2.12.5 | Atomic State Management |
-| **Animation** | Framer Motion | 12 | Motion & Transitions |
-| **Backend** | Supabase | 2.52.1 | Database & Realtime |
-| **Video** | Daily.co | 0.81.0 | Video Conferencing |
-| **Testing** | Vitest/Jest | 29.7.0 | Unit & Integration Tests |
-| **Deployment** | Netlify | - | Static Site Hosting |
+| Category       | Technology    | Version | Purpose                  |
+| -------------- | ------------- | ------- | ------------------------ |
+| **Frontend**   | React         | 19      | UI Framework             |
+| **Build Tool** | Vite          | 7       | Development & Build      |
+| **Styling**    | Tailwind CSS  | 3.4     | Utility-first CSS        |
+| **Language**   | TypeScript    | 5.8.3   | Type Safety              |
+| **State**      | Jotai         | 2.12.5  | Atomic State Management  |
+| **Animation**  | Framer Motion | 12      | Motion & Transitions     |
+| **Backend**    | Supabase      | 2.52.1  | Database & Realtime      |
+| **Video**      | Daily.co      | 0.81.0  | Video Conferencing       |
+| **Testing**    | Vitest/Jest   | 29.7.0  | Unit & Integration Tests |
+| **Deployment** | Netlify       | -       | Static Site Hosting      |
 
 ## 🚀 Quick Start
 
@@ -195,13 +195,13 @@ graph TD
 
 ## 🎯 Quiz Segments
 
-| Segment | Description | Points | Duration |
-|---------|-------------|--------|----------|
-| **WSHA** | Team Recognition | 4 | Variable |
-| **BELL** | Quick Answer Bell | 10 | Timed |
-| **SING** | Audio/Music Round | 10 | Timed |
-| **REMO** | Penalty Kicks | 4 | Variable |
-| **AUCT** | Auction Bidding | 4 | Variable |
+| Segment  | Description       | Points | Duration |
+| -------- | ----------------- | ------ | -------- |
+| **WSHA** | Team Recognition  | 4      | Variable |
+| **BELL** | Quick Answer Bell | 10     | Timed    |
+| **SING** | Audio/Music Round | 10     | Timed    |
+| **REMO** | Penalty Kicks     | 4      | Variable |
+| **AUCT** | Auction Bidding   | 4      | Variable |
 
 Each segment has custom logic in `src/segments/` with specialized hooks and components.
 

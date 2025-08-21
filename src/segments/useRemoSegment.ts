@@ -7,11 +7,11 @@ import { gameStateAtom } from '@/state';
  */
 export function useRemoSegment() {
   const gameState = useAtomValue(gameStateAtom);
-  
+
   const isActive = gameState.currentSegment === 'REMO';
   const questionsTotal = gameState.segmentSettings.REMO;
   const currentQuestion = gameState.currentQuestionIndex;
-  
+
   return {
     isActive,
     questionsTotal,

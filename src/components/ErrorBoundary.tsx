@@ -22,12 +22,12 @@ export class ErrorBoundary extends React.Component<
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('🚨 React Error Boundary caught an error:', error);
     console.error('Error Info:', errorInfo);
-    
+
     // Send to error reporting service in production
     if (import.meta.env.PROD) {
       // reportError(error, errorInfo);
     }
-    
+
     this.setState({ error, errorInfo });
   }
 
@@ -50,7 +50,7 @@ export class ErrorBoundary extends React.Component<
                 </pre>
               </details>
             )}
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >

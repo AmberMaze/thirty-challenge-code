@@ -13,7 +13,7 @@ interface VideoRoomLazyProps {
 // Loading component for video components
 function VideoLoadingFallback() {
   const { t } = useTranslation();
-  
+
   return (
     <div className="bg-gray-500/20 border border-gray-500/30 rounded-xl p-6">
       <div className="text-center py-8">

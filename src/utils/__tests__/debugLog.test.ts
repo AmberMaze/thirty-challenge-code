@@ -5,7 +5,7 @@ import { debugLog } from '../debugLog';
 
 // Mock import.meta.env
 const mockEnv = {
-  DEV: true
+  DEV: true,
 };
 
 jest.mock('../debugLog', () => ({
@@ -17,7 +17,7 @@ jest.mock('../debugLog', () => ({
       console.trace('Call stack');
       console.groupEnd();
     }
-  })
+  }),
 }));
 
 describe('debugLog', () => {
@@ -41,6 +41,10 @@ describe('debugLog', () => {
     const testData = { userId: 123, action: 'test' };
     debugLog('TestComponent', 'testAction', testData);
 
-    expect(debugLog).toHaveBeenCalledWith('TestComponent', 'testAction', testData);
+    expect(debugLog).toHaveBeenCalledWith(
+      'TestComponent',
+      'testAction',
+      testData,
+    );
   });
 });

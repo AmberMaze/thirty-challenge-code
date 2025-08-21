@@ -58,6 +58,81 @@ export default function Landing() {
     navigate(`/join?gameId=${gameId}`);
   };
 
+  // Generate background classes based on theme and style
+  const getBackgroundClass = () => {
+    const baseClasses = 'min-h-screen transition-colors duration-300';
+
+    if (backgroundStyle === 'solid') {
+      switch (theme) {
+        case 'dark':
+          return `${baseClasses} bg-brand-dark`;
+        case 'light':
+          return `${baseClasses} bg-white`;
+        case 'football':
+          return `${baseClasses} bg-green-900`;
+        case 'neon':
+          return `${baseClasses} bg-black`;
+        default:
+          return `${baseClasses} bg-brand-dark`;
+      }
+    } else if (backgroundStyle === 'pattern') {
+      switch (theme) {
+        case 'dark':
+          return `${baseClasses} bg-gradient-to-br from-brand-dark to-slate-900`;
+        case 'light':
+          return `${baseClasses} bg-gradient-to-br from-blue-50 to-gray-100`;
+        case 'football':
+          return `${baseClasses} bg-gradient-to-br from-green-900 to-emerald-800`;
+        case 'neon':
+          return `${baseClasses} bg-gradient-to-br from-black to-purple-900`;
+        default:
+          return `${baseClasses} bg-gradient-to-br from-brand-dark to-slate-900`;
+      }
+    } else if (backgroundStyle === 'animated') {
+      return `${baseClasses} bg-gradient-to-br from-brand-dark via-slate-800 to-purple-900 animate-pulse`;
+    } else {
+      // gradient (default)
+      switch (theme) {
+        case 'dark':
+          return `${baseClasses} bg-gradient-to-br from-brand-dark via-slate-900 to-football-dark`;
+        case 'light':
+          return `${baseClasses} bg-gradient-to-br from-blue-50 via-white to-green-50`;
+        case 'football':
+          return `${baseClasses} bg-gradient-to-br from-green-900 via-emerald-800 to-green-700`;
+        case 'neon':
+          return `${baseClasses} bg-gradient-to-br from-black via-gray-900 to-purple-900`;
+        default:
+          return `${baseClasses} bg-gradient-to-br from-brand-dark via-slate-900 to-football-dark`;
+      }
+    }
+  };
+
+  // Generate pattern based on theme
+  const getPatternStyle = () => {
+    switch (theme) {
+      case 'dark':
+        return {
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2322c55e' fill-opacity='0.2'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E")`,
+        };
+      case 'light':
+        return {
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2316a34a' fill-opacity='0.1'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E")`,
+        };
+      case 'football':
+        return {
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2315803d' fill-opacity='0.3'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E")`,
+        };
+      case 'neon':
+        return {
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2300ff88' fill-opacity='0.1'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E")`,
+        };
+      default:
+        return {
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2322c55e' fill-opacity='0.2'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E")`,
+        };
+    }
+  };
+
   const themeOptions: { value: Theme; label: string; preview: string }[] = [
     {
       value: 'dark',
@@ -82,21 +157,10 @@ export default function Landing() {
   ];
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        isDarkMode
-          ? 'bg-gradient-to-br from-brand-dark via-slate-900 to-football-dark'
-          : 'bg-gradient-to-br from-blue-50 via-white to-green-50'
-      }`}
-    >
+    <div className={getBackgroundClass()}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2322c55e' fill-opacity='0.2'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
+        <div className="absolute inset-0" style={getPatternStyle()} />
       </div>
 
       {/* Language Toggle */}
@@ -507,13 +571,8 @@ export default function Landing() {
           {/* Title */}
           <motion.h1
             className={`text-4xl sm:text-6xl lg:text-7xl font-extrabold mb-4 text-center ${
-              isDarkMode ? 'text-accent glow' : 'text-green-600'
+              isDarkMode ? 'text-accent' : 'text-green-600'
             } font-arabic`}
-            style={
-              isDarkMode
-                ? { textShadow: '0 0 30px #7c3aed, 0 0 20px #38bdf8' }
-                : {}
-            }
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -538,109 +597,9 @@ export default function Landing() {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mb-8"
+            className="mb-8 w-full max-w-sm"
           >
             <ActiveGames onJoinGame={handleJoinGameById} />
-          </motion.div>
-
-          {/* Quick Preview Section */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mb-8 w-full max-w-md"
-          >
-            <div
-              className={`bg-white/5 backdrop-blur-sm rounded-xl p-6 border ${
-                isDarkMode ? 'border-white/10' : 'border-black/10'
-              }`}
-            >
-              <h3
-                className={`text-lg font-bold mb-4 text-center ${
-                  isDarkMode ? 'text-accent2' : 'text-green-700'
-                } ${isArabic ? 'font-arabic' : ''}`}
-              >
-                {isArabic ? 'معاينة سريعة' : 'Quick Preview'}
-              </h3>
-
-              {/* Sample Question */}
-              <div
-                className={`bg-white/5 rounded-lg p-4 mb-4 border ${
-                  isDarkMode ? 'border-white/5' : 'border-black/5'
-                }`}
-              >
-                <p
-                  className={`text-sm font-medium mb-2 ${
-                    isDarkMode ? 'text-white/70' : 'text-gray-600'
-                  } ${isArabic ? 'font-arabic' : ''}`}
-                >
-                  {isArabic ? 'سؤال تجريبي:' : 'Sample Question:'}
-                </p>
-                <p
-                  className={`text-white font-medium ${isArabic ? 'font-arabic' : ''}`}
-                >
-                  {isArabic
-                    ? 'أي فريق فاز بكأس العالم 2022؟'
-                    : 'Which team won the 2022 World Cup?'}
-                </p>
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  {['Argentina', 'France', 'Brazil', 'Croatia'].map(
-                    (option, index) => (
-                      <motion.div
-                        key={option}
-                        className={`p-2 rounded text-sm text-center cursor-pointer transition-all ${
-                          index === 0
-                            ? isDarkMode
-                              ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                              : 'bg-green-100 text-green-700 border border-green-300'
-                            : isDarkMode
-                              ? 'bg-white/5 hover:bg-white/10 text-white/80 border border-white/10'
-                              : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
-                        } ${isArabic ? 'font-arabic' : ''}`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {option}
-                      </motion.div>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Game Stats */}
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[
-                  { label: isArabic ? 'الأسئلة' : 'Questions', value: '30+' },
-                  { label: isArabic ? 'الفئات' : 'Categories', value: '4' },
-                  { label: isArabic ? 'المدة' : 'Duration', value: '15m' },
-                ].map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    className={`p-3 rounded-lg ${
-                      isDarkMode ? 'bg-white/5' : 'bg-gray-50'
-                    }`}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.7 + index * 0.1 }}
-                  >
-                    <div
-                      className={`text-lg font-bold ${
-                        isDarkMode ? 'text-accent2' : 'text-green-600'
-                      }`}
-                    >
-                      {stat.value}
-                    </div>
-                    <div
-                      className={`text-xs ${
-                        isDarkMode ? 'text-white/60' : 'text-gray-500'
-                      } ${isArabic ? 'font-arabic' : ''}`}
-                    >
-                      {stat.label}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
           </motion.div>
 
           {/* Action Buttons */}
@@ -648,13 +607,13 @@ export default function Landing() {
             className="flex flex-col gap-6 items-center w-full max-w-md"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.9 }}
+            transition={{ delay: 0.6 }}
           >
             <motion.button
               onClick={handleCreateSession}
               className={`w-full px-10 py-4 text-xl rounded-2xl font-bold transition-all shadow-lg ${
                 isDarkMode
-                  ? 'bg-accent2 hover:bg-accent text-white border border-accent glow'
+                  ? 'bg-accent2 hover:bg-accent text-white border border-accent'
                   : 'bg-green-600 hover:bg-green-700 text-white'
               } ${isArabic ? 'font-arabic' : ''}`}
               whileHover={{ scale: 1.05, y: -2 }}

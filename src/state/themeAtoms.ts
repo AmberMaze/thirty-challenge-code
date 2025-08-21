@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 
 export type Theme = 'light' | 'dark' | 'football' | 'neon';
 export type BackgroundStyle =
@@ -34,7 +35,7 @@ export const toggleThemeAtom = atom(null, (get, set) => {
 });
 
 // Advanced theme colors atom
-export const customColorsAtom = atom({
+export const customColorsAtom = atomWithStorage('customColors', {
   primary: '#22c55e',
   secondary: '#38bdf8',
   accent: '#6a5acd',

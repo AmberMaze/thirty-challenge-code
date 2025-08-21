@@ -1,6 +1,10 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { playerAAtom, playerBAtom, currentSegmentAtom } from '../state/alphaAtoms';
+import {
+  playerAAtom,
+  playerBAtom,
+  currentSegmentAtom,
+} from '../state/alphaAtoms';
 
 export default function AlphaScoreboard() {
   const [playerA] = useAtom(playerAAtom);
@@ -9,10 +13,14 @@ export default function AlphaScoreboard() {
 
   const getSegmentName = (type: string) => {
     switch (type) {
-      case 'bell': return 'فقرة الجرس';
-      case 'sing': return 'سين & جيم';
-      case 'remo': return 'التعويض';
-      default: return 'Alpha Quiz';
+      case 'bell':
+        return 'فقرة الجرس';
+      case 'sing':
+        return 'سين & جيم';
+      case 'remo':
+        return 'التعويض';
+      default:
+        return 'Alpha Quiz';
     }
   };
 
@@ -27,7 +35,8 @@ export default function AlphaScoreboard() {
           {getSegmentName(currentSegment.type)}
         </h2>
         <p className="text-sm text-white/70 font-arabic">
-          السؤال {currentSegment.questionNumber} من {currentSegment.totalQuestions}
+          السؤال {currentSegment.questionNumber} من{' '}
+          {currentSegment.totalQuestions}
         </p>
       </div>
 
@@ -57,7 +66,9 @@ export default function AlphaScoreboard() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="text-center">
-            <div className="text-sm text-green-300 font-arabic mb-1">لاعب ب</div>
+            <div className="text-sm text-green-300 font-arabic mb-1">
+              لاعب ب
+            </div>
             <div className="text-lg font-bold text-white font-arabic">
               {playerB?.name || 'في الانتظار...'}
             </div>

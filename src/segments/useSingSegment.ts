@@ -7,11 +7,11 @@ import { gameStateAtom } from '@/state';
  */
 export function useSingSegment() {
   const gameState = useAtomValue(gameStateAtom);
-  
+
   const isActive = gameState.currentSegment === 'SING';
   const questionsTotal = gameState.segmentSettings.SING;
   const currentQuestion = gameState.currentQuestionIndex;
-  
+
   return {
     isActive,
     questionsTotal,

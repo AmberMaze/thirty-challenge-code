@@ -1,6 +1,11 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { bellStateAtom, myPlayerIdAtom, myRoleAtom, playersAtom } from '../state/alphaAtoms';
+import {
+  bellStateAtom,
+  myPlayerIdAtom,
+  myRoleAtom,
+  playersAtom,
+} from '../state/alphaAtoms';
 import { useEffect } from 'react';
 
 export default function AlphaBell() {
@@ -13,7 +18,7 @@ export default function AlphaBell() {
   useEffect(() => {
     if (bellState.timerRunning && bellState.timeLeft > 0) {
       const timer = setTimeout(() => {
-        setBellState(prev => ({
+        setBellState((prev) => ({
           ...prev,
           timeLeft: prev.timeLeft - 1,
         }));
@@ -21,7 +26,7 @@ export default function AlphaBell() {
       return () => clearTimeout(timer);
     } else if (bellState.timerRunning && bellState.timeLeft === 0) {
       // Timer finished
-      setBellState(prev => ({
+      setBellState((prev) => ({
         ...prev,
         timerRunning: false,
         isActive: false,
@@ -32,8 +37,8 @@ export default function AlphaBell() {
   const pressBell = () => {
     if (!bellState.isActive || bellState.pressedBy) return;
     if (myRole === 'host') return; // Host can't press the bell
-    
-    setBellState(prev => ({
+
+    setBellState((prev) => ({
       ...prev,
       pressedBy: myPlayerId,
       pressedAt: Date.now(),
@@ -44,11 +49,12 @@ export default function AlphaBell() {
 
   const getPlayerName = (playerId: string | null) => {
     if (!playerId) return '';
-    const player = players.find(p => p.id === playerId);
+    const player = players.find((p) => p.id === playerId);
     return player?.name || 'Unknown';
   };
 
-  const canPress = bellState.isActive && !bellState.pressedBy && myRole !== 'host';
+  const canPress =
+    bellState.isActive && !bellState.pressedBy && myRole !== 'host';
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -58,11 +64,12 @@ export default function AlphaBell() {
         disabled={!canPress}
         className={`
           w-32 h-32 rounded-full border-4 font-bold text-2xl transition-all duration-200 font-arabic
-          ${canPress 
-            ? 'bg-yellow-400 border-yellow-500 text-yellow-900 hover:bg-yellow-300 hover:scale-105 shadow-lg cursor-pointer' 
-            : bellState.pressedBy 
-              ? 'bg-red-400 border-red-500 text-red-900 cursor-not-allowed'
-              : 'bg-gray-400 border-gray-500 text-gray-700 cursor-not-allowed opacity-50'
+          ${
+            canPress
+              ? 'bg-yellow-400 border-yellow-500 text-yellow-900 hover:bg-yellow-300 hover:scale-105 shadow-lg cursor-pointer'
+              : bellState.pressedBy
+                ? 'bg-red-400 border-red-500 text-red-900 cursor-not-allowed'
+                : 'bg-gray-400 border-gray-500 text-gray-700 cursor-not-allowed opacity-50'
           }
         `}
         whileTap={canPress ? { scale: 0.95 } : {}}
@@ -77,13 +84,13 @@ export default function AlphaBell() {
         {!bellState.isActive && (
           <p className="text-white/60 font-arabic">الجرس غير مفعل</p>
         )}
-        
+
         {bellState.isActive && !bellState.pressedBy && (
           <p className="text-yellow-400 font-arabic font-bold animate-pulse">
             اضغط الجرس للإجابة!
           </p>
         )}
-        
+
         {bellState.pressedBy && (
           <div className="space-y-2">
             <p className="text-accent2 font-arabic font-bold">

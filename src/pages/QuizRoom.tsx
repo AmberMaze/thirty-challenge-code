@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useGameState, useGameActions, usePlayerActions } from '@/hooks/useGameAtoms';
+import {
+  useGameState,
+  useGameActions,
+  usePlayerActions,
+} from '@/hooks/useGameAtoms';
 import { getQuestionsForSegment } from '@/data/questions';
 import type { SegmentCode } from '@/types/game';
 import Buzzer from '@/components/Buzzer';
@@ -41,11 +45,11 @@ export default function QuizRoom() {
   };
 
   const handleAddStrike = (playerId: 'playerA' | 'playerB') => {
-    updatePlayer({ 
-      playerId: playerId as 'playerA' | 'playerB', 
-      update: { 
-        strikes: (state.players[playerId]?.strikes || 0) + 1 
-      } 
+    updatePlayer({
+      playerId: playerId as 'playerA' | 'playerB',
+      update: {
+        strikes: (state.players[playerId]?.strikes || 0) + 1,
+      },
     });
   };
 

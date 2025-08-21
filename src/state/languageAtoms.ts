@@ -9,10 +9,7 @@ export const languageAtom = atom<Language>('en');
 export const isArabicAtom = atom((get) => get(languageAtom) === 'ar');
 
 // Atom for toggling language
-export const toggleLanguageAtom = atom(
-  null,
-  (get, set) => {
-    const currentLang = get(languageAtom);
-    set(languageAtom, currentLang === 'en' ? 'ar' : 'en');
-  }
-);
+export const toggleLanguageAtom = atom(null, (get, set) => {
+  const currentLang = get(languageAtom);
+  set(languageAtom, currentLang === 'en' ? 'ar' : 'en');
+});

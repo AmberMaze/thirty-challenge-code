@@ -1,5 +1,11 @@
 import { atom } from 'jotai';
-import type { GameState, Player, PlayerId, SegmentCode, GamePhase } from '@/types/game';
+import type {
+  GameState,
+  Player,
+  PlayerId,
+  SegmentCode,
+  GamePhase,
+} from '@/types/game';
 
 // Default values
 const defaultPlayers: Record<PlayerId, Player> = {
@@ -57,7 +63,9 @@ export const timerAtom = atom<number>(0);
 export const isTimerRunningAtom = atom<boolean>(false);
 
 // Configuration atoms
-export const segmentSettingsAtom = atom<Record<SegmentCode, number>>(defaultSegmentSettings);
+export const segmentSettingsAtom = atom<Record<SegmentCode, number>>(
+  defaultSegmentSettings,
+);
 
 // Player atoms
 export const playersAtom = atom<Record<PlayerId, Player>>(defaultPlayers);
@@ -90,24 +98,36 @@ export const updateGameStateAtom = atom(
     if (update.gameId !== undefined) set(gameIdAtom, update.gameId);
     if (update.hostCode !== undefined) set(hostCodeAtom, update.hostCode);
     if (update.hostName !== undefined) set(hostNameAtom, update.hostName);
-    if (update.hostIsConnected !== undefined) set(hostIsConnectedAtom, update.hostIsConnected);
+    if (update.hostIsConnected !== undefined)
+      set(hostIsConnectedAtom, update.hostIsConnected);
     if (update.phase !== undefined) set(phaseAtom, update.phase);
-    if (update.currentSegment !== undefined) set(currentSegmentAtom, update.currentSegment);
-    if (update.currentQuestionIndex !== undefined) set(currentQuestionIndexAtom, update.currentQuestionIndex);
-    if (update.videoRoomUrl !== undefined) set(videoRoomUrlAtom, update.videoRoomUrl);
-    if (update.videoRoomCreated !== undefined) set(videoRoomCreatedAtom, update.videoRoomCreated);
+    if (update.currentSegment !== undefined)
+      set(currentSegmentAtom, update.currentSegment);
+    if (update.currentQuestionIndex !== undefined)
+      set(currentQuestionIndexAtom, update.currentQuestionIndex);
+    if (update.videoRoomUrl !== undefined)
+      set(videoRoomUrlAtom, update.videoRoomUrl);
+    if (update.videoRoomCreated !== undefined)
+      set(videoRoomCreatedAtom, update.videoRoomCreated);
     if (update.timer !== undefined) set(timerAtom, update.timer);
-    if (update.isTimerRunning !== undefined) set(isTimerRunningAtom, update.isTimerRunning);
-    if (update.segmentSettings !== undefined) set(segmentSettingsAtom, update.segmentSettings);
+    if (update.isTimerRunning !== undefined)
+      set(isTimerRunningAtom, update.isTimerRunning);
+    if (update.segmentSettings !== undefined)
+      set(segmentSettingsAtom, update.segmentSettings);
     if (update.players !== undefined) set(playersAtom, update.players);
-    if (update.scoreHistory !== undefined) set(scoreHistoryAtom, update.scoreHistory);
-  }
+    if (update.scoreHistory !== undefined)
+      set(scoreHistoryAtom, update.scoreHistory);
+  },
 );
 
 // Action atoms for specific operations
 export const updatePlayerAtom = atom(
   null,
-  (get, set, { playerId, update }: { playerId: PlayerId; update: Partial<Player> }) => {
+  (
+    get,
+    set,
+    { playerId, update }: { playerId: PlayerId; update: Partial<Player> },
+  ) => {
     const currentPlayers = get(playersAtom);
     set(playersAtom, {
       ...currentPlayers,
@@ -116,19 +136,16 @@ export const updatePlayerAtom = atom(
         ...update,
       },
     });
-  }
+  },
 );
 
-export const addPlayerAtom = atom(
-  null,
-  (get, set, player: Player) => {
-    const currentPlayers = get(playersAtom);
-    set(playersAtom, {
-      ...currentPlayers,
-      [player.id]: player,
-    });
-  }
-);
+export const addPlayerAtom = atom(null, (get, set, player: Player) => {
+  const currentPlayers = get(playersAtom);
+  set(playersAtom, {
+    ...currentPlayers,
+    [player.id]: player,
+  });
+});
 
 export const updateScoreAtom = atom(
   null,
@@ -144,7 +161,7 @@ export const updateScoreAtom = atom(
         },
       });
     }
-  }
+  },
 );
 
 export const initializeGameAtom = atom(
@@ -163,5 +180,5 @@ export const initializeGameAtom = atom(
     set(segmentSettingsAtom, gameState.segmentSettings);
     set(playersAtom, gameState.players);
     set(scoreHistoryAtom, gameState.scoreHistory);
-  }
+  },
 );

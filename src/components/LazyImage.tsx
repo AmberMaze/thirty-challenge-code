@@ -7,7 +7,12 @@ interface LazyImageProps {
   fallback?: React.ReactNode;
 }
 
-export default function LazyImage({ src, alt, className, fallback }: LazyImageProps) {
+export default function LazyImage({
+  src,
+  alt,
+  className,
+  fallback,
+}: LazyImageProps) {
   const [imageSrc, setImageSrc] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -17,7 +22,7 @@ export default function LazyImage({ src, alt, className, fallback }: LazyImagePr
       try {
         setIsLoading(true);
         setError(false);
-        
+
         if (typeof src === 'string') {
           setImageSrc(src);
         } else {
@@ -47,7 +52,9 @@ export default function LazyImage({ src, alt, className, fallback }: LazyImagePr
 
   if (error || !imageSrc) {
     return (
-      <div className={`bg-gray-300 flex items-center justify-center ${className}`}>
+      <div
+        className={`bg-gray-300 flex items-center justify-center ${className}`}
+      >
         <span className="text-gray-500 text-xs">?</span>
       </div>
     );

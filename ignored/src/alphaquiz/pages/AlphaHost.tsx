@@ -1,12 +1,12 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-  playersAtom, 
-  gamePhaseAtom, 
-  currentSegmentAtom, 
+import {
+  playersAtom,
+  gamePhaseAtom,
+  currentSegmentAtom,
   bellStateAtom,
-  myRoleAtom 
+  myRoleAtom,
 } from '../state/alphaAtoms';
 import AlphaScoreboard from '../components/AlphaScoreboard';
 import AlphaBell from '../components/AlphaBell';
@@ -27,18 +27,18 @@ export default function AlphaHost() {
     }
   }, [myRole, navigate]);
 
-  const playerA = players.find(p => p.role === 'player-a');
-  const playerB = players.find(p => p.role === 'player-b');
+  const playerA = players.find((p) => p.role === 'player-a');
+  const playerB = players.find((p) => p.role === 'player-b');
   const bothPlayersJoined = playerA && playerB;
 
   const startGame = () => {
     if (!bothPlayersJoined) return;
     setGamePhase('bell');
-    setBellState(prev => ({ ...prev, isActive: true }));
+    setBellState((prev) => ({ ...prev, isActive: true }));
   };
 
   const activateBell = () => {
-    setBellState(prev => ({
+    setBellState((prev) => ({
       ...prev,
       isActive: true,
       pressedBy: null,
@@ -49,7 +49,7 @@ export default function AlphaHost() {
   };
 
   const resetBell = () => {
-    setBellState(prev => ({
+    setBellState((prev) => ({
       ...prev,
       isActive: false,
       pressedBy: null,
@@ -60,19 +60,19 @@ export default function AlphaHost() {
   };
 
   const addScore = (playerId: string, points: number) => {
-    setPlayers(prev => prev.map(p => 
-      p.id === playerId 
-        ? { ...p, score: Math.max(0, p.score + points) }
-        : p
-    ));
+    setPlayers((prev) =>
+      prev.map((p) =>
+        p.id === playerId ? { ...p, score: Math.max(0, p.score + points) } : p,
+      ),
+    );
   };
 
   const addStrike = (playerId: string) => {
-    setPlayers(prev => prev.map(p => 
-      p.id === playerId 
-        ? { ...p, strikes: p.strikes + 1 }
-        : p
-    ));
+    setPlayers((prev) =>
+      prev.map((p) =>
+        p.id === playerId ? { ...p, strikes: p.strikes + 1 } : p,
+      ),
+    );
   };
 
   const nextSegment = () => {
@@ -90,9 +90,9 @@ export default function AlphaHost() {
 
   const nextQuestion = () => {
     if (currentSegment.questionNumber < currentSegment.totalQuestions) {
-      setCurrentSegment(prev => ({
+      setCurrentSegment((prev) => ({
         ...prev,
-        questionNumber: prev.questionNumber + 1
+        questionNumber: prev.questionNumber + 1,
       }));
     } else {
       nextSegment();
@@ -130,18 +130,26 @@ export default function AlphaHost() {
         <div className="lg:col-span-2">
           <AlphaScoreboard />
         </div>
-        
+
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-          <h3 className="text-lg font-bold text-white mb-3 font-arabic">حالة اللعبة</h3>
+          <h3 className="text-lg font-bold text-white mb-3 font-arabic">
+            حالة اللعبة
+          </h3>
           <div className="space-y-2 text-sm">
             <p className="text-white/80 font-arabic">
-              المرحلة: {gamePhase === 'waiting' ? 'في الانتظار' : 
-                       gamePhase === 'bell' ? 'فقرة الجرس' :
-                       gamePhase === 'sing' ? 'سين & جيم' :
-                       gamePhase === 'remo' ? 'التعويض' : 'انتهت'}
+              المرحلة:{' '}
+              {gamePhase === 'waiting'
+                ? 'في الانتظار'
+                : gamePhase === 'bell'
+                  ? 'فقرة الجرس'
+                  : gamePhase === 'sing'
+                    ? 'سين & جيم'
+                    : gamePhase === 'remo'
+                      ? 'التعويض'
+                      : 'انتهت'}
             </p>
             <p className="text-white/80 font-arabic">
-              اللاعبين: {players.filter(p => p.role !== 'host').length}/2
+              اللاعبين: {players.filter((p) => p.role !== 'host').length}/2
             </p>
             <p className="text-white/80 font-arabic">
               الجرس: {bellState.isActive ? 'مفعل' : 'معطل'}
@@ -162,7 +170,9 @@ export default function AlphaHost() {
           </h2>
           <p className="text-white/80 mb-4 font-arabic">
             {!playerA && !playerB && 'في انتظار انضمام اللاعبين...'}
-            {playerA && !playerB && 'لاعب واحد انضم، في انتظار اللاعب الثاني...'}
+            {playerA &&
+              !playerB &&
+              'لاعب واحد انضم، في انتظار اللاعب الثاني...'}
             {playerA && playerB && 'كلا اللاعبين جاهز! يمكنك بدء اللعبة الآن.'}
           </p>
           {bothPlayersJoined && (
@@ -181,7 +191,9 @@ export default function AlphaHost() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bell Controls */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-bold text-white mb-4 font-arabic">تحكم الجرس</h3>
+            <h3 className="text-lg font-bold text-white mb-4 font-arabic">
+              تحكم الجرس
+            </h3>
             <div className="flex justify-center mb-4">
               <AlphaBell />
             </div>
@@ -203,7 +215,9 @@ export default function AlphaHost() {
 
           {/* Score Controls */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-bold text-white mb-4 font-arabic">تحكم النقاط</h3>
+            <h3 className="text-lg font-bold text-white mb-4 font-arabic">
+              تحكم النقاط
+            </h3>
             <div className="space-y-4">
               {[playerA, playerB].filter(Boolean).map((player) => (
                 <div key={player!.id} className="space-y-2">
@@ -228,9 +242,13 @@ export default function AlphaHost() {
                       عقوبة
                     </button>
                     <button
-                      onClick={() => setPlayers(prev => prev.map(p => 
-                        p.id === player!.id ? { ...p, strikes: 0 } : p
-                      ))}
+                      onClick={() =>
+                        setPlayers((prev) =>
+                          prev.map((p) =>
+                            p.id === player!.id ? { ...p, strikes: 0 } : p,
+                          ),
+                        )
+                      }
                       className="px-2 py-1 bg-gray-500/20 hover:bg-gray-500/30 border border-gray-400/30 rounded text-gray-300 text-sm font-arabic"
                     >
                       مسح
@@ -276,9 +294,12 @@ export default function AlphaHost() {
           <div className="space-y-2">
             {playerA && playerB && (
               <p className="text-lg font-arabic text-white">
-                الفائز: {playerA.score > playerB.score ? playerA.name : 
-                         playerB.score > playerA.score ? playerB.name : 
-                         'تعادل!'}
+                الفائز:{' '}
+                {playerA.score > playerB.score
+                  ? playerA.name
+                  : playerB.score > playerA.score
+                    ? playerB.name
+                    : 'تعادل!'}
               </p>
             )}
           </div>
@@ -293,12 +314,20 @@ export default function AlphaHost() {
 
       {/* Instructions */}
       <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-        <h4 className="font-bold text-white/80 mb-2 font-arabic">تعليمات المقدم:</h4>
+        <h4 className="font-bold text-white/80 mb-2 font-arabic">
+          تعليمات المقدم:
+        </h4>
         <ul className="text-sm text-white/60 space-y-1">
           <li className="font-arabic">• اقرأ الأسئلة بصوت عالٍ للاعبين</li>
-          <li className="font-arabic">• فعل الجرس عندما تريد السماح للاعبين بالإجابة</li>
-          <li className="font-arabic">• أضف نقاط (+1) للإجابات الصحيحة وعقوبات للخاطئة</li>
-          <li className="font-arabic">• استخدم "السؤال التالي" للانتقال أو "الفقرة التالية" لتغيير النوع</li>
+          <li className="font-arabic">
+            • فعل الجرس عندما تريد السماح للاعبين بالإجابة
+          </li>
+          <li className="font-arabic">
+            • أضف نقاط (+1) للإجابات الصحيحة وعقوبات للخاطئة
+          </li>
+          <li className="font-arabic">
+            • استخدم "السؤال التالي" للانتقال أو "الفقرة التالية" لتغيير النوع
+          </li>
         </ul>
       </div>
     </motion.div>

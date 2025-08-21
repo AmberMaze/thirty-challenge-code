@@ -3,6 +3,7 @@
 This document explains Daily.co usage: Netlify functions for room creation/tokens, client SDK patterns and recommended flows.
 
 Key endpoints (Netlify functions):
+
 - `create-daily-room.ts` — POST to create a room
 - `create-daily-token.ts` — POST to create meeting tokens
 - `delete-daily-room.ts` — POST to delete a room

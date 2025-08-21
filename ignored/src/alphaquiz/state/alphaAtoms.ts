@@ -4,7 +4,13 @@ import { atom } from 'jotai';
 export type PlayerRole = 'host' | 'player-a' | 'player-b';
 
 // Game state
-export type GamePhase = 'entry' | 'waiting' | 'bell' | 'sing' | 'remo' | 'finished';
+export type GamePhase =
+  | 'entry'
+  | 'waiting'
+  | 'bell'
+  | 'sing'
+  | 'remo'
+  | 'finished';
 
 // Player data
 export interface AlphaPlayer {
@@ -34,7 +40,11 @@ export interface BellState {
 // Core game state atoms
 export const gamePhaseAtom = atom<GamePhase>('entry');
 export const playersAtom = atom<AlphaPlayer[]>([]);
-export const currentSegmentAtom = atom<CurrentSegment>({ type: 'bell', questionNumber: 1, totalQuestions: 5 });
+export const currentSegmentAtom = atom<CurrentSegment>({
+  type: 'bell',
+  questionNumber: 1,
+  totalQuestions: 5,
+});
 export const bellStateAtom = atom<BellState>({
   isActive: false,
   pressedBy: null,
@@ -48,31 +58,23 @@ export const myRoleAtom = atom<PlayerRole>('host');
 export const myPlayerIdAtom = atom<string>('');
 
 // Derived atoms
-export const myPlayerAtom = atom(
-  (get) => {
-    const players = get(playersAtom);
-    const myId = get(myPlayerIdAtom);
-    return players.find(p => p.id === myId) || null;
-  }
-);
+export const myPlayerAtom = atom((get) => {
+  const players = get(playersAtom);
+  const myId = get(myPlayerIdAtom);
+  return players.find((p) => p.id === myId) || null;
+});
 
-export const playerAAtom = atom(
-  (get) => {
-    const players = get(playersAtom);
-    return players.find(p => p.role === 'player-a') || null;
-  }
-);
+export const playerAAtom = atom((get) => {
+  const players = get(playersAtom);
+  return players.find((p) => p.role === 'player-a') || null;
+});
 
-export const playerBAtom = atom(
-  (get) => {
-    const players = get(playersAtom);
-    return players.find(p => p.role === 'player-b') || null;
-  }
-);
+export const playerBAtom = atom((get) => {
+  const players = get(playersAtom);
+  return players.find((p) => p.role === 'player-b') || null;
+});
 
-export const hostPlayerAtom = atom(
-  (get) => {
-    const players = get(playersAtom);
-    return players.find(p => p.role === 'host') || null;
-  }
-);
+export const hostPlayerAtom = atom((get) => {
+  const players = get(playersAtom);
+  return players.find((p) => p.role === 'host') || null;
+});

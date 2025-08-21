@@ -2,11 +2,11 @@ import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { 
-  myRoleAtom, 
-  gamePhaseAtom, 
+import {
+  myRoleAtom,
+  gamePhaseAtom,
   currentSegmentAtom,
-  myPlayerAtom 
+  myPlayerAtom,
 } from '../state/alphaAtoms';
 import AlphaScoreboard from '../components/AlphaScoreboard';
 import AlphaBell from '../components/AlphaBell';
@@ -20,7 +20,7 @@ export default function AlphaPlayer() {
 
   // Redirect if not a player
   useEffect(() => {
-    if (myRole === 'host' || (!myRole.startsWith('player'))) {
+    if (myRole === 'host' || !myRole.startsWith('player')) {
       navigate('/alpha-quiz');
     }
   }, [myRole, navigate]);
@@ -115,7 +115,9 @@ export default function AlphaPlayer() {
         </motion.div>
       )}
 
-      {(gamePhase === 'bell' || gamePhase === 'sing' || gamePhase === 'remo') && (
+      {(gamePhase === 'bell' ||
+        gamePhase === 'sing' ||
+        gamePhase === 'remo') && (
         <motion.div
           className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20"
           initial={{ scale: 0.95, opacity: 0 }}
@@ -123,20 +125,25 @@ export default function AlphaPlayer() {
         >
           <div className="text-center space-y-6">
             <h2 className="text-2xl font-bold text-accent2 font-arabic">
-              {currentSegment.type === 'bell' ? '🔔 فقرة الجرس' :
-               currentSegment.type === 'sing' ? '❓ سين & جيم' :
-               '🎯 التعويض'}
+              {currentSegment.type === 'bell'
+                ? '🔔 فقرة الجرس'
+                : currentSegment.type === 'sing'
+                  ? '❓ سين & جيم'
+                  : '🎯 التعويض'}
             </h2>
-            
+
             {/* Bell Component */}
             <AlphaBell />
-            
+
             {/* Instructions */}
             <div className="bg-white/5 rounded-lg p-4 text-center">
               <p className="text-sm text-white/70 font-arabic">
-                {currentSegment.type === 'bell' && '⚡ اضغط الجرس بسرعة عندما تسمع السؤال وتعرف الإجابة'}
-                {currentSegment.type === 'sing' && '🤔 أسئلة صعبة - تأكد من إجابتك قبل الضغط'}
-                {currentSegment.type === 'remo' && '🕵️ استمع للدلائل واضغط عندما تعرف الإجابة'}
+                {currentSegment.type === 'bell' &&
+                  '⚡ اضغط الجرس بسرعة عندما تسمع السؤال وتعرف الإجابة'}
+                {currentSegment.type === 'sing' &&
+                  '🤔 أسئلة صعبة - تأكد من إجابتك قبل الضغط'}
+                {currentSegment.type === 'remo' &&
+                  '🕵️ استمع للدلائل واضغط عندما تعرف الإجابة'}
               </p>
               <p className="text-xs text-white/50 mt-2 font-arabic">
                 لديك 10 ثوانٍ للإجابة بعد الضغط
@@ -171,10 +178,14 @@ export default function AlphaPlayer() {
       {/* Player Tips */}
       {gamePhase !== 'waiting' && gamePhase !== 'finished' && (
         <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-          <h4 className="font-bold text-white/80 mb-2 font-arabic">نصائح للاعب:</h4>
+          <h4 className="font-bold text-white/80 mb-2 font-arabic">
+            نصائح للاعب:
+          </h4>
           <ul className="text-sm text-white/60 space-y-1">
             <li className="font-arabic">• استمع للمقدم بعناية</li>
-            <li className="font-arabic">• اضغط الجرس بسرعة عندما تعرف الإجابة</li>
+            <li className="font-arabic">
+              • اضغط الجرس بسرعة عندما تعرف الإجابة
+            </li>
             <li className="font-arabic">• لديك 10 ثوان للإجابة بعد الضغط</li>
             <li className="font-arabic">• الإجابات الخاطئة تعطيك عقوبات</li>
           </ul>
@@ -187,14 +198,20 @@ export default function AlphaPlayer() {
           className="bg-white/5 rounded-xl p-4 border border-white/10"
           whileHover={{ scale: 1.02 }}
         >
-          <h4 className="font-bold text-white/80 mb-2 font-arabic">إحصائياتك:</h4>
+          <h4 className="font-bold text-white/80 mb-2 font-arabic">
+            إحصائياتك:
+          </h4>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div className="bg-blue-500/20 rounded-lg p-3">
-              <div className="text-2xl font-bold text-blue-400">{myPlayer.score}</div>
+              <div className="text-2xl font-bold text-blue-400">
+                {myPlayer.score}
+              </div>
               <div className="text-xs text-blue-300 font-arabic">النقاط</div>
             </div>
             <div className="bg-red-500/20 rounded-lg p-3">
-              <div className="text-2xl font-bold text-red-400">{myPlayer.strikes}</div>
+              <div className="text-2xl font-bold text-red-400">
+                {myPlayer.strikes}
+              </div>
               <div className="text-xs text-red-300 font-arabic">العقوبات</div>
             </div>
           </div>

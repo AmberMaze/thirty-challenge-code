@@ -43,5 +43,4 @@ Help build and iterate on a replayable, club‑themed football quiz web app usin
 - Segment specific behaviors (BELL, SING, REMO)
 - Centralized video room creation in Lobby
 
-
 (For full historical details refer to the original top-level file in git history.)

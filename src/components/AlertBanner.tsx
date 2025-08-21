@@ -28,10 +28,14 @@ export default function AlertBanner({
 
   useEffect(() => {
     if (show && autoHide) {
-      debugLog('AlertBanner', 'useEffect - autoHide timer started', { autoHideDelay });
+      debugLog('AlertBanner', 'useEffect - autoHide timer started', {
+        autoHideDelay,
+      });
       const timer = setTimeout(() => {
         setShow(false);
-        debugLog('AlertBanner', 'useEffect - autoHide timer ended', { autoHideDelay });
+        debugLog('AlertBanner', 'useEffect - autoHide timer ended', {
+          autoHideDelay,
+        });
         onClose?.();
       }, autoHideDelay);
 

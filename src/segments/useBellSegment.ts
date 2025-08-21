@@ -7,11 +7,11 @@ import { gameStateAtom } from '@/state';
  */
 export function useBellSegment() {
   const gameState = useAtomValue(gameStateAtom);
-  
+
   const isActive = gameState.currentSegment === 'BELL';
   const questionsTotal = gameState.segmentSettings.BELL;
   const currentQuestion = gameState.currentQuestionIndex;
-  
+
   return {
     isActive,
     questionsTotal,

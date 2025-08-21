@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getAllTeams, searchTeams, searchFlags, type Team } from '@/utils/teamUtils';
+import {
+  getAllTeams,
+  searchTeams,
+  searchFlags,
+  type Team,
+} from '@/utils/teamUtils';
 import { GameDatabase } from '@/lib/gameDatabase';
 import { getSupabase } from '@/lib/supabaseLazy';
 import LazyImage from '@/components/LazyImage';
@@ -27,7 +32,7 @@ export default function Join() {
   const [teamSearch, setTeamSearch] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [allTeams, setAllTeams] = useState<Team[]>([]);
-  
+
   // Confirmation modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [playerRole, setPlayerRole] = useState<string>('');
@@ -69,7 +74,6 @@ export default function Join() {
     if (!gameId.trim()) return;
 
     if (joinType === 'host') {
-
       const sessionId = gameId.toUpperCase();
       const code = hostCode.toUpperCase();
       const supabase = await getSupabase();
@@ -78,7 +82,6 @@ export default function Join() {
         .select('id')
         .eq('id', sessionId)
         .eq('host_code', code)
-
 
         .single();
       const foundId = data?.id;
@@ -108,8 +111,8 @@ export default function Join() {
     try {
       // Check existing players to find available slot
       const existingPlayers = await GameDatabase.getGamePlayers(sessionId);
-      const takenRoles = existingPlayers.map(p => p.role);
-      
+      const takenRoles = existingPlayers.map((p) => p.role);
+
       let availableRole: string;
       if (!takenRoles.includes('playerA')) {
         availableRole = 'playerA';
@@ -129,15 +132,20 @@ export default function Join() {
 
       // Double-check with Daily.co that the room actually exists
       try {
-        const checkResult = await fetch(`/.netlify/functions/check-daily-room`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomName: sessionId }),
-        });
+        const checkResult = await fetch(
+          `/.netlify/functions/check-daily-room`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomName: sessionId }),
+          },
+        );
         const data = await checkResult.json();
-        
+
         if (data && !data.exists) {
-          setErrorMsg('غرفة الفيديو غير موجودة على Daily.co. اتصل بالمقدم لإعادة إنشائها.');
+          setErrorMsg(
+            'غرفة الفيديو غير موجودة على Daily.co. اتصل بالمقدم لإعادة إنشائها.',
+          );
           return;
         }
       } catch (error) {
@@ -175,7 +183,9 @@ export default function Join() {
 
       // Navigate to lobby
       try {
-        navigate(`/lobby/${sessionId}?role=${playerRole}&name=${encodeURIComponent(name)}&flag=${selectedFlag}&club=${encodeURIComponent(selectedTeam)}&autoJoin=true`);
+        navigate(
+          `/lobby/${sessionId}?role=${playerRole}&name=${encodeURIComponent(name)}&flag=${selectedFlag}&club=${encodeURIComponent(selectedTeam)}&autoJoin=true`,
+        );
       } catch (navError) {
         console.error('Navigation error:', navError);
         setErrorMsg('فشل في الانتقال إلى الردهة. حاول مرة أخرى.');
@@ -197,7 +207,9 @@ export default function Join() {
         transition={{ duration: 0.5 }}
       >
         <div className="text-center mb-8">
-          <h1 className={`text-3xl font-bold text-white mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+          <h1
+            className={`text-3xl font-bold text-white mb-2 ${isArabic ? 'font-arabic' : ''}`}
+          >
             {t('joinGame')}
           </h1>
           <p className={`text-white/70 ${isArabic ? 'font-arabic' : ''}`}>
@@ -222,13 +234,19 @@ export default function Join() {
             >
               <div className="text-center">
                 <div className="text-3xl mb-2">🎤</div>
-                <h3 className={`text-lg font-bold mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+                <h3
+                  className={`text-lg font-bold mb-2 ${isArabic ? 'font-arabic' : ''}`}
+                >
                   {t('hostMobile')}
                 </h3>
-                <p className={`text-sm text-blue-200 ${isArabic ? 'font-arabic' : ''}`}>
+                <p
+                  className={`text-sm text-blue-200 ${isArabic ? 'font-arabic' : ''}`}
+                >
                   {t('hostMobileDesc')}
                 </p>
-                <p className={`text-xs text-blue-300 mt-1 ${isArabic ? 'font-arabic' : ''}`}>
+                <p
+                  className={`text-xs text-blue-300 mt-1 ${isArabic ? 'font-arabic' : ''}`}
+                >
                   {t('needSessionAndHostCode')}
                 </p>
               </div>
@@ -242,13 +260,19 @@ export default function Join() {
             >
               <div className="text-center">
                 <div className="text-3xl mb-2">🎮</div>
-                <h3 className={`text-lg font-bold mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+                <h3
+                  className={`text-lg font-bold mb-2 ${isArabic ? 'font-arabic' : ''}`}
+                >
                   {t('playerJoin')}
                 </h3>
-                <p className={`text-sm text-green-200 ${isArabic ? 'font-arabic' : ''}`}>
+                <p
+                  className={`text-sm text-green-200 ${isArabic ? 'font-arabic' : ''}`}
+                >
                   {t('participatingPlayers')}
                 </p>
-                <p className={`text-xs text-green-300 mt-1 ${isArabic ? 'font-arabic' : ''}`}>
+                <p
+                  className={`text-xs text-green-300 mt-1 ${isArabic ? 'font-arabic' : ''}`}
+                >
                   {t('sessionCode')}
                 </p>
               </div>
@@ -267,7 +291,9 @@ export default function Join() {
             {joinType === 'host' ? (
               <>
                 <div>
-                  <label className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+                  <label
+                    className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}
+                  >
                     {t('sessionCode')}
                   </label>
                   <input
@@ -280,7 +306,9 @@ export default function Join() {
                   />
                 </div>
                 <div>
-                  <label className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+                  <label
+                    className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}
+                  >
                     {t('hostCode')}
                   </label>
                   <input
@@ -291,11 +319,15 @@ export default function Join() {
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-accent2 font-mono text-center text-lg"
                     required
                   />
-                  <p className={`text-xs text-blue-300 mt-1 text-center ${isArabic ? 'font-arabic' : ''}`}>
+                  <p
+                    className={`text-xs text-blue-300 mt-1 text-center ${isArabic ? 'font-arabic' : ''}`}
+                  >
                     {t('hostCodeFound')}
                   </p>
                   {errorMsg && (
-                    <p className={`text-xs text-red-400 mt-1 text-center ${isArabic ? 'font-arabic' : ''}`}>
+                    <p
+                      className={`text-xs text-red-400 mt-1 text-center ${isArabic ? 'font-arabic' : ''}`}
+                    >
                       {errorMsg}
                     </p>
                   )}
@@ -304,7 +336,9 @@ export default function Join() {
             ) : (
               <>
                 <div>
-                  <label className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+                  <label
+                    className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}
+                  >
                     {t('sessionCode')}
                   </label>
                   <input
@@ -316,13 +350,17 @@ export default function Join() {
                     required
                   />
                   {errorMsg && (
-                    <p className={`text-xs text-red-400 mt-1 text-center ${isArabic ? 'font-arabic' : ''}`}>
+                    <p
+                      className={`text-xs text-red-400 mt-1 text-center ${isArabic ? 'font-arabic' : ''}`}
+                    >
                       {errorMsg}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+                  <label
+                    className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}
+                  >
                     {t('playerName')}
                   </label>
                   <input
@@ -362,7 +400,9 @@ export default function Join() {
           <form onSubmit={handlePlayerJoin} className="space-y-6">
             {/* Flag Selection */}
             <div>
-              <label className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+              <label
+                className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}
+              >
                 {t('selectFlag')}
               </label>
               <input
@@ -385,7 +425,9 @@ export default function Join() {
                     }`}
                   >
                     <span className={`fi fi-${flag.code} text-2xl`}></span>
-                    <p className={`text-xs text-white/80 mt-1 ${isArabic ? 'font-arabic' : ''}`}>
+                    <p
+                      className={`text-xs text-white/80 mt-1 ${isArabic ? 'font-arabic' : ''}`}
+                    >
                       {flag.name}
                     </p>
                   </button>
@@ -395,7 +437,9 @@ export default function Join() {
 
             {/* Team Selection */}
             <div>
-              <label className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}>
+              <label
+                className={`block text-white/80 mb-2 ${isArabic ? 'font-arabic' : ''}`}
+              >
                 {t('selectTeam')}
               </label>
               <input
@@ -422,7 +466,9 @@ export default function Join() {
                       alt={team.name}
                       className="w-8 h-8 object-contain"
                     />
-                    <span className={`text-white text-sm ${isArabic ? 'font-arabic' : ''}`}>
+                    <span
+                      className={`text-white text-sm ${isArabic ? 'font-arabic' : ''}`}
+                    >
                       {team.displayName}
                     </span>
                   </button>
@@ -432,7 +478,9 @@ export default function Join() {
 
             {/* Error message for step 3 */}
             {errorMsg && (
-              <div className={`text-red-400 text-sm text-center ${isArabic ? 'font-arabic' : ''}`}>
+              <div
+                className={`text-red-400 text-sm text-center ${isArabic ? 'font-arabic' : ''}`}
+              >
                 {errorMsg}
               </div>
             )}

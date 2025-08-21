@@ -3,14 +3,16 @@
  */
 
 // Type-only imports for better tree-shaking
-import type { 
-  SupabaseClient, 
+import type {
+  SupabaseClient,
   RealtimeChannel,
-  PostgrestResponse 
+  PostgrestResponse,
 } from '@supabase/supabase-js';
 
 // Cache the dynamic import promise and client instance
-let supabaseImportPromise: Promise<typeof import('@supabase/supabase-js')> | null = null;
+let supabaseImportPromise: Promise<
+  typeof import('@supabase/supabase-js')
+> | null = null;
 let supabaseClient: SupabaseClient | null = null;
 
 // Environment variables
@@ -67,11 +69,11 @@ export function isSupabaseConfigured(): boolean {
  */
 export function getConfigurationError(): string | null {
   if (isSupabaseConfigured()) return null;
-  
+
   if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
     return 'متغيرات البيئة مفقودة: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY';
   }
-  
+
   return 'إعدادات قاعدة البيانات غير صحيحة - تعمل في وضع التطوير';
 }
 
@@ -79,8 +81,8 @@ export function getConfigurationError(): string | null {
  * Create a Supabase channel with lazy loading
  */
 export async function createChannel(
-  name: string, 
-  config?: Parameters<SupabaseClient['channel']>[1]
+  name: string,
+  config?: Parameters<SupabaseClient['channel']>[1],
 ): Promise<RealtimeChannel> {
   const supabase = await getSupabase();
   return supabase.channel(name, config);
@@ -90,15 +92,11 @@ export async function createChannel(
  * Execute a database query with lazy loading
  */
 export async function executeQuery<T>(
-  queryFn: (supabase: SupabaseClient) => Promise<PostgrestResponse<T>>
+  queryFn: (supabase: SupabaseClient) => Promise<PostgrestResponse<T>>,
 ): Promise<PostgrestResponse<T>> {
   const supabase = await getSupabase();
   return queryFn(supabase);
 }
 
 // Re-export common types for convenience
-export type { 
-  SupabaseClient, 
-  RealtimeChannel,
-  PostgrestResponse 
-};
+export type { SupabaseClient, RealtimeChannel, PostgrestResponse };

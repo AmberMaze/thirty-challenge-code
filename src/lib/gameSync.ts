@@ -262,7 +262,10 @@ export function createGameSync(
   return new GameSync(gameId, callbacks);
 }
 
-export async function attachGameSync(gameId: string, dispatch: Dispatch<GameAction>) {
+export async function attachGameSync(
+  gameId: string,
+  dispatch: Dispatch<GameAction>,
+) {
   const supabase = await getSupabase();
   const channel = supabase
     .channel(`game:${gameId}`)

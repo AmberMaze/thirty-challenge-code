@@ -44,14 +44,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const isActive = { current: true };
 
     // Setup async attachment
-    attachGameSync(state.gameId, dispatch).then((detach) => {
-      if (isActive.current) {
-        detachFn = detach;
-      } else {
-        // If effect already cleaned up, call detach immediately
-        detach();
-      }
-    }).catch(console.error);
+    attachGameSync(state.gameId, dispatch)
+      .then((detach) => {
+        if (isActive.current) {
+          detachFn = detach;
+        } else {
+          // If effect already cleaned up, call detach immediately
+          detach();
+        }
+      })
+      .catch(console.error);
 
     // Cleanup function
     return () => {
@@ -109,7 +111,9 @@ export function useGame() {
    * This function is kept for backward compatibility but should not be used.
    */
   const createVideoRoom = async (gameId: string) => {
-    console.warn('[DEPRECATED] createVideoRoom called from GameContext. Use Lobby component instead.');
+    console.warn(
+      '[DEPRECATED] createVideoRoom called from GameContext. Use Lobby component instead.',
+    );
     const result = (await callFn('create-daily-room', {
       roomName: gameId,
     })) as {
@@ -131,7 +135,9 @@ export function useGame() {
    * This function is kept for backward compatibility but should not be used.
    */
   const endVideoRoom = async (gameId: string) => {
-    console.warn('[DEPRECATED] endVideoRoom called from GameContext. Use Lobby component instead.');
+    console.warn(
+      '[DEPRECATED] endVideoRoom called from GameContext. Use Lobby component instead.',
+    );
     await callFn('delete-daily-room', { roomName: gameId });
     await GameDatabase.updateGame(gameId, {
       video_room_created: false,

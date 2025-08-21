@@ -16,7 +16,7 @@
   // Test Explorer
   "testExplorer.codeLens": true,
   // TypeScript & JavaScript
-  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.preferences.includePackageJsonAutoImports": "on",
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.suggest.autoImports": true,
@@ -124,5 +124,52 @@
   // Supabase extension (only applies if installed)
   "supabase.telemetry.enabled": false,
   // Performance
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  // Chrome/Browser Debugging
+  "debug.chrome.useV3": true,
+  "debug.javascript.usePreview": true,
+  // Live Server for development
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveServer.settings.host": "localhost",
+  "liveServer.settings.port": 3000,
+  "liveServer.settings.root": "/dist",
+  "liveServer.settings.CustomBrowser": "chrome",
+  "liveServer.settings.ChromeDebuggingAttachment": true,
+  "liveServer.settings.fullReload": true,
+  // Auto Rename Tag
+  "auto-rename-tag.activationOnLanguage": [
+    "html",
+    "xml",
+    "php",
+    "javascript",
+    "typescript",
+    "javascriptreact",
+    "typescriptreact"
+  ],
+  // Bracket Pair Colorizer (enhanced)
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+  // IntelliSense enhancements
+  "editor.suggest.preview": true,
+  "editor.suggest.showMethods": true,
+  "editor.suggest.showFunctions": true,
+  "editor.suggest.showConstructors": true,
+  "editor.suggest.showDeprecated": true,
+  "editor.parameterHints.enabled": true,
+  // CSS/SCSS enhancements
+  "css.validate": true,
+  "scss.validate": true,
+  "css.hover.documentation": true,
+  "css.hover.references": true,
+  // React/JSX specific
+  "typescript.suggest.completeFunctionCalls": true,
+  "javascript.suggest.completeFunctionCalls": true,
+  // Vite/React development
+  "html.hover.documentation": true,
+  "html.suggest.html5": true,
+  // Arabic/RTL support
+  "editor.detectIndentation": true,
+  "editor.unicodeHighlight.nonBasicASCII": false,
+  "editor.unicodeHighlight.invisibleCharacters": false,
+  // PWA/Web App debugging
+  "js/ts.preferences.includePackageJsonAutoImports": "on"
 }
