@@ -41,11 +41,6 @@
         "FIRECRAWL_API_KEY": "$COPILOT_MCP_FIRECRAWL_API_KEY"
       },
       "tools": ["*"]
-    },
-    "sentry": {
-      "type": "sse",
-      "url": "https://mcp.sentry.dev/mcp",
-      "tools": ["*"]
     }
   }
 }

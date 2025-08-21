@@ -17,7 +17,6 @@ This repository is configured to work with Model Context Protocol (MCP) servers 
 - **Sequential Thinking**: Advanced problem-solving and planning
 - **Memory**: Knowledge graph for project context
 - **Playwright**: Web automation and testing
-- **Sentry**: Error monitoring and debugging
 - **Firecrawl**: Web scraping and content extraction
 - **ImageSorcery**: Image processing and manipulation
 

@@ -18,7 +18,17 @@
 
 ---
 
-## Latest - 2025-01-23
+## Latest - 2025-08-21
+
+### 🗑️ Removed - Netlify error monitoring plugin references
+
+- Cleared MCP configuration and documentation tied to the deprecated Netlify error monitoring plugin.
+- **Files Modified**:
+  - `.github/copilot-instructions.md`
+  - `.github/copilot-web-mcp.json`
+  - `docs/GITHUB_COPILOT_MCP_SETUP.md`
+
+## Previous - 2025-01-23
 
 ### 🛡️ Added - Comprehensive Supabase Database Security & Performance Overhaul
 
@@ -49,7 +59,7 @@
 - **Purpose**: Address all TODOs from supabase.md with production-ready security and performance
 - **Status**: ✅ All Supabase TODOs completed successfully
 
-## Previous - 2025-08-21
+## Earlier - 2025-08-21
 
 ### ✨ Added - User Flow State Diagrams
 
