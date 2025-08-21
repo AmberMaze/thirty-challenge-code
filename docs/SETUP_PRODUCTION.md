@@ -7,14 +7,14 @@
 You need to update the `.env` file with your actual API keys from your dashboards:
 
 ```bash
-# Get these from: https://supabase.com/dashboard/project/zgvmkjefgdabumvafqch/settings/api
-VITE_SUPABASE_URL=https://zgvmkjefgdabumvafqch.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # Your actual anon key
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # Your actual service role key
+# Get these from: https://supabase.com/dashboard/project/projectID/settings/api
+VITE_SUPABASE_URL=https://projectID.supabase.co
+VITE_SUPABASE_ANON_KEY=  # Your actual anon key
+SUPABASE_SERVICE_ROLE_KEY= # Your actual service role key
 
-# Daily.co keys (already set)
-DAILY_API_KEY=d81a89b83da4147172c2b9d3c36c5569aa74a8a10e21658bf1e094e757dab722
-VITE_DAILY_DOMAIN=thirty.daily.co
+# Daily.co keys 
+DAILY_API_KEY=
+VITE_DAILY_DOMAIN=project.daily.co
 
 # Required for Netlify Functions local development
 NETLIFY_DEV=true
