@@ -16,10 +16,12 @@
   "src/components/ConfirmationModal.tsx": [],
   "src/components/ConnectionBanner.tsx": [],
   "src/components/ErrorBoundary.tsx": [],
+  "src/components/HexGridCanvas.tsx": [],
   "src/components/LanguageToggle.tsx": [],
   "src/components/LazyImage.tsx": [],
   "src/components/Scoreboard.tsx": [],
   "src/components/ThemeConfigurator.tsx": [],
+  "src/components/ThemePicker/TeamPicker.tsx": [],
   "src/components/Timer.tsx": [],
   "src/components/VideoRoom.tsx": [
     "src/components/AlertBanner.tsx"
@@ -52,10 +54,12 @@
     "src/lib/supabaseLazy.ts",
     "src/types/game.ts"
   ],
+  "src/lib/hexgrid.ts": [],
   "src/lib/playerManager.ts": [
     "src/lib/gameDatabase.ts"
   ],
   "src/lib/supabaseLazy.ts": [],
+  "src/lib/svgColors.ts": [],
   "src/lib/translations.ts": [],
   "src/main.tsx": [
     "src/App.tsx"
