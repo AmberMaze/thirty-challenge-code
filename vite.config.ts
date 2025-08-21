@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import bundlesize from 'vite-plugin-bundlesize';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
   plugins: [
@@ -12,6 +13,14 @@ export default defineConfig({
         { name: '**/*.js', limit: '205 kB' },
       ],
     }),
+    // Add Sentry plugin only when environment variables are available
+    ...(process.env.SENTRY_ORG && process.env.SENTRY_PROJECT && process.env.SENTRY_AUTH_TOKEN
+      ? [sentryVitePlugin({
+          org: process.env.SENTRY_ORG,
+          project: process.env.SENTRY_PROJECT,
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+        })]
+      : []),
   ],
   base: '/',
   resolve: {
