@@ -3,6 +3,7 @@
  */
 
 import * as Sentry from '@sentry/react';
+import { BrowserTracing } from '@sentry/tracing';
 
 describe('Sentry Integration', () => {
   test('should have Sentry available for import', () => {
@@ -13,7 +14,6 @@ describe('Sentry Integration', () => {
   });
 
   test('should have BrowserTracing available for import', () => {
-    const { BrowserTracing } = require('@sentry/tracing');
     expect(BrowserTracing).toBeDefined();
     expect(typeof BrowserTracing).toBe('function');
   });
