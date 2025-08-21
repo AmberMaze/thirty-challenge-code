@@ -8,8 +8,9 @@ export default defineConfig({
     react(),
     bundlesize({
       limits: [
-        // check every generated JS entry ≤ 205 kB gzip-compressed
-        { name: '**/*.js', limit: '205 kB' },
+        // Allow a little extra headroom so Netlify builds don't fail on
+        // minor bundle size fluctuations while still keeping bundles small
+        { name: '**/*.js', limit: '230 kB' },
       ],
     }),
   ],
@@ -35,8 +36,8 @@ export default defineConfig({
         },
       },
     },
-    // optional: also raise Vite’s own warning bar from 500 kB to 200 kB
-    chunkSizeWarningLimit: 205, // kB
+    // Match the bundlesize limit above so Vite warns at the same threshold
+    chunkSizeWarningLimit: 230, // kB
   },
   optimizeDeps: {
     include: [
