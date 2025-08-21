@@ -14,7 +14,6 @@ GitHub Copilot Web supports MCP servers to extend its capabilities with external
 4. **Playwright** - Web automation and testing
 5. **ImageSorcery** - Image processing and manipulation
 6. **Firecrawl** - Web scraping and content extraction (requires API key)
-7. **Sentry** - Error monitoring and debugging
 
 ## Setup Instructions
 
@@ -67,11 +66,6 @@ GitHub Copilot Web supports MCP servers to extend its capabilities with external
       "env": {
         "FIRECRAWL_API_KEY": "$COPILOT_MCP_FIRECRAWL_API_KEY"
       },
-      "tools": ["*"]
-    },
-    "sentry": {
-      "type": "sse",
-      "url": "https://mcp.sentry.dev/mcp",
       "tools": ["*"]
     }
   }
@@ -171,12 +165,6 @@ For Firecrawl MCP server:
 
 - **Purpose**: Web scraping and content extraction
 - **API Key Required**: Sign up at https://www.firecrawl.dev/
-
-### Sentry
-
-- **Purpose**: Error monitoring and debugging integration
-- **Type**: Server-Sent Events (SSE) connection
-- **No API Key Required** for basic functionality
 
 ## Best Practices
 

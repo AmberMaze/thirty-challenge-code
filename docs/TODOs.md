@@ -39,6 +39,10 @@ Sections
 
 - Theme system: persist custom colors and apply them globally (write CSS vars from `customColorsAtom`)
 
+## Monitoring
+
+- Evaluate alternative error monitoring after removing the previous Netlify plugin — 2025-08-21
+
 - Color picker: add background/surface pickers and live preview
   - Note: partial implementation added for primary/secondary/accent pickers; background/surface and persistence remain TODO — 2025-08-21
 
