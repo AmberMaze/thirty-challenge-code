@@ -43,6 +43,7 @@
   "src/hooks/useTranslation.ts": [],
   "src/lib/atomGameSync.ts": [],
   "src/lib/dailyConfig.ts": [],
+  "src/lib/database.types.ts": [],
   "src/lib/gameDatabase.ts": [
     "src/lib/supabaseLazy.ts"
   ],
