@@ -1,5 +1,5 @@
 import { parse } from 'svgson';
-import Vibrant from 'node-vibrant/browser';
+import { Vibrant } from 'node-vibrant/browser';
 
 export interface ColorPalette {
   colors: string[];
@@ -123,7 +123,7 @@ async function extractColorsFromRaster(svgUrl: string): Promise<ColorPalette> {
             
             swatches.forEach((swatch, index) => {
               if (swatch) {
-                colors.push(swatch.getHex());
+                colors.push(swatch.hex);
                 // Give higher weights to more vibrant colors
                 weights.push(Math.max(0.1, 1 - (index * 0.15)));
               }
