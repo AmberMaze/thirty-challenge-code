@@ -1,4 +1,33 @@
-# Copilot Instructions for Thirty Challenge
+# Copilot Instructions for Thirty C## Pull Request Checklist
+
+1. Code compiles (`pnpm tsc --noEmit`)
+2. ESLint passes (`pnpm lint`)
+3. Vitest passes (`pnpm test`)
+4. Bundle size guard (<200 kB JS)
+5. Regenerate dependency map if structure changes (`pnpm dep:graph`)
+6. Update relevant documentation in `docs/` when behavior changes
+
+## MCP Server Integration
+
+This repository is configured to work with Model Context Protocol (MCP) servers for enhanced development capabilities:
+
+### Supported MCP Servers
+
+- **Context7**: Library documentation and code examples
+- **Sequential Thinking**: Advanced problem-solving and planning
+- **Memory**: Knowledge graph for project context
+- **Playwright**: Web automation and testing
+- **Sentry**: Error monitoring and debugging
+- **Firecrawl**: Web scraping and content extraction
+- **ImageSorcery**: Image processing and manipulation
+
+### Usage in GitHub Copilot Web
+
+The repository includes MCP server configurations for GitHub Copilot coding agent. When working with issues assigned to Copilot, these tools will be automatically available for autonomous use.
+
+### Local Development
+
+For local VS Code development, MCP servers are configured in the user's `mcp.json` file with input prompts for secure credential management.
 
 ## Purpose & Scope
 

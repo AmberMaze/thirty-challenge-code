@@ -20,7 +20,7 @@
 
 ## 📅 2025 Changelog
 
-### August 21, 2025 - Documentation Consolidation
+### August 21, 2025 - Documentation Consolidation & MCP Setup
 
 - Consolidated minimal documentation files into `DEVELOPER_GUIDE.md`, `REFERENCE.md`, and enhanced `SETUP.md`
 
@@ -29,6 +29,14 @@
 - Removed redundant documentation files after successful consolidation
 
 - Updated documentation structure to follow optimal best practices
+
+- Added GitHub Copilot Web MCP server configuration with `copilot-web-mcp.json`
+
+- Enhanced `copilot-setup-steps.yml` workflow with Python, uv, pipx, and Playwright dependencies for MCP servers
+
+- Created comprehensive `GITHUB_COPILOT_MCP_SETUP.md` guide for setting up MCP servers in GitHub Copilot Web
+
+- Updated copilot instructions with MCP server integration details
 
 ### Consolidated from FIXES_SUMMARY.md
 
