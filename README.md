@@ -8,7 +8,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-2.19-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
 [![Daily.co](https://img.shields.io/badge/Daily.co-0.56-FF6B6B?logo=dailydotco&logoColor=white)](https://daily.co/)
 [![Bundle Size](https://img.shields.io/badge/Bundle_Size-<200kB-green)](https://quiz.tyshub.xyz)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-quiz.tyshub.xyz-blue)](https://quiz.tyshub.xyz)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-thirtyquiz.tyshub.xyz-blue)](https://thirtyquiz.tyshub.xyz)
 
 > **Real-time, club-themed football quiz web app** with video conferencing, Arabic language support, and sequential quiz segments.
 
