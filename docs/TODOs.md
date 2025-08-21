@@ -26,6 +26,12 @@ Sections
 
 - Onboarding: add a quick guided tour for new hosts
 
+## Documentation Consolidation
+
+- ✅ Consolidated minimal documentation files into DEVELOPER_GUIDE.md, REFERENCE.md, and enhanced SETUP.md
+
+- ✅ Removed redundant documentation files: DocsGuide.md, Guide.md, reactconfig.md, VSCode.md, CHROME_SETUP.md, DAILY_CO_INTEGRATION.md, QUIZ_STRUCTURE.md, Theme.md, ThemeConfigurator.md, Environment-variables-Netlify.md
+
 ## Tests
 
 - Add Vitest unit tests for `themeAtoms` and `ThemeConfigurator` (recommended: test persistence and CSS var propagation)
