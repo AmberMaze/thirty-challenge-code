@@ -3,28 +3,25 @@
 
 # Project settings
 project_id = "zgvmkjefgdabumvafqch"
-name = "Thirty Challenge Quiz"
 
 # Database settings
 [db]
-port = 54321
+port = 54322
 major_version = 15
 
 # Authentication
 [auth]
 enabled = true
 site_url = "https://thirtyquiz.tyshub.xyz"
-additional_redirect_urls = ["http://localhost:3000", "http://localhost:5173"]
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://thirtyquiz.tyshub.xyz"
+]
 
-# Email configuration (for production)
 [auth.email]
-enable_signup = false
-double_confirm_change_email = true
-enable_confirmations = false
-
-# Security settings
-[auth.security]
-update_password_require_reauthentication = false
+enable_signup = true
+enable_confirmations = true
 
 # API settings
 [api]
@@ -34,24 +31,26 @@ schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
-# Database configuration
-[database]
-listen_addresses = ["*"]
-log_statement = "all"
-
 # Storage configuration
 [storage]
 enabled = true
-image_transformation_enabled = false
+file_size_limit = "50MiB"
 
-# Edge Functions
+# Edge Functions (must be a table, not just a bool)
 [functions]
-enabled = false
+[functions.hello_world]
+verify_jwt = false
 
 # Analytics
 [analytics]
-enabled = false
+enabled = true
 
-# Environment-specific overrides
-[local_config]
-# Local development overrides can be added here
+# Studio configuration
+[studio]
+enabled = true
+port = 54323
+
+# Inbucket (local email testing)
+[inbucket]
+enabled = true
+port = 54324
