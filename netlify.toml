@@ -6,6 +6,13 @@
   # Pin build environment to Node 20 as used locally
   environment = { NODE_VERSION = "20", PNPM_VERSION = "10" }
 
+[[plugins]]
+  package = "@sentry/netlify-build-plugin"
+  [plugins.inputs]
+    authToken = "${SENTRY_AUTH_TOKEN}"
+    org = "${SENTRY_ORG}"
+    project = "${SENTRY_PROJECT}"
+
 [functions]
   # Functions are located in ./netlify/functions relative to this file
   directory    = "netlify/functions"

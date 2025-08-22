@@ -19,6 +19,8 @@
   "dependencies": {
     "@daily-co/daily-js": "^0.81.0",
     "@daily-co/daily-react": "^0.23.2",
+    "@sentry/react": "^10.5.0",
+    "@sentry/tracing": "^7.120.4",
     "@supabase/supabase-js": "^2.55.0",
     "dayjs": "^1.11.13",
     "dompurify": "^3.2.6",
@@ -36,6 +38,8 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@netlify/functions": "^4.2.2",
+    "@sentry/netlify-build-plugin": "^1.1.1",
+    "@sentry/vite-plugin": "^4.1.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^15.0.7",
     "@types/jest": "^29.5.14",
