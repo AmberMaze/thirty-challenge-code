@@ -56,7 +56,7 @@ Sections
 
 ## Tests
 
-- Add Vitest unit tests for `themeAtoms` and `ThemeConfigurator` (recommended: test persistence and CSS var propagation)
+- Add Vitest unit tests for `themeAtoms` (recommended: test persistence and CSS var propagation)
 
 - E2E smoke test for creating a game and joining
 

@@ -100,22 +100,6 @@ Themes use CSS custom properties (variables) defined on theme classes applied to
 2. **State Management**: Update presets in `src/state/themeAtoms.ts`
 3. **UI Integration**: Expose in ThemeConfigurator component
 
-### ThemeConfigurator Component
-
-**Location**: `src/components/ThemeConfigurator.tsx`
-
-**Key Atoms**:
-
-- `themeAtom` (string union: 'light'|'dark'|'football'|'neon')
-- `customColorsAtom` (object: primary/secondary/accent/background/surface)
-- `isDarkModeAtom` (derived boolean)
-
-**Theme Change Process**:
-
-1. Remove prior theme classes from `html`
-2. Add new theme class to `html`
-3. Add `dark` class for dark-like themes to activate Tailwind `dark:` utilities
-
 ### Persistence Options
 
 - **Local**: Use `atomWithStorage` or `useEffect` with `localStorage`

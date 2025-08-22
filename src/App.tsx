@@ -1,5 +1,4 @@
 import ConnectionBanner from '@/components/ConnectionBanner';
-import HexGridCanvas from '@/components/HexGridCanvas';
 import LanguageToggle from '@/components/LanguageToggle';
 import { Provider as JotaiProvider } from 'jotai';
 import { lazy, Suspense } from 'react';
@@ -36,9 +35,6 @@ export default function App() {
   return (
     <JotaiProvider>
       <div className="dark min-h-screen bg-gradient-to-tr from-black via-[#10102a] to-accent2 relative">
-        {/* Hexagonal grid background for team theme */}
-        <HexGridCanvas />
-        
         <ConnectionBanner />
         <LanguageToggle />
         <Suspense fallback={<PageLoader />}>
